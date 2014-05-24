@@ -111,6 +111,7 @@ function ctranspose(op :: LinearOperator)
                         v -> conj(op.tprod(v)), u -> conj(op.prod(u)), op.prod)
 end
 
+import Base.conj
 function conj(op :: LinearOperator)
   return LinearOperator(op.nrow, op.ncol, op.dtype, op.symmetric, op.hermitian,
                         v -> conj(op.prod(conj(v))),
