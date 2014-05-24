@@ -41,11 +41,9 @@ end
 
 
 # Constructors.
-function LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false)
-  (m, n) = size(M)
-  return LinearOperator(m, n, typeof(M[1,1]), symmetric, hermitian,
-                        v -> M * v, u -> M.' * u, w -> M' * w)
-end
+LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
+  LinearOperator(size(M,1), size(M,2), typeof(M[1,1]), symmetric, hermitian,
+                 v -> M * v, u -> M.' * u, w -> M' * w)
 
 
 # Apply an operator to a vector.
