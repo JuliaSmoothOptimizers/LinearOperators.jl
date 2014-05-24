@@ -3,18 +3,19 @@ module linop
 
 export LinearOperator, opEye, opOnes, opZeros, opCholesky
 
+KindOfMatrix = Union(Array, SparseMatrixCSC)
+FuncOrNothing = Union(Function, Nothing)
+
 type LinearOperator
   nrow   :: Int
   ncol   :: Int
   dtype   :: DataType
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function  # apply the operator to a vector
-  tprod  :: Function  # apply the transpose operator to a vector
-  ctprod :: Function  # apply the transpose conjugate operator to a vector
+  prod   :: Function       # apply the operator to a vector
+  tprod  :: FuncOrNothing  # apply the transpose operator to a vector
+  ctprod :: FuncOrNothing  # apply the transpose conjugate operator to a vector
 end
-
-KindOfMatrix = Union(Array, SparseMatrixCSC)
 
 
 import Base.size
