@@ -1,7 +1,8 @@
 # Linear Operators for Julia
 module linop
 
-export LinearOperator, opEye, opOnes, opZeros, opCholesky
+export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
+       opCholesky, opHouseholder
 
 KindOfMatrix = Union(Array, SparseMatrixCSC)
 FuncOrNothing = Union(Function, Nothing)
@@ -211,6 +212,13 @@ opZeros(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
                                                    u -> zeros(ncol),
                                                    w -> zeros(ncol))
 
+## Diagonal.
+opDiagonal(d :: Vector) = LinearOperator(length(d), length(d), typeof(d[1]),
+                                         true, !(typeof(d[1]) <: Complex),
+                                         v -> v .* d,
+                                         u -> u .* d,
+                                         w -> w .* conj(d))
+
 ## Inverse as a Cholesky factorization.
 function opCholesky(M :: KindOfMatrix; check=false)
   (m, n) = size(M)
@@ -241,5 +249,13 @@ function opCholesky(M :: KindOfMatrix; check=false)
                         w -> L' \ (L \ w))
   # Todo: use iterative refinement.
 end
+
+## Apply a Householder transformation stored in the vector h.
+## The result is x -> (I - 2 h h') x.
+opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
+                                            !(typeof(h[1]) <: Complex), true,
+                                            v -> (v - 2 * dot(h, v) * h),
+                                            Nothing(),  # Will be inferred.
+                                            w -> (w - 2 * dot(h, w) * h))
 
 end  # module
