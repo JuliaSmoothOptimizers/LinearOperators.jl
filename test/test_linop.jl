@@ -49,6 +49,6 @@ u = rand(nrow) + rand(nrow) * im;
 
 # Test Cholesky operator.
 AA = A1' * A1;
-AAinv = opCholesky(AA);
+AAinv = opCholesky(AA, check=true);
 v = rand(ncol) + im * rand(ncol);
 @test(norm(AAinv * v - AA \ v) <= rtol * norm(v));
