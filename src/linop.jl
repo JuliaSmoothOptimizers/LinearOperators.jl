@@ -2,7 +2,8 @@
 module linop
 
 export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
-       opCholesky, opHouseholder
+       opCholesky, opHouseholder,
+       check_ctranspose, check_hermitian, check_positive_definite
 
 KindOfMatrix = Union(Array, SparseMatrixCSC)
 FuncOrNothing = Union(Function, Nothing)
@@ -192,6 +193,52 @@ end
 (.-)(op :: LinearOperator, x :: Number) = op .+ (-x)
 (.-)(x :: Number, op :: LinearOperator) = x .+ (-op)
 
+
+# Utility functions.
+
+function check_ctranspose(op :: LinearOperator)
+  # Cheap check that the operator and its conjugate transposed are related.
+  (m, n) = size(op);
+  x = rand(n);
+  y = rand(m);
+  yAx = dot(y, op * x);
+  xAty = dot(x, op' * y);
+  ε = eps(Float64);
+  return abs(yAx - xAty) < (abs(yAx) + ε) * ε^(1/3);
+end
+
+check_ctranspose(M :: KindOfMatrix) = check_ctranspose(LinearOperator(M))
+
+function check_hermitian(op :: LinearOperator)
+  # Cheap hermicity check.
+  m, n = size(op);
+  v = rand(n);
+  w = op * v;
+  s = dot(w, w);  # = (Av)'(Av) = v' A' A v.
+  y = op * w;
+  t = dot(v, y);  # = v' A A v.
+  ε = eps(Float64);
+  return abs(s - t) < (abs(s) + ε) * ε^(1/3);
+end
+
+check_hermitian(M :: KindOfMatrix) = check_hermitian(LinearOperator(M))
+
+function check_positive_definite(op :: LinearOperator; semi=false)
+  # Cheap positive definiteness check.
+  m, n = size(op);
+  v = rand(n);
+  w = op * v;
+  vw = dot(v, w);
+  ε = eps(Float64);
+  if imag(vw) > sqrt(ε) * abs(vw)
+    return false
+  end
+  vw = real(vw);
+  return semi ? (vw ≥ 0) : (vw > 0)
+end
+
+check_positive_definite(M :: KindOfMatrix) = check_positive_definite(LinearOperator(M))
+
 # Special linear operators.
 
 ## Identity operator.
@@ -200,10 +247,10 @@ opEye(n :: Int; dtype=Float64) = LinearOperator(n, n, true, true, dtype,
 
 ## All ones.
 opOnes(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
-                                                  nrow == ncol, nrow == ncol,
-                                                  v -> sum(v) * ones(nrow),
-                                                  u -> sum(u) * ones(ncol),
-                                                  w -> sum(w) * ones(ncol))
+                                                   nrow == ncol, nrow == ncol,
+                                                   v -> sum(v) * ones(nrow),
+                                                   u -> sum(u) * ones(ncol),
+                                                   w -> sum(w) * ones(ncol))
 
 ## All zeros.
 opZeros(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
@@ -226,18 +273,11 @@ function opCholesky(M :: KindOfMatrix; check=false)
     error("Shape mismatch")
   end
   if check
-    # Cheap hermicity check.
-    v = rand(n)
-    w = M * v
-    s = dot(w, w)  # = (Mv)'(Mv) = v' M' M v.
-    y = M * w
-    t = dot(v, y)  # = v' M M v.
-    u = eps(Float64)
-    if abs(s-t) > (s * u) * u^(1/3)
-      error("Matrix is not symmetric")
+    if !check_hermitian(M)
+      error("Matrix is not Hermitian")
     end
     # Cheap positive definiteness check.
-    if dot(v, w) <= 0
+    if !check_positive_definite(M)
       error("Matrix is not positive definite")
     end
   end
