@@ -242,7 +242,7 @@ check_positive_definite(M :: KindOfMatrix) = check_positive_definite(LinearOpera
 # Special linear operators.
 
 ## Identity operator.
-opEye(n :: Int; dtype=Float64) = LinearOperator(n, n, true, true, dtype,
+opEye(n :: Int; dtype=Float64) = LinearOperator(n, n, dtype, true, true,
                                                 v -> v, u -> u, w -> w)
 
 ## All ones.
