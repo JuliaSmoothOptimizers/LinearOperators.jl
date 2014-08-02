@@ -2,7 +2,7 @@
 module linop
 
 export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
-       opCholesky, opHouseholder,
+       opInverse, opCholesky, opHouseholder,
        check_ctranspose, check_hermitian, check_positive_definite
 
 KindOfMatrix = Union(Array, SparseMatrixCSC)
@@ -265,6 +265,11 @@ opDiagonal(d :: Vector) = LinearOperator(length(d), length(d), typeof(d[1]),
                                          v -> v .* d,
                                          u -> u .* d,
                                          w -> w .* conj(d))
+
+## Inverse. Useful for triangular matrices.
+opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
+  LinearOperator(size(M,2), size(M,1), typeof(M[1,1]), symmetric, hermitian,
+                 v -> M \ v, u -> M.' \ u, w -> M' \ w);
 
 ## Inverse as a Cholesky factorization.
 function opCholesky(M :: KindOfMatrix; check=false)
