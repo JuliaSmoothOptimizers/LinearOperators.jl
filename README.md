@@ -2,6 +2,12 @@
 
 Operators behave like matrices but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
 
+## How to Install
+
+````JULIA
+Pkg.clone("https://github.com/dpo/linop.jl.git")
+````
+
 ## Example 1
 
 Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.
