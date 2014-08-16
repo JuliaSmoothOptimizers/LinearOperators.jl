@@ -52,6 +52,30 @@ julia> 10-element Array{Complex{Float64},1}:
  ...
 ````
 
+## Operators Available
+
+Operator       | Description
+---------------|------------
+LinearOperator | Base class. Useful to define operators from functions
+opEye          | Identity operator
+opOnes         | All ones operator
+opZeros        | All zeros operator
+opDiagonal     | Equivalent to `diagm()`
+opInverse      | Equivalent to `\`
+opCholesky     | More efficient than `opInverse` for symmetric positive definite matrices
+opHouseholder  | Apply a Householder transformation `I-2hh'`
+opHermitian    | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
+
+
+## Other Operators
+
+* [LLDL](https://github.com/optimizers/lldl) features a limited-memory
+  LDL<sup>T</sup> factorization operator that may be used as preconditioner
+  in iterative methods
+* [MUMPS.jl](https://github.com/dpo/MUMPS.jl) features a full
+  distributed-memory factorization operator that may be used to represent the
+  preconditioner in, e.g., constraint-preconditioned Krylov methods.
+
 ## Testing
 
 ````JULIA
