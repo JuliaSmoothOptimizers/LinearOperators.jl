@@ -2,7 +2,7 @@
 module linop
 
 export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
-       opInverse, opCholesky, opHouseholder,
+       opInverse, opCholesky, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite
 
 KindOfMatrix = Union(Array, SparseMatrixCSC)
@@ -302,5 +302,14 @@ opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
                                             v -> (v - 2 * dot(h, v) * h),
                                             Nothing(),  # Will be inferred.
                                             w -> (w - 2 * dot(h, w) * h))
+
+
+# A symmetric/hermitian operator based on the diagonal and lower triangle.
+opHermitian(d :: Vector, T :: KindOfMatrix) =
+  LinearOperator(length(d), length(d), typeof(d[1]),
+  !(typeof(d[1]) <: Complex), true,
+  v -> (d .* v + T * v + (v' * T)'),
+  Nothing(),
+  Nothing())
 
 end  # module

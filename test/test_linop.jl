@@ -52,3 +52,12 @@ AA = A1' * A1;
 AAinv = opCholesky(AA, check=true);
 v = rand(ncol) + im * rand(ncol);
 @test(norm(AAinv * v - AA \ v) <= rtol * norm(v));
+
+# Test Hermitian operator.
+A1 = rand(nrow, nrow) + rand(nrow, nrow) * im;
+d = diag(A1); A1 = tril(A1, -1);
+A2 = A1 + A1' + diagm(d);
+op = opHermitian(d, A1);
+v  = rand(nrow) + rand(nrow) * im;
+Av = A2 * v;
+@test(norm(op * v - Av) <= rtol * norm(Av));
