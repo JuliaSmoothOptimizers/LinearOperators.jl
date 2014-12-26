@@ -98,11 +98,17 @@ function transpose(op :: LinearOperator)
                           op.tprod, op.prod, v -> conj(op.tprod(v)))
   end
   if op.ctprod == nothing
-    error("Unable to infer transpose operator")
+    if op.hermitian
+      ctprod = op.prod;
+    else
+      error("Unable to infer transpose operator")
+    end
+  else
+    ctprod = op.ctprod;
   end
 
   return LinearOperator(op.ncol, op.nrow, op.dtype, op.symmetric, op.hermitian,
-                        v -> conj(op.ctprod(conj(v))),  # A.'v = conj(A' conj(v))
+                        v -> conj(ctprod(conj(v))),     # A.'v = conj(A' conj(v))
                         op.prod,                        # (A.').' = A
                         w -> conj(op.prod(v)))          # (A.')' = conj(A)
 end
@@ -116,11 +122,17 @@ function ctranspose(op :: LinearOperator)
                           op.ctprod, u -> conj(op.prod(u)), op.prod)
   end
   if op.tprod == nothing
-    error("Unable to infer conjugate transpose operator")
+    if op.symmetric
+      tprod = op.prod;
+    else
+      error("Unable to infer conjugate transpose operator")
+    end
+  else
+    tprod = op.tprod;
   end
 
   return LinearOperator(op.ncol, op.nrow, op.dtype, op.symmetric, op.hermitian,
-                        v -> conj(op.tprod(v)), u -> conj(op.prod(u)), op.prod)
+                        v -> conj(tprod(v)), u -> conj(op.prod(u)), op.prod)
 end
 
 import Base.conj
