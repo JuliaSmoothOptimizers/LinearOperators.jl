@@ -288,6 +288,25 @@ opDiagonal(d :: Vector) = LinearOperator(length(d), length(d), typeof(d[1]),
                                          u -> u .* d,
                                          w -> w .* conj(d))
 
+## Rectangular diagonal operator.
+function opDiagonal(nrow :: Int, ncol :: Int, d :: Vector)
+  if nrow == ncol
+    return opDiagonal(d)
+  end
+  if nrow > ncol
+    D = LinearOperator(nrow, ncol, typeof(d[1]), false, false,
+                       v -> [v .* d ; zeros(nrow-ncol)],
+                       u -> u[1:ncol] .* d,
+                       w -> w[1:ncol] .* conj(d));
+  else
+    D = LinearOperator(nrow, ncol, typeof(d[1]), false, false,
+                       v -> v[1:nrow] .* d,
+                       u -> [u .* d ; zeros(ncol-nrow)],
+                       w -> [w .* conj(d) ; zeros(ncol-nrow)]);
+  end
+  return D
+end
+
 ## Inverse. Useful for triangular matrices.
 opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,2), size(M,1), typeof(M[1,1]), symmetric, hermitian,
