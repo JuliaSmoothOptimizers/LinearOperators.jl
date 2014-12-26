@@ -54,18 +54,31 @@ julia> 10-element Array{Complex{Float64},1}:
 
 ## Operators Available
 
-Operator       | Description
----------------|------------
-LinearOperator | Base class. Useful to define operators from functions
-opEye          | Identity operator
-opOnes         | All ones operator
-opZeros        | All zeros operator
-opDiagonal     | Equivalent to `diagm()`
-opInverse      | Equivalent to `\`
-opCholesky     | More efficient than `opInverse` for symmetric positive definite matrices
-opHouseholder  | Apply a Householder transformation `I-2hh'`
-opHermitian    | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
+Operator         | Description
+-----------------|------------
+`LinearOperator` | Base class. Useful to define operators from functions
+`opEye`          | Identity operator
+`opOnes`         | All ones operator
+`opZeros`        | All zeros operator
+`opDiagonal`     | Square (equivalent to `diagm()`) or rectangular diagonal operator
+`opInverse`      | Equivalent to `\`
+`opCholesky`     | More efficient than `opInverse` for symmetric positive definite matrices
+`opHouseholder`  | Apply a Householder transformation `I-2hh'`
+`opHermitian`    | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
 
+## Utility Functions
+
+Function           | Description
+-------------------|------------
+`full`             | Convert an abstract operator to a dense array
+`check_ctranspose` | Cheap check that `A'` is correctly implemented
+`check_hermitian`  | Cheap check that `A = A'`
+`check_positive_definite` | Cheap check that an operator is positive (semi-)definite
+
+
+## Other Operations on Operators
+
+Operators can be transposed (`A.'`), conjugated (`conj(A)`) and conjugate-transposed (`A'`).
 
 ## Other Operators
 
