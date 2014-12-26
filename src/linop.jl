@@ -22,6 +22,15 @@ end
 
 import Base.size
 size(op :: LinearOperator) = (op.nrow, op.ncol)
+function size(op :: LinearOperator, d :: Int)
+  if d == 1
+    return op.nrow;
+  end
+  if d == 2
+    return op.ncol;
+  end
+  error("Linear operators only have 2 dimensions for now");
+end
 shape(op :: LinearOperator) = size(op)
 hermitian(op :: LinearOperator) = op.hermitian
 symmetric(op :: LinearOperator) = op.symmetric
