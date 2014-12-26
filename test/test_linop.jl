@@ -2,10 +2,25 @@ using Base.Test
 using linop
 
 (nrow, ncol) = (10, 6);
-rtol = sqrt(eps(Float64));
+ϵ = eps(Float64);
+rtol = sqrt(ϵ);
+A1 = rand(nrow, ncol) + rand(nrow, ncol) * im;
+
+# Test size().
+op = LinearOperator(A1);
+@test(size(op) == (nrow, ncol));
+@test(shape(op) == (nrow, ncol));
+@test(size(op, 1) == nrow);
+@test(size(op, 2) == ncol);
+
+# Test boolean operators.
+@test(symmetric(op) == false);
+@test(hermitian(op) == false);
+
+# Test full().
+@test(vecnorm(A1 - full(op)) <= ϵ * vecnorm(A1));
 
 # Test LinearOperator(Matrix).
-A1 = rand(nrow, ncol) + rand(nrow, ncol) * im;
 A2 = sprand(nrow, ncol, 0.5) + sprand(nrow, ncol, 0.5) * im;
 
 for A in (A1, A2)
@@ -61,3 +76,85 @@ op = opHermitian(d, A1);
 v  = rand(nrow) + rand(nrow) * im;
 Av = A2 * v;
 @test(norm(op * v - Av) <= rtol * norm(Av));
+
+# Test opEye.
+I = opEye(nrow);
+v = rand(nrow) + rand(nrow) * im;
+@test(abs(norm(I * v - v)) <= ϵ * norm(v));
+@test(abs(norm(I.' * v - v)) <= ϵ * norm(v));
+@test(abs(norm(I' * v - v)) <= ϵ * norm(v));
+
+# Test opOnes.
+E = opOnes(nrow, ncol);
+u = rand(ncol) + rand(ncol) * im;
+@test(norm(E * u - sum(u) * ones(nrow)) <= rtol * norm(u));
+@test(norm(E.' * v - sum(v) * ones(ncol)) <= rtol * norm(v));
+@test(norm(E' * v - sum(v) * ones(ncol)) <= rtol * norm(v));
+
+# Test opZeros.
+O = opZeros(nrow, ncol);
+@test(norm(O * u) <= ϵ);
+@test(norm(O.' * v) <= ϵ);
+@test(norm(O' * v) <= ϵ);
+
+# Test opDiagonal.
+D = opDiagonal(v);
+u = rand(nrow) + rand(nrow) * im;
+@test(norm(D * u - v .* u) <= ϵ * norm(u));
+@test(norm(D.' * u - v .* u) <= ϵ * norm(u));
+@test(norm(D' * u - conj(v) .* u) <= ϵ * norm(u));
+
+# Test rectangular opDiagonal.
+nmin = min(nrow, ncol); nmax = max(nrow, ncol);
+A = zeros(Complex128, nmax, nmin);
+v = rand(nmin) + rand(nmin) * im;
+for i = 1 : nmin
+  A[i,i] = v[i];
+end
+D = opDiagonal(nmax, nmin, v);
+u = rand(nmin) + rand(nmin) * im;
+@test(norm(A * u - D * u) <= ϵ * norm(u));
+w = rand(nmax) + rand(nmax) * im;
+@test(norm(A.' * w - D.' * w) <= ϵ * norm(w));
+@test(norm(A' * w - D' * w) <= ϵ * norm(w));
+
+A = zeros(Complex128, nmin, nmax);
+for i = 1 : nmin
+  A[i,i] = v[i];
+end
+D = opDiagonal(nmin, nmax, v);
+@test(norm(A * w - D * w) <= ϵ * norm(w));
+@test(norm(A.' * u - D.' * u) <= ϵ * norm(u));
+@test(norm(A' * u - D' * u) <= ϵ * norm(u));
+
+# Test opInverse.
+(U, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
+(V, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
+Σ = diagm(rand(nrow) + 0.1);
+A = U * Σ * V';
+Ainv = opInverse(A);
+v = rand(nrow) + rand(nrow) * im;
+@test(norm(A \ v - Ainv * v) <= rtol * norm(v));
+@test(norm(A.' \ v - Ainv.' * v) <= rtol * norm(v));
+@test(norm(A' \ v - Ainv' * v) <= rtol * norm(v));
+
+# Test opCholesky.
+B = A' * A;
+Binv = opCholesky(B, check=true);
+@test(norm(B \ v - Binv * v) <= rtol * norm(v));
+@test(norm(B.' \ v - Binv.' * v) <= rtol * norm(v));
+@test(norm(B' \ v - Binv' * v) <= rtol * norm(v));
+
+# Test opHouseholder.
+H = opHouseholder(v);
+u = rand(nrow) + rand(nrow) * im;
+@test(norm(H * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u));
+@test(norm(H.' * u - (u - 2 * dot(conj(v), u) * conj(v))) <= rtol * norm(u));
+@test(norm(H' * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u));
+
+# Test opHermitian.
+C = A + A';
+H = opHermitian(C);
+@test(norm(H * v - C * v) <= rtol * norm(v));
+@test(norm(H.' * v - C.' * v) <= rtol * norm(v));
+@test(norm(H' * v - C * v) <= rtol * norm(v));
