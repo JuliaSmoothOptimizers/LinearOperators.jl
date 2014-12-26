@@ -345,12 +345,22 @@ opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
                                             w -> (w - 2 * dot(h, w) * h))
 
 
+
 # A symmetric/hermitian operator based on the diagonal and lower triangle.
-opHermitian(d :: Vector, T :: KindOfMatrix) =
-  LinearOperator(length(d), length(d), typeof(d[1]),
-  !(typeof(d[1]) <: Complex), true,
-  v -> (d .* v + T * v + (v' * T)'),
-  Nothing(),
-  Nothing())
+function opHermitian(d :: Vector, T :: KindOfMatrix)
+  L = tril(T, -1);
+  return LinearOperator(length(d), length(d), typeof(d[1]),
+                        !(typeof(d[1]) <: Complex), true,
+                        v -> (d .* v + L * v + (v' * L)')[:],
+                        Nothing(),
+                        Nothing());
+end
+
+
+# A symmetric/hermitian operator based on a matrix.
+function opHermitian(T :: KindOfMatrix)
+  d = diag(T);
+  return opHermitian(d, T);
+end
 
 end  # module
