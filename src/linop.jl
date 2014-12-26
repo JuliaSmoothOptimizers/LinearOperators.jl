@@ -3,7 +3,8 @@ module linop
 
 export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opHouseholder, opHermitian,
-       check_ctranspose, check_hermitian, check_positive_definite
+       check_ctranspose, check_hermitian, check_positive_definite,
+       shape, hermitian, symmetric
 
 KindOfMatrix = Union(Array, SparseMatrixCSC)
 FuncOrNothing = Union(Function, Nothing)
