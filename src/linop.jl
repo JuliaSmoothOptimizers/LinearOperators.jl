@@ -1,6 +1,10 @@
 # Linear Operators for Julia
 module linop
 
+# Setup for documentation
+using Docile
+@docstrings(manual = ["../doc/manual.md"])
+
 export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
@@ -9,6 +13,12 @@ export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
 KindOfMatrix = Union(Array, SparseMatrixCSC)
 FuncOrNothing = Union(Function, Nothing)
 
+@doc """Abstract object to represent a linear operator.
+The usual arithmetic operations may be applied to operators
+to combine or otherwise alter them. They can be combined with
+other operators, with matrices and with scalars. Operators may
+be transposed and conjugate-transposed using the usual Julia syntax.
+""" ->
 type LinearOperator
   nrow   :: Int
   ncol   :: Int
@@ -22,7 +32,11 @@ end
 
 
 import Base.size
+
+@doc meta("Return the size of a linear operator as a tuple", returns=(Int,Int)) ->
 size(op :: LinearOperator) = (op.nrow, op.ncol)
+
+@doc meta("Return the size of a linear operator along dimension `d`", returns=(Int,)) ->
 function size(op :: LinearOperator, d :: Int)
   if d == 1
     return op.nrow;
@@ -32,12 +46,20 @@ function size(op :: LinearOperator, d :: Int)
   end
   error("Linear operators only have 2 dimensions for now");
 end
+
+@doc "An alias for size" ->
 shape(op :: LinearOperator) = size(op)
+
+@doc meta("Determine whether the operator is Hermitian", returns=(Bool,)) ->
 hermitian(op :: LinearOperator) = op.hermitian
+
+@doc meta("Determine whether the operator is symmetric", returns=(Bool,)) ->
 symmetric(op :: LinearOperator) = op.symmetric
 
 
 import Base.show
+
+@doc "Display basic information about a linear operator" ->
 function show(io :: IO, op :: LinearOperator)
   s  = "Linear operator\n"
   s *= @sprintf("  nrow: %s\n", op.nrow)
@@ -53,6 +75,9 @@ end
 
 
 # Constructors.
+@doc """Construct a linear operator from a dense or sparse matrix.
+Use the optional keyword arguments to indicate whether the operator
+is symmetric and/or hermitian.""" ->
 LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,1), size(M,2), typeof(M[1,1]), symmetric, hermitian,
                  v -> M * v, u -> M.' * u, w -> M' * w)
@@ -68,6 +93,8 @@ function (*)(op :: LinearOperator, v :: Vector)
 end
 
 import Base.full
+
+@doc "Materialize an operator as a dense array using `op.ncol` products" ->
 function full(op :: LinearOperator)
   (m, n) = size(op)
   A = zeros(op.dtype, m, n)  # Must be of same dtype as operator.
@@ -218,8 +245,8 @@ end
 
 # Utility functions.
 
+@doc "Cheap check that the operator and its conjugate transposed are related." ->
 function check_ctranspose(op :: LinearOperator)
-  # Cheap check that the operator and its conjugate transposed are related.
   (m, n) = size(op);
   x = rand(n);
   y = rand(m);
@@ -231,8 +258,8 @@ end
 
 check_ctranspose(M :: KindOfMatrix) = check_ctranspose(LinearOperator(M))
 
+@doc "Cheap check that the operator is Hermitian." ->
 function check_hermitian(op :: LinearOperator)
-  # Cheap hermicity check.
   m, n = size(op);
   v = rand(n);
   w = op * v;
@@ -245,8 +272,8 @@ end
 
 check_hermitian(M :: KindOfMatrix) = check_hermitian(LinearOperator(M))
 
+@doc "Cheap check that the operator is positive (semi-)definite." ->
 function check_positive_definite(op :: LinearOperator; semi=false)
-  # Cheap positive definiteness check.
   m, n = size(op);
   v = rand(n);
   w = op * v;
@@ -263,32 +290,33 @@ check_positive_definite(M :: KindOfMatrix) = check_positive_definite(LinearOpera
 
 # Special linear operators.
 
-## Identity operator.
+@doc "Identity operator of order `n` and of data type `dtype`." ->
 opEye(n :: Int; dtype=Float64) = LinearOperator(n, n, dtype, true, true,
                                                 v -> v, u -> u, w -> w)
 
-## All ones.
+@doc "Operator of all ones of size `nrow`-by-`ncol` and of data type `dtype`." ->
 opOnes(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
                                                    nrow == ncol, nrow == ncol,
                                                    v -> sum(v) * ones(nrow),
                                                    u -> sum(u) * ones(ncol),
                                                    w -> sum(w) * ones(ncol))
 
-## All zeros.
+@doc "Zero operator of size `nrow`-by-`ncol` and of data type `dtype`." ->
 opZeros(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
                                                    nrow == ncol, nrow == ncol,
                                                    v -> zeros(nrow),
                                                    u -> zeros(ncol),
                                                    w -> zeros(ncol))
 
-## Diagonal.
+@doc "Diagonal operator with the vector `d` on its main diagonal." ->
 opDiagonal(d :: Vector) = LinearOperator(length(d), length(d), typeof(d[1]),
                                          true, !(typeof(d[1]) <: Complex),
                                          v -> v .* d,
                                          u -> u .* d,
                                          w -> w .* conj(d))
 
-## Rectangular diagonal operator.
+@doc """Rectangular diagonal operator of size `nrow`-by-`ncol`
+with the vector `d` on its main diagonal.""" ->
 function opDiagonal(nrow :: Int, ncol :: Int, d :: Vector)
   if nrow == ncol
     return opDiagonal(d)
@@ -307,12 +335,17 @@ function opDiagonal(nrow :: Int, ncol :: Int, d :: Vector)
   return D
 end
 
-## Inverse. Useful for triangular matrices.
+@doc """Inverse of a matrix as a linear operator using `\`.
+Useful for triangular matrices. Note that each application of this
+operator applies `\`.""" ->
 opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,2), size(M,1), typeof(M[1,1]), symmetric, hermitian,
                  v -> M \ v, u -> M.' \ u, w -> M' \ w);
 
-## Inverse as a Cholesky factorization.
+@doc """Inverse of a positive definite matrix as a linear operator
+using its Cholesky factorization. The factorization is computed only once.
+The optional `check` argument will perform cheap hermicity and definiteness
+checks.""" ->
 function opCholesky(M :: KindOfMatrix; check=false)
   (m, n) = size(M)
   if m != n
@@ -336,8 +369,8 @@ function opCholesky(M :: KindOfMatrix; check=false)
   # Todo: use iterative refinement.
 end
 
-## Apply a Householder transformation stored in the vector h.
-## The result is x -> (I - 2 h h') x.
+@doc """Apply a Householder transformation defined by the vector `h`.
+The result is `x -> (I - 2 h h') x`.""" ->
 opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
                                             !(typeof(h[1]) <: Complex), true,
                                             v -> (v - 2 * dot(h, v) * h),
@@ -346,7 +379,7 @@ opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
 
 
 
-# A symmetric/hermitian operator based on the diagonal and lower triangle.
+@doc "A symmetric/hermitian operator based on the diagonal and lower triangle." ->
 function opHermitian(d :: Vector, T :: KindOfMatrix)
   L = tril(T, -1);
   return LinearOperator(length(d), length(d), typeof(d[1]),
@@ -357,7 +390,7 @@ function opHermitian(d :: Vector, T :: KindOfMatrix)
 end
 
 
-# A symmetric/hermitian operator based on a matrix.
+@doc "A symmetric/hermitian operator based on a matrix." ->
 function opHermitian(T :: KindOfMatrix)
   d = diag(T);
   return opHermitian(d, T);
