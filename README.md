@@ -8,6 +8,10 @@ Operators behave like matrices but are defined by their effect when applied to a
 Pkg.clone("https://github.com/dpo/linop.jl.git")
 ````
 
+## Documentation
+
+See https://dpo.github.io/linop.jl/linop.html for preliminary documentation.
+
 ## Example 1
 
 Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.
