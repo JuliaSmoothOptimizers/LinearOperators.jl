@@ -137,7 +137,7 @@ function transpose(op :: LinearOperator)
   return LinearOperator(op.ncol, op.nrow, op.dtype, op.symmetric, op.hermitian,
                         v -> conj(ctprod(conj(v))),     # A.'v = conj(A' conj(v))
                         op.prod,                        # (A.').' = A
-                        w -> conj(op.prod(v)))          # (A.')' = conj(A)
+                        w -> conj(op.prod(w)))          # (A.')' = conj(A)
 end
 
 function ctranspose(op :: LinearOperator)
