@@ -98,11 +98,11 @@ import Base.full
 function full(op :: LinearOperator)
   (m, n) = size(op)
   A = zeros(op.dtype, m, n)  # Must be of same dtype as operator.
-  e = zeros(op.dtype, n)
+  ei = zeros(op.dtype, n)
   for i = 1 : n
-    e[i] = 1;
-    A[:,i] = op * e;
-    e[i] = 0;
+    ei[i] = 1;
+    A[:,i] = op * ei;
+    ei[i] = 0;
   end
   return A
 end
