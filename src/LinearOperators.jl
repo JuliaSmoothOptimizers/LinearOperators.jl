@@ -1,5 +1,5 @@
 # Linear Operators for Julia
-module linop
+module LinearOperators
 
 # Setup for documentation
 using Docile

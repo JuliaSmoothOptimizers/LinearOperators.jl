@@ -1,5 +1,5 @@
 using Base.Test
-using linop
+using LinearOperators
 
 (nrow, ncol) = (10, 6);
 ϵ = eps(Float64);
