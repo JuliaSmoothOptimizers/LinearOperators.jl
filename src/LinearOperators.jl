@@ -82,6 +82,10 @@ LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,1), size(M,2), typeof(M[1,1]), symmetric, hermitian,
                  v -> M * v, u -> M.' * u, w -> M' * w)
 
+@doc "Construct a real symmetric linear operator from a function." ->
+LinearOperator(nrow :: Int, dtype :: DataType, prod :: Function) =
+  LinearOperator(nrow, nrow, dtype, true, true, prod, prod, prod)
+
 
 # Apply an operator to a vector.
 function (*)(op :: LinearOperator, v :: Vector)
