@@ -339,6 +339,55 @@ function opDiagonal(nrow :: Int, ncol :: Int, d :: Vector)
   return D
 end
 
+
+import Base.hcat
+function hcat(A :: LinearOperator, B :: LinearOperator)
+  A.nrow != B.nrow && error("hcat: inconsistent row sizes")
+
+  nrow  = A.nrow
+  ncol  = A.ncol + B.ncol
+  dtype = promote_type(A.dtype, B.dtype)
+
+  prod(v)   =  A * v[1:A.ncol] + B * v[A.ncol+1:end]
+  tprod(v)  =  [A.' * v; B.' * v;]
+  ctprod(v) =  [A' * v; B' * v;]
+
+  return LinearOperator(nrow, ncol, A.dtype, false, false, prod, tprod, ctprod)
+end
+
+function hcat(ops :: LinearOperator...)
+  op = ops[1]
+  for i = 2:length(ops)
+    op = [op ops[i]];
+  end
+  return op
+end
+
+import Base.vcat
+
+function vcat(A::LinearOperator, B::LinearOperator)
+  A.ncol != B.ncol && error("vcat: inconsistent column sizes")
+
+  nrow  = A.nrow + B.nrow
+  ncol  = A.ncol
+  dtype = promote_type(A.dtype, B.dtype)
+
+  prod(v)   =  [A * v; B * v;]
+  tprod(v)  =  A.' * v +  B.' * v
+  ctprod(v) =  A' * v[1:A.nrow] + B' * v[A.nrow+1:end]
+
+  return LinearOperator(nrow, ncol, dtype, false, false, prod, tprod, ctprod)
+end
+
+function vcat(ops :: LinearOperator...)
+  op = ops[1]
+  for i = 2:length(ops)
+    op = [op; ops[i]];
+  end
+  return op
+end
+
+
 @doc """Inverse of a matrix as a linear operator using `\`.
 Useful for triangular matrices. Note that each application of this
 operator applies `\`.""" ->
@@ -401,3 +450,4 @@ function opHermitian(T :: KindOfMatrix)
 end
 
 end  # module
+
