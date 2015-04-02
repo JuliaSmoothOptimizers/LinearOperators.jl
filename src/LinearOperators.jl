@@ -339,6 +339,49 @@ function opDiagonal(nrow :: Int, ncol :: Int, d :: Vector)
   return D
 end
 
+
+import Base.hcat
+import Base.vcat
+function hcat(A::LinearOperator,B::LinearOperator)
+	if A.nrow != B.nrow
+		error("numbers of rows must be the same")
+	end
+	if A.dtype != B.dtype
+		error("data type must be the same")
+	end
+	
+	nrow  = A.nrow
+	ncol = A.ncol + B.ncol
+	
+	prod(v)   =  A*v[1:A.ncol] + B*v[A.ncol+1:end]
+	tprod(v)  =  [A.tprod(v); B.tprod(v)];
+	ctprod(v) =  [A'*v; B'*v];
+	
+	return LinearOperator(nrow,ncol,A.dtype,false,false,prod,tprod,ctprod)
+		
+end
+
+function vcat(A::LinearOperator,B::LinearOperator)
+	if A.ncol != B.ncol
+		error("numbers of columns must be the same")
+	end
+	if A.dtype != B.dtype
+		error("data type must be the same")
+	end
+	
+	nrow  = A.nrow + B.nrow
+	ncol = A.ncol
+	
+	prod(v)   =  [A*v; B*v]
+	tprod(v)  =  A.tprod(v) +  B.tprod(v)
+	ctprod(v) =  A'*v[1:A.nrow] +   B'*v[A.nrow+1:end]
+	
+	return LinearOperator(nrow,ncol,A.dtype,false,false,prod,tprod,ctprod)
+		
+end
+
+
+
 @doc """Inverse of a matrix as a linear operator using `\`.
 Useful for triangular matrices. Note that each application of this
 operator applies `\`.""" ->
