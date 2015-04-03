@@ -341,45 +341,53 @@ end
 
 
 import Base.hcat
+function hcat(A :: LinearOperator, B :: LinearOperator)
+  if A.nrow != B.nrow
+    error("nrow must be the same for hcat")
+  end
+  
+  nrow  = A.nrow
+  ncol  = A.ncol + B.ncol
+  dtype = promote_type(A.dtype, B.dtype)
+  
+  prod(v)   =  A * v[1:A.ncol] + B * v[A.ncol+1:end]
+  tprod(v)  =  [A.' * v; B.' * v;]
+  ctprod(v) =  [A' * v; B' * v;]
+  
+  return LinearOperator(nrow, ncol, A.dtype, false, false, prod, tprod, ctprod)
+end
+
+function hcat(ops :: LinearOperator...)
+  op0 = ops[1]
+  for i=2:length(ops)
+    op0 = [op0 ops[i]]
+  end
+  return op0
+end
+
 import Base.vcat
-function hcat(A::LinearOperator,B::LinearOperator)
-	if A.nrow != B.nrow
-		error("numbers of rows must be the same")
-	end
-	if A.dtype != B.dtype
-		error("data type must be the same")
-	end
-	
-	nrow  = A.nrow
-	ncol = A.ncol + B.ncol
-	
-	prod(v)   =  A*v[1:A.ncol] + B*v[A.ncol+1:end]
-	tprod(v)  =  [A.tprod(v); B.tprod(v)];
-	ctprod(v) =  [A'*v; B'*v];
-	
-	return LinearOperator(nrow,ncol,A.dtype,false,false,prod,tprod,ctprod)
-		
-end
+function vcat(A::LinearOperator, B::LinearOperator)
+  if A.ncol != B.ncol
+    error("ncol must be the same for vcat")
+  end
+  
+  nrow  = A.nrow + B.nrow
+  ncol  = A.ncol
+  dtype = promote_type(A.dtype, B.dtype)
 
-function vcat(A::LinearOperator,B::LinearOperator)
-	if A.ncol != B.ncol
-		error("numbers of columns must be the same")
-	end
-	if A.dtype != B.dtype
-		error("data type must be the same")
-	end
-	
-	nrow  = A.nrow + B.nrow
-	ncol = A.ncol
-	
-	prod(v)   =  [A*v; B*v]
-	tprod(v)  =  A.tprod(v) +  B.tprod(v)
-	ctprod(v) =  A'*v[1:A.nrow] +   B'*v[A.nrow+1:end]
-	
-	return LinearOperator(nrow,ncol,A.dtype,false,false,prod,tprod,ctprod)
-		
+  prod(v)   =  [A * v; B * v;]
+  tprod(v)  =  A.' * v +  B.' * v
+  ctprod(v) =  A' * v[1:A.nrow] +   B' * v[A.nrow+1:end]
+  
+  return LinearOperator(nrow, ncol, dtype, false, false, prod, tprod, ctprod)
 end
-
+function vcat(ops :: LinearOperator...)
+  op0 = ops[1]
+  for i=2:length(ops)
+    op0 = [op0; ops[i];]
+  end
+  return op0
+end
 
 
 @doc """Inverse of a matrix as a linear operator using `\`.
