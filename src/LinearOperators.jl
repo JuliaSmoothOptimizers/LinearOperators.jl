@@ -70,6 +70,7 @@ function show(io :: IO, op :: LinearOperator)
   s *= @sprintf("  prod:   %s\n", string(op.prod))
   s *= @sprintf("  tprod:  %s\n", string(op.tprod))
   s *= @sprintf("  ctprod: %s", string(op.ctprod))
+  s *= "\n"
   print(io, s)
 end
 
