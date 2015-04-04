@@ -258,7 +258,7 @@ function check_ctranspose(op :: LinearOperator)
   yAx = dot(y, op * x);
   xAty = dot(x, op' * y);
   ε = eps(Float64);
-  return abs(yAx - xAty) < (abs(yAx) + ε) * ε^(1/3);
+  return abs(yAx - conj(xAty)) < (abs(yAx) + ε) * ε^(1/3);
 end
 
 check_ctranspose(M :: KindOfMatrix) = check_ctranspose(LinearOperator(M))
