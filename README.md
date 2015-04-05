@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/dpo/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/dpo/LinearOperators.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/l76yjaoqa4lyxhi7?svg=true)](https://ci.appveyor.com/project/dpo/linop-jl)
-[![Coverage Status](https://coveralls.io/repos/dpo/LinearOperators.jl/badge.svg)](https://coveralls.io/r/dpo/LinearOperators.jl)
+[![Coverage Status](https://coveralls.io/repos/dpo/LinearOperators.jl/badge.svg?branch=master)](https://coveralls.io/r/dpo/LinearOperators.jl?branch=master)
 
 Operators behave like matrices but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
 
