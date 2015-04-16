@@ -1,4 +1,5 @@
 using Base.Test
+using Compat
 using LinearOperators
 
 (nrow, ncol) = (10, 6);
@@ -227,7 +228,8 @@ H = opHermitian(C);
 @test(! check_positive_definite(LinearOperator(-A'*A)));
 
 # Test inference.
-op = LinearOperator(5, 3, Complex128, false, false, p -> ones(5) + im * ones(5), Nothing(), Nothing());
+op = LinearOperator(5, 3, Complex128, false, false,
+                    p -> ones(5) + im * ones(5));
 @test_throws ErrorException op.'
 @test_throws ErrorException op'
 

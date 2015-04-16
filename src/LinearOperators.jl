@@ -1,6 +1,8 @@
 # Linear Operators for Julia
 module LinearOperators
 
+using Compat  # for Nullable types.
+
 # Setup for documentation
 using Docile
 @docstrings(manual = ["../doc/manual.md"])
@@ -11,7 +13,7 @@ export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        shape, hermitian, symmetric
 
 KindOfMatrix = Union(Array, SparseMatrixCSC)
-FuncOrNothing = Union(Function, Nothing)
+
 
 @doc """Abstract object to represent a linear operator.
 The usual arithmetic operations may be applied to operators
@@ -25,9 +27,9 @@ type LinearOperator
   dtype   :: DataType
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function       # apply the operator to a vector
-  tprod  :: FuncOrNothing  # apply the transpose operator to a vector
-  ctprod :: FuncOrNothing  # apply the transpose conjugate operator to a vector
+  prod   :: Function           # apply the operator to a vector
+  tprod  :: Nullable{Function} # apply the transpose operator to a vector
+  ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
 end
 
 
@@ -81,11 +83,30 @@ Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.""" ->
 LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,1), size(M,2), typeof(M[1,1]), symmetric, hermitian,
-                 v -> M * v, u -> M.' * u, w -> M' * w)
+                 v -> M * v,
+                 Nullable{Function}(u -> M.' * u),
+                 Nullable{Function}(w -> M' * w))
+
+@doc "Construct a linear operator from functions." ->
+LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
+               symmetric :: Bool, hermitian :: Bool,
+               prod :: Function, tprod :: Function, ctprod :: Function) =
+  LinearOperator(nrow, ncol, dtype, symmetric, hermitian,
+                 prod, Nullable{Function}(tprod), Nullable{Function}(ctprod))
 
 @doc "Construct a real symmetric linear operator from a function." ->
 LinearOperator(nrow :: Int, dtype :: DataType, prod :: Function) =
-  LinearOperator(nrow, nrow, dtype, true, true, prod, prod, prod)
+  LinearOperator(nrow, nrow, dtype, true, true,
+                 prod,
+                 Nullable{Function}(prod),
+                 Nullable{Function}(prod))
+
+@doc "Construct a linear operator from a single function." ->
+LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
+               symmetric :: Bool, hermitian :: Bool,
+               prod :: Function) =
+  LinearOperator(nrow, ncol, dtype, symmetric, hermitian,
+                 prod, Nullable{Function}(), Nullable{Function}())
 
 
 # Apply an operator to a vector.
@@ -118,61 +139,67 @@ end
 (-)(op :: LinearOperator) = LinearOperator(op.nrow, op.ncol, op.dtype,
                                            op.symmetric, op.hermitian,
                                            v -> -op.prod(v),
-                                           u -> -op.tprod(u),
-                                           w -> -op.ctprod(w))
+                                           Nullable{Function}(u -> -get(op.tprod)(u)),
+                                           Nullable{Function}(w -> -get(op.ctprod)(w)))
 
 function transpose(op :: LinearOperator)
   if op.symmetric
     return op
   end
-  if op.tprod != nothing
+  if !isnull(op.tprod)
     return LinearOperator(op.ncol, op.nrow, op.dtype, op.symmetric, op.hermitian,
-                          op.tprod, op.prod, v -> conj(op.tprod(v)))
+                          get(op.tprod),
+                          Nullable{Function}(op.prod),
+                          Nullable{Function}(v -> conj(get(op.tprod)(v))))
   end
-  if op.ctprod == nothing
+  if isnull(op.ctprod)
     if op.hermitian
       ctprod = op.prod;
     else
       error("Unable to infer transpose operator")
     end
   else
-    ctprod = op.ctprod;
+    ctprod = get(op.ctprod);
   end
 
   return LinearOperator(op.ncol, op.nrow, op.dtype, op.symmetric, op.hermitian,
-                        v -> conj(ctprod(conj(v))),     # A.'v = conj(A' conj(v))
-                        op.prod,                        # (A.').' = A
-                        w -> conj(op.prod(w)))          # (A.')' = conj(A)
+                        v -> conj(ctprod(conj(v))),                # A.'v = conj(A' conj(v))
+                        Nullable{Function}(op.prod),               # (A.').' = A
+                        Nullable{Function}(w -> conj(op.prod(w)))) # (A.')' = conj(A)
 end
 
 function ctranspose(op :: LinearOperator)
   if op.hermitian
     return op
   end
-  if op.ctprod != nothing
+  if !isnull(op.ctprod)
     return LinearOperator(op.ncol, op.nrow, op.dtype, op.symmetric, op.hermitian,
-                          op.ctprod, u -> conj(op.prod(u)), op.prod)
+                          get(op.ctprod),
+                          Nullable{Function}(u -> conj(op.prod(u))),
+                          Nullable{Function}(op.prod))
   end
-  if op.tprod == nothing
+  if isnull(op.tprod)
     if op.symmetric
       tprod = op.prod;
     else
       error("Unable to infer conjugate transpose operator")
     end
   else
-    tprod = op.tprod;
+    tprod = get(op.tprod);
   end
 
   return LinearOperator(op.ncol, op.nrow, op.dtype, op.symmetric, op.hermitian,
-                        v -> conj(tprod(v)), u -> conj(op.prod(u)), op.prod)
+                        v -> conj(tprod(v)),
+                        Nullable{Function}(u -> conj(op.prod(u))),
+                        Nullable{Function}(op.prod))
 end
 
 import Base.conj
 function conj(op :: LinearOperator)
   return LinearOperator(op.nrow, op.ncol, op.dtype, op.symmetric, op.hermitian,
                         v -> conj(op.prod(conj(v))),
-                        u -> op.ctprod(u),
-                        w -> op.tprod(w))
+                        op.ctprod,
+                        op.tprod)
 end
 
 # Binary operations.
@@ -428,7 +455,7 @@ The result is `x -> (I - 2 h h') x`.""" ->
 opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
                                             !(typeof(h[1]) <: Complex), true,
                                             v -> (v - 2 * dot(h, v) * h),
-                                            Nothing(),  # Will be inferred.
+                                            Nullable{Function}(),  # Will be inferred.
                                             w -> (w - 2 * dot(h, w) * h))
 
 
@@ -439,8 +466,8 @@ function opHermitian(d :: Vector, T :: KindOfMatrix)
   return LinearOperator(length(d), length(d), typeof(d[1]),
                         !(typeof(d[1]) <: Complex), true,
                         v -> (d .* v + L * v + (v' * L)')[:],
-                        Nothing(),
-                        Nothing());
+                        Nullable{Function}(),
+                        Nullable{Function}());
 end
 
 
