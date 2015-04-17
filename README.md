@@ -6,6 +6,10 @@
 
 Operators behave like matrices but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
 
+## Compatibility
+
+Julia 0.3 and 0.4.
+
 ## How to Install
 
 ````JULIA
@@ -44,11 +48,14 @@ julia> norm(A \ v - op * v) / norm(v)
 
 ## Example 3
 
-Operators may be defined from functions. In this case, the transpose isn't defined, but it may be inferred from the conjugate transposed.
+Operators may be defined from functions. In the example below, the transposed isn't defined, but it may be inferred from the conjugate transposed. Missing operations are represented as [nullable](http://julia.readthedocs.org/en/latest/manual/types/?highlight=nullable#nullable-types-representing-missing-values) functions. Nullable types were introduced in Julia 0.4 but are provided in Julia 0.3 by [Compat.jl](https://github.com/JuliaLang/Compat.jl).
 
 ````JULIA
+julia> using Compat  # only required if you use Julia 0.3.
 julia> dft = LinearOperator(10, 10, Float64, false, false,
-                            v -> fft(v), Nothing(), w -> ifft(w));
+                            v -> fft(v),
+                            Nullable{Function}(),  # this operation is "missing".
+                            w -> ifft(w));
 julia> x = rand(10);
 julia> y = dft * x;
 julia> norm(dft' * y - x)  # DFT is an orthogonal operator
