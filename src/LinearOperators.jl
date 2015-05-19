@@ -335,10 +335,10 @@ opOnes(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
 
 @doc "Zero operator of size `nrow`-by-`ncol` and of data type `dtype`." ->
 opZeros(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
-                                                   nrow == ncol, nrow == ncol,
-                                                   v -> zeros(nrow),
-                                                   u -> zeros(ncol),
-                                                   w -> zeros(ncol))
+                                                    nrow == ncol, nrow == ncol,
+                                                    v -> zeros(nrow),
+                                                    u -> zeros(ncol),
+                                                    w -> zeros(ncol))
 
 @doc "Diagonal operator with the vector `d` on its main diagonal." ->
 opDiagonal(d :: Vector) = LinearOperator(length(d), length(d), typeof(d[1]),
