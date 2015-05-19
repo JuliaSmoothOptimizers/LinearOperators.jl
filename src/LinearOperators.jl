@@ -433,13 +433,8 @@ function opCholesky(M :: KindOfMatrix; check=false)
     error("Shape mismatch")
   end
   if check
-    if !check_hermitian(M)
-      error("Matrix is not Hermitian")
-    end
-    # Cheap positive definiteness check.
-    if !check_positive_definite(M)
-      error("Matrix is not positive definite")
-    end
+    check_hermitian(M) || error("Matrix is not Hermitian")
+    check_positive_definite(M) || error("Matrix is not positive definite")
   end
   L = issparse(M) ? cholfact(M) : chol(M, :L);
   return LinearOperator(m, m, typeof(M[1,1]),
