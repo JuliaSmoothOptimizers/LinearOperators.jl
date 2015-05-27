@@ -1,7 +1,3 @@
-using Base.Test
-using Compat
-using LinearOperators
-
 (nrow, ncol) = (10, 6);
 ϵ = eps(Float64);
 rtol = sqrt(ϵ);

@@ -1,9 +1,3 @@
-using LinearOperators
-using Base.Test
-
-ϵ    = eps(Float64)
-rtol = sqrt(ϵ)
-
 # test hcat
 A   = sprandn(100, 100, .5)
 B   = randn(100, 10) + 1im * randn(100, 10)

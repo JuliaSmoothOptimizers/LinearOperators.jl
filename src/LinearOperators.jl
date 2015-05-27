@@ -7,12 +7,16 @@ using Compat  # for Nullable types.
 using Docile
 @docstrings(manual = ["../doc/manual.md"])
 
-export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
+export AbstractLinearOperator,
+       LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opHouseholder, opHermitian,
+       LBFGSOperator, InverseLBFGSOperator,
        check_ctranspose, check_hermitian, check_positive_definite,
        shape, hermitian, symmetric
 
 KindOfMatrix = Union(Array, SparseMatrixCSC)
+
+abstract AbstractLinearOperator;
 
 
 @doc """Abstract object to represent a linear operator.
@@ -21,7 +25,7 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """ ->
-type LinearOperator
+type LinearOperator <: AbstractLinearOperator
   nrow   :: Int
   ncol   :: Int
   dtype   :: DataType
@@ -36,10 +40,10 @@ end
 import Base.size
 
 @doc meta("Return the size of a linear operator as a tuple", returns=(Int,Int)) ->
-size(op :: LinearOperator) = (op.nrow, op.ncol)
+size(op :: AbstractLinearOperator) = (op.nrow, op.ncol)
 
 @doc meta("Return the size of a linear operator along dimension `d`", returns=(Int,)) ->
-function size(op :: LinearOperator, d :: Int)
+function size(op :: AbstractLinearOperator, d :: Int)
   if d == 1
     return op.nrow;
   end
@@ -50,19 +54,19 @@ function size(op :: LinearOperator, d :: Int)
 end
 
 @doc "An alias for size" ->
-shape(op :: LinearOperator) = size(op)
+shape(op :: AbstractLinearOperator) = size(op)
 
 @doc meta("Determine whether the operator is Hermitian", returns=(Bool,)) ->
-hermitian(op :: LinearOperator) = op.hermitian
+hermitian(op :: AbstractLinearOperator) = op.hermitian
 
 @doc meta("Determine whether the operator is symmetric", returns=(Bool,)) ->
-symmetric(op :: LinearOperator) = op.symmetric
+symmetric(op :: AbstractLinearOperator) = op.symmetric
 
 
 import Base.show
 
 @doc "Display basic information about a linear operator" ->
-function show(io :: IO, op :: LinearOperator)
+function show(io :: IO, op :: AbstractLinearOperator)
   s  = "Linear operator\n"
   s *= @sprintf("  nrow: %s\n", op.nrow)
   s *= @sprintf("  ncol: %d\n", op.ncol)
@@ -110,7 +114,7 @@ LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
 
 
 # Apply an operator to a vector.
-function (*)(op :: LinearOperator, v :: Vector)
+function (*)(op :: AbstractLinearOperator, v :: Vector)
   (m, n) = size(op)
   if size(v,1) != n
     error("Shape mismatch")
@@ -121,7 +125,7 @@ end
 import Base.full
 
 @doc "Materialize an operator as a dense array using `op.ncol` products" ->
-function full(op :: LinearOperator)
+function full(op :: AbstractLinearOperator)
   (m, n) = size(op)
   A = zeros(op.dtype, m, n)  # Must be of same dtype as operator.
   ei = zeros(op.dtype, n)
@@ -135,14 +139,14 @@ end
 
 
 # Unary operations.
-(+)(op :: LinearOperator) = op
-(-)(op :: LinearOperator) = LinearOperator(op.nrow, op.ncol, op.dtype,
-                                           op.symmetric, op.hermitian,
-                                           v -> -op.prod(v),
-                                           Nullable{Function}(u -> -get(op.tprod)(u)),
-                                           Nullable{Function}(w -> -get(op.ctprod)(w)))
+(+)(op :: AbstractLinearOperator) = op
+(-)(op :: AbstractLinearOperator) = LinearOperator(op.nrow, op.ncol, op.dtype,
+                                                   op.symmetric, op.hermitian,
+                                                   v -> -op.prod(v),
+                                                   Nullable{Function}(u -> -get(op.tprod)(u)),
+                                                   Nullable{Function}(w -> -get(op.ctprod)(w)))
 
-function transpose(op :: LinearOperator)
+function transpose(op :: AbstractLinearOperator)
   if op.symmetric
     return op
   end
@@ -195,7 +199,7 @@ function ctranspose(op :: LinearOperator)
 end
 
 import Base.conj
-function conj(op :: LinearOperator)
+function conj(op :: AbstractLinearOperator)
   return LinearOperator(op.nrow, op.ncol, op.dtype, op.symmetric, op.hermitian,
                         v -> conj(op.prod(conj(v))),
                         op.ctprod,
@@ -205,7 +209,7 @@ end
 # Binary operations.
 
 ## Operator times operator.
-function (*)(op1 :: LinearOperator, op2 :: LinearOperator)
+function (*)(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
   (m1, n1) = size(op1)
   (m2, n2) = size(op2)
   if m2 != n1
@@ -219,29 +223,29 @@ function (*)(op1 :: LinearOperator, op2 :: LinearOperator)
 end
 
 ## Matrix times operator.
-(*)(M :: KindOfMatrix, op :: LinearOperator) = LinearOperator(M) * op
-(*)(op :: LinearOperator, M :: KindOfMatrix) = op * LinearOperator(M)
+(*)(M :: KindOfMatrix, op :: AbstractLinearOperator) = LinearOperator(M) * op
+(*)(op :: AbstractLinearOperator, M :: KindOfMatrix) = op * LinearOperator(M)
 
 ## Scalar times operator.
-(*)(op :: LinearOperator, x :: Number) = LinearOperator(op.nrow, op.ncol,
-                                                        promote_type(op.dtype, typeof(x)),
-                                                        op.symmetric,
-                                                        op.hermitian && isreal(x),
-                                                        v -> (op * v) * x,
-                                                        u -> x * (op.' * u),
-                                                        w -> x' * (op' * w))
-(*)(x :: Number, op :: LinearOperator) = LinearOperator(op.nrow, op.ncol,
-                                                        promote_type(op.dtype, typeof(x)),
-                                                        op.symmetric,
-                                                        op.hermitian && isreal(x),
-                                                        v -> x * (op * v),
-                                                        u -> (op.' * u) * x,
-                                                        w -> (op' * w) * x')
-(.*)(op :: LinearOperator, x :: Number) = op * x
-(.*)(x :: Number, op :: LinearOperator) = x * op
+(*)(op :: AbstractLinearOperator, x :: Number) = LinearOperator(op.nrow, op.ncol,
+                                                                promote_type(op.dtype, typeof(x)),
+                                                                op.symmetric,
+                                                                op.hermitian && isreal(x),
+                                                                v -> (op * v) * x,
+                                                                u -> x * (op.' * u),
+                                                                w -> x' * (op' * w))
+(*)(x :: Number, op :: AbstractLinearOperator) = LinearOperator(op.nrow, op.ncol,
+                                                                promote_type(op.dtype, typeof(x)),
+                                                                op.symmetric,
+                                                                op.hermitian && isreal(x),
+                                                                v -> x * (op * v),
+                                                                u -> (op.' * u) * x,
+                                                                w -> (op' * w) * x')
+(.*)(op :: AbstractLinearOperator, x :: Number) = op * x
+(.*)(x :: Number, op :: AbstractLinearOperator) = x * op
 
 # Operator + operator.
-function (+)(op1 :: LinearOperator, op2 :: LinearOperator)
+function (+)(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
   (m1, n1) = size(op1)
   (m2, n2) = size(op2)
   if (m1 != m2) || (n1 != n2)
@@ -256,29 +260,29 @@ function (+)(op1 :: LinearOperator, op2 :: LinearOperator)
 end
 
 # Operator + matrix.
-(+)(M :: KindOfMatrix, op :: LinearOperator) = LinearOperator(M) + op
-(+)(op :: LinearOperator, M :: KindOfMatrix) = op + LinearOperator(M)
+(+)(M :: KindOfMatrix, op :: AbstractLinearOperator) = LinearOperator(M) + op
+(+)(op :: AbstractLinearOperator, M :: KindOfMatrix) = op + LinearOperator(M)
 
 # Operator .+ scalar.
-(.+)(op :: LinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
-(.+)(x :: Number, op :: LinearOperator) = x * opOnes(op.nrow, op.ncol) + op
+(.+)(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
+(.+)(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
 
 # Operator - operator
-(-)(op1 :: LinearOperator, op2 :: LinearOperator) = op1 + (-op2)
+(-)(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator) = op1 + (-op2)
 
 # Operator - matrix.
-(-)(M :: KindOfMatrix, op :: LinearOperator) = LinearOperator(M) - op
-(-)(op :: LinearOperator, M :: KindOfMatrix) = op - LinearOperator(M)
+(-)(M :: KindOfMatrix, op :: AbstractLinearOperator) = LinearOperator(M) - op
+(-)(op :: AbstractLinearOperator, M :: KindOfMatrix) = op - LinearOperator(M)
 
 # Operator - scalar.
-(.-)(op :: LinearOperator, x :: Number) = op .+ (-x)
-(.-)(x :: Number, op :: LinearOperator) = x .+ (-op)
+(.-)(op :: AbstractLinearOperator, x :: Number) = op .+ (-x)
+(.-)(x :: Number, op :: AbstractLinearOperator) = x .+ (-op)
 
 
 # Utility functions.
 
 @doc "Cheap check that the operator and its conjugate transposed are related." ->
-function check_ctranspose(op :: LinearOperator)
+function check_ctranspose(op :: AbstractLinearOperator)
   (m, n) = size(op);
   x = rand(n);
   y = rand(m);
@@ -291,7 +295,7 @@ end
 check_ctranspose(M :: KindOfMatrix) = check_ctranspose(LinearOperator(M))
 
 @doc "Cheap check that the operator is Hermitian." ->
-function check_hermitian(op :: LinearOperator)
+function check_hermitian(op :: AbstractLinearOperator)
   m, n = size(op);
   v = rand(n);
   w = op * v;
@@ -305,7 +309,7 @@ end
 check_hermitian(M :: KindOfMatrix) = check_hermitian(LinearOperator(M))
 
 @doc "Cheap check that the operator is positive (semi-)definite." ->
-function check_positive_definite(op :: LinearOperator; semi=false)
+function check_positive_definite(op :: AbstractLinearOperator; semi=false)
   m, n = size(op);
   v = rand(n);
   w = op * v;
@@ -335,10 +339,10 @@ opOnes(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
 
 @doc "Zero operator of size `nrow`-by-`ncol` and of data type `dtype`." ->
 opZeros(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
-                                                   nrow == ncol, nrow == ncol,
-                                                   v -> zeros(nrow),
-                                                   u -> zeros(ncol),
-                                                   w -> zeros(ncol))
+                                                    nrow == ncol, nrow == ncol,
+                                                    v -> zeros(nrow),
+                                                    u -> zeros(ncol),
+                                                    w -> zeros(ncol))
 
 @doc "Diagonal operator with the vector `d` on its main diagonal." ->
 opDiagonal(d :: Vector) = LinearOperator(length(d), length(d), typeof(d[1]),
@@ -369,7 +373,7 @@ end
 
 
 import Base.hcat
-function hcat(A :: LinearOperator, B :: LinearOperator)
+function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   A.nrow != B.nrow && error("hcat: inconsistent row sizes")
 
   nrow  = A.nrow
@@ -383,7 +387,7 @@ function hcat(A :: LinearOperator, B :: LinearOperator)
   return LinearOperator(nrow, ncol, A.dtype, false, false, prod, tprod, ctprod)
 end
 
-function hcat(ops :: LinearOperator...)
+function hcat(ops :: AbstractLinearOperator...)
   op = ops[1]
   for i = 2:length(ops)
     op = [op ops[i]];
@@ -393,7 +397,7 @@ end
 
 import Base.vcat
 
-function vcat(A::LinearOperator, B::LinearOperator)
+function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   A.ncol != B.ncol && error("vcat: inconsistent column sizes")
 
   nrow  = A.nrow + B.nrow
@@ -407,7 +411,7 @@ function vcat(A::LinearOperator, B::LinearOperator)
   return LinearOperator(nrow, ncol, dtype, false, false, prod, tprod, ctprod)
 end
 
-function vcat(ops :: LinearOperator...)
+function vcat(ops :: AbstractLinearOperator...)
   op = ops[1]
   for i = 2:length(ops)
     op = [op; ops[i]];
@@ -433,13 +437,8 @@ function opCholesky(M :: KindOfMatrix; check=false)
     error("Shape mismatch")
   end
   if check
-    if !check_hermitian(M)
-      error("Matrix is not Hermitian")
-    end
-    # Cheap positive definiteness check.
-    if !check_positive_definite(M)
-      error("Matrix is not positive definite")
-    end
+    check_hermitian(M) || error("Matrix is not Hermitian")
+    check_positive_definite(M) || error("Matrix is not positive definite")
   end
   L = issparse(M) ? cholfact(M) : chol(M, :L);
   return LinearOperator(m, m, typeof(M[1,1]),
@@ -475,6 +474,174 @@ end
 function opHermitian(T :: KindOfMatrix)
   d = diag(T);
   return opHermitian(d, T);
+end
+
+
+@doc "A data type to hold information relative to LBFGS operators." ->
+type LBFGSData
+  mem :: Int;
+  scaling :: Bool;
+  s   :: Array;
+  y   :: Array;
+  ys  :: Vector;
+  α   :: Vector;
+  a   :: Array;
+  b   :: Array;
+  insert :: Int;
+
+  function LBFGSData(n :: Int, mem :: Int;
+                     dtype :: DataType=Float64, scaling :: Bool=false, inverse :: Bool=true)
+    return new(max(mem, 1),
+               scaling,
+               zeros(dtype, n, mem),
+               zeros(dtype, n, mem),
+               zeros(dtype, mem),
+               inverse ? zeros(dtype, mem) : dtype[],
+               inverse ? dtype[] : zeros(dtype, n, mem),
+               inverse ? dtype[] : zeros(dtype, n, mem),
+               1)
+  end
+end
+
+
+@doc "A type for limited-memory BFGS approximations." ->
+type LBFGSOperator <: AbstractLinearOperator
+  nrow   :: Int
+  ncol   :: Int
+  dtype   :: DataType
+  symmetric :: Bool
+  hermitian :: Bool
+  prod   :: Function           # apply the operator to a vector
+  tprod  :: Nullable{Function} # apply the transpose operator to a vector
+  ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
+  inverse :: Bool
+  data :: LBFGSData
+end
+
+@doc "Construct a limited-memory BFGS approximation in inverse form." ->
+function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
+  lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling);
+  insert = 1;
+
+  function lbfgs_multiply(data :: LBFGSData, x :: Array)
+    # Multiply operator with a vector.
+    # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
+
+    if dtype == typeof(x[1])
+      q = copy(x);
+    else
+      result_type = promote_type(dtype, typeof(x[1]))
+      q = convert(Array{result_type}, x);
+    end
+
+    for i = 1 : data.mem
+      k = mod(data.insert - i - 1, data.mem) + 1;
+      if data.ys[k] != 0
+        data.α[k] = dot(data.s[:,k], q) / data.ys[k];
+        q -= data.α[k] * data.y[:,k];
+      end
+    end
+
+    r = q;
+    if data.scaling
+      last = mod(data.insert -1, data.mem) + 1;
+      if data.ys[last] != 0
+        γ = data.ys[last] / dot(data.y[:,last], data.y[:,last]);
+        r *= γ
+      end
+    end
+
+    for i = 1 : data.mem
+      k = mod(data.insert + i - 2, data.mem) + 1;
+      if data.ys[k] != 0
+        β = dot(data.y[:,k], r) / data.ys[k];
+        r += (data.α[k] - β) * data.s[:,k];
+      end
+    end
+
+    return r
+  end
+
+  return LBFGSOperator(n, n, dtype, true, true,
+                       x -> lbfgs_multiply(lbfgs_data, x),
+                       Nullable{Function}(),
+                       Nullable{Function}(),
+                       true,
+                       lbfgs_data)
+end
+
+@doc "Construct a limited-memory BFGS approximation in forward form." ->
+function LBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
+  lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling, inverse=false);
+  insert = 1;
+
+  function lbfgs_multiply(data :: LBFGSData, x :: Array)
+    # Multiply operator with a vector.
+    # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
+
+    if dtype == typeof(x[1])
+      q = copy(x);
+    else
+      result_type = promote_type(dtype, typeof(x[1]))
+      q = convert(Array{result_type}, x);
+    end
+
+    # B = B₀ + Σᵢ (bᵢbᵢ' - aᵢaᵢ').
+    for i = 1 : data.mem
+      k = mod(data.insert + i - 2, data.mem) + 1;
+      if data.ys[k] != 0
+        q += dot(data.b[:, k], x) * data.b[:, k] - dot(data.a[:, k], x) * data.a[:, k];
+      end
+    end
+    return q
+  end
+
+  return LBFGSOperator(n, n, dtype, true, true,
+                       x -> lbfgs_multiply(lbfgs_data, x),
+                       Nullable{Function}(),
+                       Nullable{Function}(),
+                       false,
+                       lbfgs_data)
+end
+
+import Base.push!
+
+@doc "Push a new {s,y} pair into a L-BFGS operator." ->
+function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
+
+  ys = dot(y, s);
+  ys <= 1.0e-20 && error("Rejecting L-BFGS {s,y} pair: y's = ", ys)
+
+  data = op.data;
+  insert = data.insert;
+
+  data.s[:, insert] = s;
+  data.y[:, insert] = y;
+  data.ys[insert] = ys;
+
+  # Update arrays a and b used in forward products.
+  if !op.inverse
+    data.b[:, insert] = y / sqrt(ys);
+
+    for i = 1 : data.mem
+      k = mod(insert + i - 1, data.mem) + 1;
+      if data.ys[k] != 0
+        data.a[:, k] = data.s[:, k];   # B₀ = I.
+
+        for j = 1 : i - 1
+          l = mod(insert + j - 1, data.mem) + 1;
+          if data.ys[l] != 0
+            data.a[:, k] += dot(data.b[:, l], data.s[:, k]) * data.b[:, l];
+            data.a[:, k] -= dot(data.a[:, l], data.s[:, k]) * data.a[:, l];
+          end
+        end
+        data.a[:, k] /= sqrt(dot(data.s[:, k], data.a[:, k]));
+      end
+    end
+  end
+
+  op.data.insert = mod(insert, data.mem) + 1;
+  return
 end
 
 end  # module
