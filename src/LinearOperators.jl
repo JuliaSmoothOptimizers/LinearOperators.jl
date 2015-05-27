@@ -7,7 +7,8 @@ using Compat  # for Nullable types.
 using Docile
 @docstrings(manual = ["../doc/manual.md"])
 
-export LinearOperator, opEye, opOnes, opZeros, opDiagonal,
+export AbstractLinearOperator,
+       LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opHouseholder, opHermitian,
        LBFGSOperator, InverseLBFGSOperator,
        check_ctranspose, check_hermitian, check_positive_definite,
