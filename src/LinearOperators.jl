@@ -328,7 +328,7 @@ check_positive_definite(M :: KindOfMatrix) = check_positive_definite(LinearOpera
 
 @doc "Identity operator of order `n` and of data type `dtype`." ->
 opEye(n :: Int; dtype=Float64) = LinearOperator(n, n, dtype, true, true,
-                                                v -> v, u -> u, w -> w)
+                                                v -> v[:], u -> u[:], w -> w[:])
 
 @doc "Operator of all ones of size `nrow`-by-`ncol` and of data type `dtype`." ->
 opOnes(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
