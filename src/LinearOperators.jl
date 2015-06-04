@@ -430,7 +430,8 @@ opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
 @doc """Inverse of a positive definite matrix as a linear operator
 using its Cholesky factorization. The factorization is computed only once.
 The optional `check` argument will perform cheap hermicity and definiteness
-checks.""" ->
+checks. If the input is sparse and not positive definite, but possesses a
+LDL' factorization, the latter is computed.""" ->
 function opCholesky(M :: KindOfMatrix; check=false)
   (m, n) = size(M)
   if m != n
@@ -440,12 +441,21 @@ function opCholesky(M :: KindOfMatrix; check=false)
     check_hermitian(M) || error("Matrix is not Hermitian")
     check_positive_definite(M) || error("Matrix is not positive definite")
   end
-  L = issparse(M) ? cholfact(M) : chol(M, :L);
-  return LinearOperator(m, m, typeof(M[1,1]),
-                        !(typeof(M[1,1]) <: Complex), true,
-                        v -> L' \ (L \ v),
-                        u -> L.' \ (conj(L \ conj(u))),
-                        w -> L' \ (L \ w))
+  if issparse(M)
+    LDL = cholfact(M);
+    return LinearOperator(m, m, typeof(M[1,1]),
+                          !(typeof(M[1,1]) <: Complex), true,
+                          v -> LDL \ v,
+                          u -> conj(LDL \ conj(u)),  # M.' = conj(M)
+                          w -> LDL \ w)
+  else
+    L = chol(M, :L);
+    return LinearOperator(m, m, typeof(M[1,1]),
+                          !(typeof(M[1,1]) <: Complex), true,
+                          v -> L' \ (L \ v),
+                          u -> L.' \ (conj(L \ conj(u))),
+                          w -> L' \ (L \ w))
+  end
   # Todo: use iterative refinement.
 end
 

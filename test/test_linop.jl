@@ -242,3 +242,16 @@ A = rand(5,5) + im * rand(5,5);
 @test_throws ErrorException opCholesky(A, check=true)  # Not Hermitian / positive definite
 @test_throws ErrorException opCholesky(-A'*A, check=true)  # Not positive definite
 
+# Test Cholesky operator on SQD matrix.
+A = rand(3,3); A = A'*A;
+B = rand(2,3);
+C = rand(2,2); C = C'*C;
+K = [A B' ; B -C];
+
+# Dense Cholesky should throw an exception.
+@test_throws Base.LinAlg.PosDefException opCholesky(K);
+
+# Sparse Cholesky computes the LDL' factorization.
+LDL = opCholesky(sparse(K));
+e = ones(size(K,1));
+@test(norm(LDL * (K * e) - e) < rtol * norm(e))
