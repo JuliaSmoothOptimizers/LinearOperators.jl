@@ -620,7 +620,10 @@ import Base.push!
 function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
 
   ys = dot(y, s);
-  ys <= 1.0e-20 && error("Rejecting L-BFGS {s,y} pair: y's = ", ys)
+  if ys <= 1.0e-20
+    warn(@sprintf("Rejecting L-BFGS {s,y} pair: y's = %8.1e", ys))
+    return
+  end
 
   data = op.data;
   insert = data.insert;
