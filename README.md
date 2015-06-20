@@ -1,8 +1,8 @@
 # A [Julia](http://julialang.org) Linear Operator Package
 
-[![Build Status](https://travis-ci.org/dpo/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/dpo/LinearOperators.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/l76yjaoqa4lyxhi7?svg=true)](https://ci.appveyor.com/project/dpo/linop-jl)
-[![Coverage Status](https://coveralls.io/repos/dpo/LinearOperators.jl/badge.svg?branch=master)](https://coveralls.io/r/dpo/LinearOperators.jl?branch=master)
+[![Build Status](https://travis-ci.org/lruthotto/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/lruthotto/LinearOperators.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/q1o545vbwaq8lw71?svg=true)](https://ci.appveyor.com/project/lruthotto/linearoperators-jl)
+[![Coverage Status](https://coveralls.io/repos/lruthotto/LinearOperators.jl/badge.svg?branch=master)](https://coveralls.io/r/lruthotto/LinearOperators.jl?branch=master)
 
 Operators behave like matrices but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
 
