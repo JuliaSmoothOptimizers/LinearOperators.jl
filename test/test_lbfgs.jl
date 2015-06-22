@@ -11,13 +11,13 @@ H = InverseLBFGSOperator(n, mem)
 @test norm(full(B) - eye(n)) <= ϵ
 @test norm(full(H) - eye(n)) <= ϵ
 
-# Test that negative curvature can't be added.
+# Test that nonpositive curvature can't be added.
 s = rand(n)
 z = zeros(n)
-@test_throws ErrorException push!(B, s, -s)
-@test_throws ErrorException push!(B, s,  z)
-@test_throws ErrorException push!(H, s, -s)
-@test_throws ErrorException push!(H, s,  z)
+push!(B, s, -s); @assert B.data.insert == 1
+push!(B, s,  z); @assert B.data.insert == 1
+push!(H, s, -s); @assert H.data.insert == 1
+push!(H, s,  z); @assert H.data.insert == 1
 
 # Insert a few {s,y} pairs.
 for i = 1 : mem+2
