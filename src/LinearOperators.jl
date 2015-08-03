@@ -420,9 +420,9 @@ function vcat(ops :: AbstractLinearOperator...)
 end
 
 
-@doc """Inverse of a matrix as a linear operator using `\`.
+@doc """Inverse of a matrix as a linear operator using `\\`.
 Useful for triangular matrices. Note that each application of this
-operator applies `\`.""" ->
+operator applies `\\`.""" ->
 opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,2), size(M,1), typeof(M[1,1]), symmetric, hermitian,
                  v -> M \ v, u -> M.' \ u, w -> M' \ w);
