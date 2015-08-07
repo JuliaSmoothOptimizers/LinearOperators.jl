@@ -16,10 +16,6 @@ Julia 0.3 and 0.4.
 Pkg.clone("https://github.com/dpo/LinearOperators.jl.git")
 ````
 
-## Documentation
-
-See https://dpo.github.io/LinearOperators.jl/LinearOperators.html for preliminary documentation.
-
 ## Example 1
 
 Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.
