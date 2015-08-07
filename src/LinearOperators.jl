@@ -3,9 +3,6 @@ module LinearOperators
 
 using Compat  # for Nullable types.
 
-# Setup for documentation
-using Docile
-
 export AbstractLinearOperator,
        LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opHouseholder, opHermitian,
@@ -18,12 +15,12 @@ KindOfMatrix = Union(Array, SparseMatrixCSC)
 abstract AbstractLinearOperator;
 
 
-Docile.@doc """Abstract object to represent a linear operator.
+"""Abstract object to represent a linear operator.
 The usual arithmetic operations may be applied to operators
 to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
-""" ->
+"""
 type LinearOperator <: AbstractLinearOperator
   nrow   :: Int
   ncol   :: Int
@@ -38,10 +35,10 @@ end
 
 import Base.size
 
-Docile.@doc meta("Return the size of a linear operator as a tuple", returns=(Int,Int)) ->
+"Return the size of a linear operator as a tuple"
 size(op :: AbstractLinearOperator) = (op.nrow, op.ncol)
 
-Docile.@doc meta("Return the size of a linear operator along dimension `d`", returns=(Int,)) ->
+"Return the size of a linear operator along dimension `d`"
 function size(op :: AbstractLinearOperator, d :: Int)
   if d == 1
     return op.nrow;
@@ -52,19 +49,19 @@ function size(op :: AbstractLinearOperator, d :: Int)
   error("Linear operators only have 2 dimensions for now");
 end
 
-Docile.@doc "An alias for size" ->
+"An alias for size"
 shape(op :: AbstractLinearOperator) = size(op)
 
-Docile.@doc meta("Determine whether the operator is Hermitian", returns=(Bool,)) ->
+"Determine whether the operator is Hermitian"
 hermitian(op :: AbstractLinearOperator) = op.hermitian
 
-Docile.@doc meta("Determine whether the operator is symmetric", returns=(Bool,)) ->
+"Determine whether the operator is symmetric"
 symmetric(op :: AbstractLinearOperator) = op.symmetric
 
 
 import Base.show
 
-Docile.@doc "Display basic information about a linear operator" ->
+"Display basic information about a linear operator"
 function show(io :: IO, op :: AbstractLinearOperator)
   s  = "Linear operator\n"
   s *= @sprintf("  nrow: %s\n", op.nrow)
@@ -81,30 +78,30 @@ end
 
 
 # Constructors.
-Docile.@doc """Construct a linear operator from a dense or sparse matrix.
+"""Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
-is symmetric and/or hermitian.""" ->
+is symmetric and/or hermitian."""
 LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,1), size(M,2), typeof(M[1,1]), symmetric, hermitian,
                  v -> M * v,
                  Nullable{Function}(u -> M.' * u),
                  Nullable{Function}(w -> M' * w))
 
-Docile.@doc "Construct a linear operator from functions." ->
+"Construct a linear operator from functions."
 LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
                symmetric :: Bool, hermitian :: Bool,
                prod :: Function, tprod :: Function, ctprod :: Function) =
   LinearOperator(nrow, ncol, dtype, symmetric, hermitian,
                  prod, Nullable{Function}(tprod), Nullable{Function}(ctprod))
 
-Docile.@doc "Construct a real symmetric linear operator from a function." ->
+"Construct a real symmetric linear operator from a function."
 LinearOperator(nrow :: Int, dtype :: DataType, prod :: Function) =
   LinearOperator(nrow, nrow, dtype, true, true,
                  prod,
                  Nullable{Function}(prod),
                  Nullable{Function}(prod))
 
-Docile.@doc "Construct a linear operator from a single function." ->
+"Construct a linear operator from a single function."
 LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
                symmetric :: Bool, hermitian :: Bool,
                prod :: Function) =
@@ -123,7 +120,7 @@ end
 
 import Base.full
 
-Docile.@doc "Materialize an operator as a dense array using `op.ncol` products" ->
+"Materialize an operator as a dense array using `op.ncol` products"
 function full(op :: AbstractLinearOperator)
   (m, n) = size(op)
   A = zeros(op.dtype, m, n)  # Must be of same dtype as operator.
@@ -280,7 +277,7 @@ end
 
 # Utility functions.
 
-Docile.@doc "Cheap check that the operator and its conjugate transposed are related." ->
+"Cheap check that the operator and its conjugate transposed are related."
 function check_ctranspose(op :: AbstractLinearOperator)
   (m, n) = size(op);
   x = rand(n);
@@ -293,7 +290,7 @@ end
 
 check_ctranspose(M :: KindOfMatrix) = check_ctranspose(LinearOperator(M))
 
-Docile.@doc "Cheap check that the operator is Hermitian." ->
+"Cheap check that the operator is Hermitian."
 function check_hermitian(op :: AbstractLinearOperator)
   m, n = size(op);
   v = rand(n);
@@ -307,7 +304,7 @@ end
 
 check_hermitian(M :: KindOfMatrix) = check_hermitian(LinearOperator(M))
 
-Docile.@doc "Cheap check that the operator is positive (semi-)definite." ->
+"Cheap check that the operator is positive (semi-)definite."
 function check_positive_definite(op :: AbstractLinearOperator; semi=false)
   m, n = size(op);
   v = rand(n);
@@ -325,33 +322,33 @@ check_positive_definite(M :: KindOfMatrix) = check_positive_definite(LinearOpera
 
 # Special linear operators.
 
-Docile.@doc "Identity operator of order `n` and of data type `dtype`." ->
+"Identity operator of order `n` and of data type `dtype`."
 opEye(n :: Int; dtype=Float64) = LinearOperator(n, n, dtype, true, true,
                                                 v -> v[:], u -> u[:], w -> w[:])
 
-Docile.@doc "Operator of all ones of size `nrow`-by-`ncol` and of data type `dtype`." ->
+"Operator of all ones of size `nrow`-by-`ncol` and of data type `dtype`."
 opOnes(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
                                                    nrow == ncol, nrow == ncol,
                                                    v -> sum(v) * ones(nrow),
                                                    u -> sum(u) * ones(ncol),
                                                    w -> sum(w) * ones(ncol))
 
-Docile.@doc "Zero operator of size `nrow`-by-`ncol` and of data type `dtype`." ->
+"Zero operator of size `nrow`-by-`ncol` and of data type `dtype`."
 opZeros(nrow, ncol; dtype=Float64) = LinearOperator(nrow, ncol, dtype,
                                                     nrow == ncol, nrow == ncol,
                                                     v -> zeros(nrow),
                                                     u -> zeros(ncol),
                                                     w -> zeros(ncol))
 
-Docile.@doc "Diagonal operator with the vector `d` on its main diagonal." ->
+"Diagonal operator with the vector `d` on its main diagonal."
 opDiagonal(d :: Vector) = LinearOperator(length(d), length(d), typeof(d[1]),
                                          true, !(typeof(d[1]) <: Complex),
                                          v -> v .* d,
                                          u -> u .* d,
                                          w -> w .* conj(d))
 
-Docile.@doc """Rectangular diagonal operator of size `nrow`-by-`ncol`
-with the vector `d` on its main diagonal.""" ->
+"""Rectangular diagonal operator of size `nrow`-by-`ncol`
+with the vector `d` on its main diagonal."""
 function opDiagonal(nrow :: Int, ncol :: Int, d :: Vector)
   if nrow == ncol
     return opDiagonal(d)
@@ -419,18 +416,18 @@ function vcat(ops :: AbstractLinearOperator...)
 end
 
 
-Docile.@doc """Inverse of a matrix as a linear operator using `\\`.
+"""Inverse of a matrix as a linear operator using `\\`.
 Useful for triangular matrices. Note that each application of this
-operator applies `\\`.""" ->
+operator applies `\\`."""
 opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,2), size(M,1), typeof(M[1,1]), symmetric, hermitian,
                  v -> M \ v, u -> M.' \ u, w -> M' \ w);
 
-Docile.@doc """Inverse of a positive definite matrix as a linear operator
+"""Inverse of a positive definite matrix as a linear operator
 using its Cholesky factorization. The factorization is computed only once.
 The optional `check` argument will perform cheap hermicity and definiteness
 checks. If the input is sparse and not positive definite, but possesses a
-LDL' factorization, the latter is computed.""" ->
+LDL' factorization, the latter is computed."""
 function opCholesky(M :: KindOfMatrix; check=false)
   (m, n) = size(M)
   if m != n
@@ -458,8 +455,8 @@ function opCholesky(M :: KindOfMatrix; check=false)
   # Todo: use iterative refinement.
 end
 
-Docile.@doc """Apply a Householder transformation defined by the vector `h`.
-The result is `x -> (I - 2 h h') x`.""" ->
+"""Apply a Householder transformation defined by the vector `h`.
+The result is `x -> (I - 2 h h') x`."""
 opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
                                             !(typeof(h[1]) <: Complex), true,
                                             v -> (v - 2 * dot(h, v) * h),
@@ -468,7 +465,7 @@ opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
 
 
 
-Docile.@doc "A symmetric/hermitian operator based on the diagonal and lower triangle." ->
+"A symmetric/hermitian operator based on the diagonal and lower triangle."
 function opHermitian(d :: Vector, T :: KindOfMatrix)
   L = tril(T, -1);
   return LinearOperator(length(d), length(d), typeof(d[1]),
@@ -479,14 +476,14 @@ function opHermitian(d :: Vector, T :: KindOfMatrix)
 end
 
 
-Docile.@doc "A symmetric/hermitian operator based on a matrix." ->
+"A symmetric/hermitian operator based on a matrix."
 function opHermitian(T :: KindOfMatrix)
   d = diag(T);
   return opHermitian(d, T);
 end
 
 
-Docile.@doc "A data type to hold information relative to LBFGS operators." ->
+"A data type to hold information relative to LBFGS operators."
 type LBFGSData
   mem :: Int;
   scaling :: Bool;
@@ -513,7 +510,7 @@ type LBFGSData
 end
 
 
-Docile.@doc "A type for limited-memory BFGS approximations." ->
+"A type for limited-memory BFGS approximations."
 type LBFGSOperator <: AbstractLinearOperator
   nrow   :: Int
   ncol   :: Int
@@ -527,7 +524,7 @@ type LBFGSOperator <: AbstractLinearOperator
   data :: LBFGSData
 end
 
-Docile.@doc "Construct a limited-memory BFGS approximation in inverse form." ->
+"Construct a limited-memory BFGS approximation in inverse form."
 function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
   lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling);
   insert = 1;
@@ -579,7 +576,7 @@ function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scalin
                        lbfgs_data)
 end
 
-Docile.@doc "Construct a limited-memory BFGS approximation in forward form." ->
+"Construct a limited-memory BFGS approximation in forward form."
 function LBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
   lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling, inverse=false);
   insert = 1;
@@ -615,7 +612,7 @@ end
 
 import Base.push!
 
-Docile.@doc "Push a new {s,y} pair into a L-BFGS operator." ->
+"Push a new {s,y} pair into a L-BFGS operator."
 function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
 
   ys = dot(y, s);
