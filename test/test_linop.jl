@@ -251,7 +251,7 @@ K = [A B' ; B -C];
 # Dense Cholesky should throw an exception.
 @test_throws Base.LinAlg.PosDefException opCholesky(K);
 
-# Sparse Cholesky computes the LDL' factorization.
-# LDL = opCholesky(sparse(K));
-# e = ones(size(K,1));
-# @test(norm(LDL * (K * e) - e) < rtol * norm(e))
+# Compute the LDL' factorization.
+LDL = opLDL(sparse(K));
+e = ones(size(K,1));
+@test(norm(LDL * (K * e) - e) < rtol * norm(e))

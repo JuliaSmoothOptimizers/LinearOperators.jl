@@ -5,7 +5,7 @@ using Compat  # for Nullable types.
 
 export AbstractLinearOperator,
        LinearOperator, opEye, opOnes, opZeros, opDiagonal,
-       opInverse, opCholesky, opHouseholder, opHermitian,
+       opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        LBFGSOperator, InverseLBFGSOperator,
        check_ctranspose, check_hermitian, check_positive_definite,
        shape, hermitian, symmetric
@@ -455,6 +455,31 @@ function opCholesky(M :: KindOfMatrix; check=false)
                           u -> L.' \ (conj(L \ conj(u))),
                           w -> L' \ (L \ w))
   end
+  # Todo: use iterative refinement.
+end
+
+"""Inverse of a symmetric matrix as a linear operator
+using its LDL' factorization if it exists. The factorization is computed
+only once. The optional `check` argument will perform a cheap hermicity
+check."""
+function opLDL(M :: SparseMatrixCSC; check=false)
+  (m, n) = size(M)
+  if m != n
+    error("Shape mismatch")
+  end
+  if check
+    check_hermitian(M) || error("Matrix is not Hermitian")
+  end
+  if VERSION < v"0.4.0-dev"
+    LDL = cholfact(M);
+  else
+    LDL = ldltfact(M)
+  end
+  return LinearOperator(m, m, typeof(M[1,1]),
+                        !(typeof(M[1,1]) <: Complex), true,
+                        v -> LDL \ v,
+                        u -> conj(LDL \ conj(u)),  # M.' = conj(M)
+                        w -> LDL \ w)
   # Todo: use iterative refinement.
 end
 
