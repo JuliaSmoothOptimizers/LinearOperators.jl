@@ -578,7 +578,7 @@ function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scalin
 
     r = q;
     if data.scaling
-      last = mod(data.insert -1, data.mem) + 1;
+      last = mod(data.insert - 2, data.mem) + 1;
       if data.ys[last] != 0
         γ = data.ys[last] / dot(data.y[:,last], data.y[:,last]);
         r *= γ
