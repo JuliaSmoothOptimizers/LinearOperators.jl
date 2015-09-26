@@ -10,7 +10,11 @@ export AbstractLinearOperator,
        check_ctranspose, check_hermitian, check_positive_definite,
        shape, hermitian, symmetric
 
-KindOfMatrix = Union(Array, SparseMatrixCSC)
+if VERSION ≥ v"0.4.0-dev"
+  KindOfMatrix = Union{Array, SparseMatrixCSC}
+else
+  KindOfMatrix = Union(Array, SparseMatrixCSC)
+end
 
 abstract AbstractLinearOperator;
 
@@ -109,6 +113,11 @@ LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
                  prod, Nullable{Function}(), Nullable{Function}())
 
 
+if VERSION ≥ v"0.4.0-dev"
+  import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
+  import Base.transpose, Base.ctranspose
+end
+
 # Apply an operator to a vector.
 function (*)(op :: AbstractLinearOperator, v :: Vector)
   (m, n) = size(op)
@@ -132,7 +141,6 @@ function full(op :: AbstractLinearOperator)
   end
   return A
 end
-
 
 # Unary operations.
 (+)(op :: AbstractLinearOperator) = op
