@@ -91,6 +91,12 @@ LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
                  Nullable{Function}(u -> M.' * u),
                  Nullable{Function}(w -> M' * w))
 
+"""Constructs a linear operator from a symmetric tridiagonal matrix. If
+its elements are real, it is also Hermitian, otherwise complex
+symmetric."""
+LinearOperator(M :: SymTridiagonal) =
+    LinearOperator(M; symmetric = true, hermitian = eltype(M) <: Real)
+
 "Construct a linear operator from functions."
 LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
                symmetric :: Bool, hermitian :: Bool,
