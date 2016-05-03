@@ -11,9 +11,9 @@ export AbstractLinearOperator,
        shape, hermitian, symmetric
 
 if VERSION ≥ v"0.4.0-dev"
-  KindOfMatrix = Union{Array, SparseMatrixCSC}
+  KindOfMatrix = Union{AbstractArray, SparseMatrixCSC}
 else
-  KindOfMatrix = Union(Array, SparseMatrixCSC)
+  KindOfMatrix = Union(AbstractArray, SparseMatrixCSC)
 end
 
 abstract AbstractLinearOperator;
