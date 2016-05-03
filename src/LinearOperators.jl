@@ -11,9 +11,9 @@ export AbstractLinearOperator,
        shape, hermitian, symmetric
 
 if VERSION ≥ v"0.4.0-dev"
-  KindOfMatrix = Union{Array, SparseMatrixCSC}
+  KindOfMatrix = Union{AbstractArray, SparseMatrixCSC}
 else
-  KindOfMatrix = Union(Array, SparseMatrixCSC)
+  KindOfMatrix = Union(AbstractArray, SparseMatrixCSC)
 end
 
 abstract AbstractLinearOperator;
@@ -90,6 +90,12 @@ LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
                  v -> M * v,
                  Nullable{Function}(u -> M.' * u),
                  Nullable{Function}(w -> M' * w))
+
+"""Constructs a linear operator from a symmetric tridiagonal matrix. If
+its elements are real, it is also Hermitian, otherwise complex
+symmetric."""
+LinearOperator(M :: SymTridiagonal) =
+    LinearOperator(M; symmetric = true, hermitian = eltype(M) <: Real)
 
 "Construct a linear operator from functions."
 LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
