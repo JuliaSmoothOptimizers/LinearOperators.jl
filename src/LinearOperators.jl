@@ -599,6 +599,10 @@ function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scalin
       end
     end
 
+
+#    Equivalent to the reverse loop 
+#    for i = data.mem :-1 :1  # reverse loop   JPD
+#      k = mod(data.insert - i - 1, data.mem) + 1;  # Use same index as first loop
     for i = 1 : data.mem
       k = mod(data.insert + i - 2, data.mem) + 1;
       if data.ys[k] != 0
