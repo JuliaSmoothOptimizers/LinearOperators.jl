@@ -1,9 +1,9 @@
 # A [Julia](http://julialang.org) Linear Operator Package
 
-[![Build Status](https://travis-ci.org/JuliaOptimizers/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/JuliaOptimizers/LinearOperators.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/l76yjaoqa4lyxhi7?svg=true)](https://ci.appveyor.com/project/dpo/linop-jl)
-[![Coveralls](https://coveralls.io/repos/JuliaOptimizers/LinearOperators.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaOptimizers/LinearOperators.jl?branch=master)
-[![codecov.io](https://codecov.io/github/JuliaOptimizers/LinearOperators.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaOptimizers/LinearOperators.jl?branch=master)
+[![Build Status](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/l76yjaoqa4lyxhi7?svg=true)](https://ci.appveyor.com/project/JuliaSmoothOptimizers/linop-jl)
+[![Coveralls](https://coveralls.io/repos/JuliaSmoothOptimizers/LinearOperators.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
+[![codecov.io](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
 
 Operators behave like matrices but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
 
@@ -14,7 +14,7 @@ Julia 0.3 and 0.4.
 ## How to Install
 
 ````JULIA
-Pkg.clone("https://github.com/dpo/LinearOperators.jl.git")
+Pkg.clone("https://github.com/JuliaSmoothOptimizers/LinearOperators.jl.git")
 ````
 
 ## Example 1
@@ -97,7 +97,7 @@ Operators can be transposed (`A.'`), conjugated (`conj(A)`) and conjugate-transp
 * [LLDL](https://github.com/optimizers/lldl) features a limited-memory
   LDL<sup>T</sup> factorization operator that may be used as preconditioner
   in iterative methods
-* [MUMPS.jl](https://github.com/dpo/MUMPS.jl) features a full
+* [MUMPS.jl](https://github.com/JuliaSmoothOptimizers/MUMPS.jl) features a full
   distributed-memory factorization operator that may be used to represent the
   preconditioner in, e.g., constraint-preconditioned Krylov methods.
 
