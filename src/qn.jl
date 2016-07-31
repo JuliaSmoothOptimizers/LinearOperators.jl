@@ -4,3 +4,4 @@ import Base.push!
 import Base.diag
 
 include("lbfgs.jl")
+include("lsr1.jl")
