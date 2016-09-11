@@ -255,3 +255,20 @@ K = [A B' ; B -C];
 LDL = opLDL(sparse(K));
 e = ones(size(K,1));
 @test(norm(LDL * (K * e) - e) < rtol * norm(e))
+
+# Test the Restriction and Extension index operators
+n = 10
+I = [1;2;4;7]
+m = length(I)
+P = RestrictionOperator(I, n)
+Z = ExtensionOperator(I, n)
+
+v = rand(n)
+w = v[I]
+vz = zeros(n); vz[I] = v[I]
+@test P*v == w
+@test P'w == vz
+@test Z*w == vz
+@test Z'*v == w
+@test (P*Z)*w == w
+@test (Z*P)*v == vz
