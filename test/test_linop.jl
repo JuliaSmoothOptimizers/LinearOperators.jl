@@ -256,12 +256,12 @@ LDL = opLDL(sparse(K));
 e = ones(size(K,1));
 @test(norm(LDL * (K * e) - e) < rtol * norm(e))
 
-# Test the Reduce and Extend index operators
+# Test the Restriction and Extension index operators
 n = 10
 I = [1;2;4;7]
 m = length(I)
-P = ReduceIndexOperator(I, n)
-Z = ExtendIndexOperator(I, n)
+P = RestrictionOperator(I, n)
+Z = ExtensionOperator(I, n)
 
 v = rand(n)
 w = v[I]
