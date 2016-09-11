@@ -7,7 +7,8 @@ export AbstractLinearOperator,
        LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
-       shape, hermitian, symmetric
+       shape, hermitian, symmetric,
+       ReduceIndexOperator, ExtendIndexOperator
 
 if VERSION ≥ v"0.4.0-dev"
   KindOfMatrix = Union{AbstractArray, SparseMatrixCSC}
@@ -524,5 +525,20 @@ function opHermitian(T :: KindOfMatrix)
 end
 
 include("qn.jl")  # quasi-Newton operators
+
+function ReduceIndexOperator(I::Array{Int, 1}, inputlen::Int; dtype::DataType=Int)
+  if any(I .> inputlen | I .< 1)
+    error("`I` should be a collection of index {1,…,n}, in this case, n=$inputlen")
+  end
+  outlen = length(I)
+  tprod(x) = begin
+    z = zeros(inputlen)
+    z[I] = x
+    return z
+  end
+  return LinearOperator(outlen, inputlen, dtype, false, false, x->x[I], tprod, tprod)
+end  
+
+ExtendIndexOperator(I::Array{Int, 1}, outlen::Int; dtype::DataType=Int) = ReduceIndexOperator(I, outlen)'
 
 end  # module
