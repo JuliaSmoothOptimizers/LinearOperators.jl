@@ -6,6 +6,8 @@ type LBFGSData
   mem :: Int
   scaling :: Bool
   scaling_factor :: Float64
+  damped :: Bool
+  damp_factor :: Float64
   s   :: Array
   y   :: Array
   ys  :: Vector
@@ -15,10 +17,15 @@ type LBFGSData
   insert :: Int
 
   function LBFGSData(n :: Int, mem :: Int;
-                     dtype :: DataType=Float64, scaling :: Bool=false, inverse :: Bool=true)
+                     dtype :: DataType=Float64,
+                     scaling :: Bool=false,
+                     damped :: Bool=false,
+                     inverse :: Bool=true)
     return new(max(mem, 1),
                scaling,
                1.0,
+               damped,
+               0.2,
                zeros(dtype, n, mem),
                zeros(dtype, n, mem),
                zeros(dtype, mem),
@@ -130,9 +137,27 @@ end
 function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
 
   ys = dot(y, s)
-  if ys <= 1.0e-20
-    # op.counters.rejects +=1
-    return op
+
+  if op.data.damped
+    # Powell's damped update strategy
+    if op.inverse
+      By = op * y
+      yBy = dot(y, By)
+      θ = ys ≥ op.data.damp_factor * yBy ? 1.0 : ((1.0 - op.data.damp_factor) * yBy / (yBy - ys))
+      damped_s = θ * s + (1 - θ) * By
+      ys = dot(y, damped_s)
+    else
+      Bs = op * s
+      sBs = dot(s, Bs)
+      θ = ys ≥ op.data.damp_factor * sBs ? 1.0 : ((1.0 - op.data.damp_factor) * sBs / (sBs - ys))
+      damped_y = θ * y + (1 - θ) * Bs
+      ys = dot(damped_y, s)
+    end
+  else
+    if ys <= 1.0e-20
+      # op.counters.rejects +=1
+      return op
+    end
   end
 
   # op.counters.updates += 1
