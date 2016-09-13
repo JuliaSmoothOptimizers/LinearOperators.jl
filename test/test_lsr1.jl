@@ -6,25 +6,32 @@ n = 10
 mem = 5
 B = LSR1Operator(n, mem)
 
-@assert norm(diag(B) - diag(full(B))) <= rtol
+for t = 1:2
+  @assert norm(diag(B) - diag(full(B))) <= rtol
 
-@assert B.data.insert == 1
-@test norm(full(B) - eye(n)) <= ϵ
+  @assert B.data.insert == 1
+  @test norm(full(B) - eye(n)) <= ϵ
 
-# Test that only valid updates are accepted.
-s = rand(n)
-y = B * s
-push!(B, s, y); @assert B.data.insert == 1
-
-# Insert a few {s,y} pairs.
-for i = 1 : mem+2
+  # Test that only valid updates are accepted.
   s = rand(n)
-  y = rand(n)
-  push!(B, s, y)
-end
+  y = B * s
+  push!(B, s, y); @assert B.data.insert == 1
 
-@test check_hermitian(B)
-@assert norm(diag(B) - diag(full(B))) <= rtol
+  # Insert a few {s,y} pairs.
+  for i = 1 : mem+2
+    s = rand(n)
+    y = rand(n)
+    push!(B, s, y)
+  end
+
+  @test check_hermitian(B)
+  @assert norm(diag(B) - diag(full(B))) <= rtol
+
+  v = rand(n)
+  @assert norm(B * v - v) > rtol
+  reset!(B)
+  @assert norm(B * v - v) < rtol
+end
 
 # test against full SR1 without scaling
 mem = n

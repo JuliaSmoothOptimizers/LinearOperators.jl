@@ -1,4 +1,4 @@
-export LBFGSOperator, InverseLBFGSOperator
+export LBFGSOperator, InverseLBFGSOperator, reset!
 
 
 "A data type to hold information relative to LBFGS operators."
@@ -28,7 +28,6 @@ type LBFGSData
                1)
   end
 end
-
 
 "A type for limited-memory BFGS approximations."
 type LBFGSOperator <: AbstractLinearOperator
@@ -189,4 +188,22 @@ function diag(op :: LBFGSOperator)
     end
   end
   return d
+end
+
+"Resets the given LBFGS data."
+function reset!(data :: LBFGSData)
+  fill!(data.s, 0)
+  fill!(data.y, 0)
+  fill!(data.ys, 0)
+  fill!(data.α , 0)
+  fill!(data.a, 0)
+  fill!(data.b, 0)
+  data.insert = 1
+  return data
+end
+
+"Resets the LBFGS data of the given operator."
+function reset!(op :: LBFGSOperator)
+  reset!(op.data)
+  return op
 end

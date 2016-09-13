@@ -1,4 +1,4 @@
-export LSR1Operator  #, InverseLSR1Operator
+export LSR1Operator, reset!  #, InverseLSR1Operator
 
 "A data type to hold information relative to LSR1 operators."
 type LSR1Data
@@ -25,7 +25,6 @@ type LSR1Data
                1)
   end
 end
-
 
 "A type for limited-memory SR1 approximations."
 type LSR1Operator <: AbstractLinearOperator
@@ -148,4 +147,21 @@ function diag(op :: LSR1Operator)
     end
   end
   return d
+end
+
+"Reset the given LSR1 data."
+function reset!(data :: LSR1Data)
+  fill!(data.s, 0)
+  fill!(data.y, 0)
+  fill!(data.ys, 0)
+  fill!(data.a, 0)
+  fill!(data.as, 0)
+  data.insert = 1
+  return data
+end
+
+"Resets the LSR1 data of the given operator."
+function reset!(op :: LSR1Operator)
+  reset!(op.data)
+  return op
 end
