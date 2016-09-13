@@ -149,15 +149,19 @@ function diag(op :: LSR1Operator)
   return d
 end
 
+"Reset the given LSR1 data."
 function reset!(data :: LSR1Data)
-  data.s[:] = 0
-  data.y[:] = 0
-  data.ys[:] = 0
-  data.a[:] = 0
-  data.as[:] = 0
+  fill!(data.s, 0)
+  fill!(data.y, 0)
+  fill!(data.ys, 0)
+  fill!(data.a, 0)
+  fill!(data.as, 0)
   data.insert = 1
+  return data
 end
 
+"Resets the LSR1 data of the given operator."
 function reset!(op :: LSR1Operator)
   reset!(op.data)
+  return op
 end

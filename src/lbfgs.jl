@@ -190,21 +190,20 @@ function diag(op :: LBFGSOperator)
   return d
 end
 
-function reset!(data :: LBFGSData, inverse :: Bool=true)
-  dtype = typeof(data.ys[1])
-  n = size(data.s, 1)
-  data.s[:] = 0
-  data.y[:] = 0
-  data.ys[:] = 0
-  if inverse # data.a and data.b are not used
-    data.α[:]  = 0
-  else # data.α is not used
-    data.a[:] = 0
-    data.b[:] = 0
-  end
+"Resets the given LBFGS data."
+function reset!(data :: LBFGSData)
+  fill!(data.s, 0)
+  fill!(data.y, 0)
+  fill!(data.ys, 0)
+  fill!(data.α , 0)
+  fill!(data.a, 0)
+  fill!(data.b, 0)
   data.insert = 1
+  return data
 end
 
+"Resets the LBFGS data of the given operator."
 function reset!(op :: LBFGSOperator)
-  reset!(op.data, op.inverse)
+  reset!(op.data)
+  return op
 end
