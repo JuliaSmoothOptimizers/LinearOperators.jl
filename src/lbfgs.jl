@@ -1,4 +1,4 @@
-export LBFGSOperator, InverseLBFGSOperator
+export LBFGSOperator, InverseLBFGSOperator, reset!
 
 
 "A data type to hold information relative to LBFGS operators."
@@ -28,7 +28,6 @@ type LBFGSData
                1)
   end
 end
-
 
 "A type for limited-memory BFGS approximations."
 type LBFGSOperator <: AbstractLinearOperator
@@ -189,4 +188,23 @@ function diag(op :: LBFGSOperator)
     end
   end
   return d
+end
+
+function reset!(data :: LBFGSData, inverse :: Bool=true)
+  dtype = typeof(data.ys[1])
+  n = size(data.s, 1)
+  data.s[:] = 0
+  data.y[:] = 0
+  data.ys[:] = 0
+  if inverse # data.a and data.b are not used
+    data.α[:]  = 0
+  else # data.α is not used
+    data.a[:] = 0
+    data.b[:] = 0
+  end
+  data.insert = 1
+end
+
+function reset!(op :: LBFGSOperator)
+  reset!(op.data, op.inverse)
 end
