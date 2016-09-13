@@ -6,6 +6,8 @@ type LBFGSData{T}
   mem :: Int
   scaling :: Bool
   scaling_factor :: T
+  damped :: Bool
+  damp_factor :: T
   s   :: Array{T}
   y   :: Array{T}
   ys  :: Vector{T}
@@ -15,10 +17,13 @@ type LBFGSData{T}
   insert :: Int
 end
 
-function LBFGSData(T :: DataType, n :: Int, mem :: Int; scaling :: Bool=false, inverse :: Bool=true)
+function LBFGSData(T :: DataType, n :: Int, mem :: Int;
+                   scaling :: Bool=false, damped :: Bool=false, inverse :: Bool=true)
   LBFGSData{T}(max(mem, 1),
                scaling,
                convert(T, 1),
+               damped,
+               convert(T, 0.2),
                zeros(T, n, mem),
                zeros(T, n, mem),
                zeros(T, mem),
@@ -51,9 +56,11 @@ end
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
+function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
 
-  lbfgs_data = LBFGSData(T, n, mem; inverse=true, scaling=scaling)
+  kwargs = Dict(kwargs)
+  delete!(kwargs, :inverse)
+  lbfgs_data = LBFGSData(T, n, mem; inverse=true, kwargs...)
 
   function lbfgs_multiply(data :: LBFGSData, x :: Array)
     # Multiply operator with a vector.
@@ -105,8 +112,11 @@ InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(F
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
-  lbfgs_data = LBFGSData(T, n, mem, inverse=false, scaling=scaling)
+function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
+
+  kwargs = Dict(kwargs)
+  delete!(kwargs, :inverse)
+  lbfgs_data = LBFGSData(T, n, mem; inverse=false, kwargs...)
 
   function lbfgs_multiply(data :: LBFGSData, x :: Array)
     # Multiply operator with a vector.
@@ -149,9 +159,27 @@ Push a new {s,y} pair into a L-BFGS operator.
 function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
 
   ys = dot(y, s)
-  if ys <= 1.0e-20
-    # op.counters.rejects +=1
-    return op
+
+  if op.data.damped
+    # Powell's damped update strategy
+    if op.inverse
+      By = op * y
+      yBy = dot(y, By)
+      θ = ys ≥ op.data.damp_factor * yBy ? 1.0 : ((1.0 - op.data.damp_factor) * yBy / (yBy - ys))
+      damped_s = θ * s + (1 - θ) * By
+      ys = dot(y, damped_s)
+    else
+      Bs = op * s
+      sBs = dot(s, Bs)
+      θ = ys ≥ op.data.damp_factor * sBs ? 1.0 : ((1.0 - op.data.damp_factor) * sBs / (sBs - ys))
+      damped_y = θ * y + (1 - θ) * Bs
+      ys = dot(damped_y, s)
+    end
+  else
+    if ys <= 1.0e-20
+      # op.counters.rejects +=1
+      return op
+    end
   end
 
   # op.counters.updates += 1
