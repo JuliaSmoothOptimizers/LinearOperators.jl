@@ -24,17 +24,19 @@ for t = 1:2 # Run again after reset!
   push!(H, s,  z); @assert H.data.insert == 1
 
   # Insert a few {s,y} pairs.
+  insert = 1
   for i = 1 : mem+2
     s = rand(n)
     y = rand(n)
-    if dot(s, y) >= 1.0e-20
+    if dot(s, y) > 1.0e-20
+      insert += 1
       push!(B, s, y)
       push!(H, s, y)
     end
   end
 
-  @assert B.data.insert == 3
-  @assert H.data.insert == 3
+  @assert B.data.insert == mod(insert, B.data.mem)
+  @assert H.data.insert == mod(insert, H.data.mem)
 
   @test check_positive_definite(B)
   @test check_positive_definite(H)
