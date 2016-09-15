@@ -52,9 +52,12 @@ end
 
 
 "Construct a limited-memory BFGS approximation in inverse form."
-function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
+function InverseLBFGSOperator(n, mem :: Int=5; kwargs...)
 
-  lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling)
+  kwargs = Dict(kwargs)
+  delete!(kwargs, :inverse)
+  dtype = getkey(kwargs, :dtype, Float64)
+  lbfgs_data = LBFGSData(n, mem; inverse=true, kwargs...)
 
   function lbfgs_multiply(data :: LBFGSData, x :: Array)
     # Multiply operator with a vector.
@@ -98,8 +101,12 @@ end
 
 
 "Construct a limited-memory BFGS approximation in forward form."
-function LBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
-  lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling, inverse=false)
+function LBFGSOperator(n, mem :: Int=5; kwargs...)
+
+  kwargs = Dict(kwargs)
+  delete!(kwargs, :inverse)
+  dtype = getkey(kwargs, :dtype, Float64)
+  lbfgs_data = LBFGSData(n, mem; inverse=false, kwargs...)
 
   function lbfgs_multiply(data :: LBFGSData, x :: Array)
     # Multiply operator with a vector.
