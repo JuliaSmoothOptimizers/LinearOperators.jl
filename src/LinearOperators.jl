@@ -10,11 +10,6 @@ export AbstractLinearOperator,
        shape, hermitian, symmetric,
        RestrictionOperator, ExtensionOperator
 
-if VERSION ≥ v"0.4.0-dev"
-  KindOfMatrix = Union{AbstractArray, SparseMatrixCSC}
-else
-  KindOfMatrix = Union(AbstractArray, SparseMatrixCSC)
-end
 
 abstract AbstractLinearOperator;
 
@@ -85,7 +80,7 @@ end
 """Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian."""
-LinearOperator(M :: KindOfMatrix; symmetric=false, hermitian=false) =
+LinearOperator(M :: AbstractMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,1), size(M,2), typeof(M[1,1]), symmetric, hermitian,
                  v -> M * v,
                  Nullable{Function}(u -> M.' * u),
@@ -233,8 +228,8 @@ function (*)(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
 end
 
 ## Matrix times operator.
-(*)(M :: KindOfMatrix, op :: AbstractLinearOperator) = LinearOperator(M) * op
-(*)(op :: AbstractLinearOperator, M :: KindOfMatrix) = op * LinearOperator(M)
+(*)(M :: AbstractMatrix, op :: AbstractLinearOperator) = LinearOperator(M) * op
+(*)(op :: AbstractLinearOperator, M :: AbstractMatrix) = op * LinearOperator(M)
 
 ## Scalar times operator.
 (*)(op :: AbstractLinearOperator, x :: Number) = LinearOperator(op.nrow, op.ncol,
@@ -270,8 +265,8 @@ function (+)(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
 end
 
 # Operator + matrix.
-(+)(M :: KindOfMatrix, op :: AbstractLinearOperator) = LinearOperator(M) + op
-(+)(op :: AbstractLinearOperator, M :: KindOfMatrix) = op + LinearOperator(M)
+(+)(M :: AbstractMatrix, op :: AbstractLinearOperator) = LinearOperator(M) + op
+(+)(op :: AbstractLinearOperator, M :: AbstractMatrix) = op + LinearOperator(M)
 
 # Operator .+ scalar.
 (.+)(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
@@ -281,8 +276,8 @@ end
 (-)(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator) = op1 + (-op2)
 
 # Operator - matrix.
-(-)(M :: KindOfMatrix, op :: AbstractLinearOperator) = LinearOperator(M) - op
-(-)(op :: AbstractLinearOperator, M :: KindOfMatrix) = op - LinearOperator(M)
+(-)(M :: AbstractMatrix, op :: AbstractLinearOperator) = LinearOperator(M) - op
+(-)(op :: AbstractLinearOperator, M :: AbstractMatrix) = op - LinearOperator(M)
 
 # Operator - scalar.
 (.-)(op :: AbstractLinearOperator, x :: Number) = op .+ (-x)
@@ -302,7 +297,7 @@ function check_ctranspose(op :: AbstractLinearOperator)
   return abs(yAx - conj(xAty)) < (abs(yAx) + ε) * ε^(1/3);
 end
 
-check_ctranspose(M :: KindOfMatrix) = check_ctranspose(LinearOperator(M))
+check_ctranspose(M :: AbstractMatrix) = check_ctranspose(LinearOperator(M))
 
 "Cheap check that the operator is Hermitian."
 function check_hermitian(op :: AbstractLinearOperator)
@@ -316,7 +311,7 @@ function check_hermitian(op :: AbstractLinearOperator)
   return abs(s - t) < (abs(s) + ε) * ε^(1/3);
 end
 
-check_hermitian(M :: KindOfMatrix) = check_hermitian(LinearOperator(M))
+check_hermitian(M :: AbstractMatrix) = check_hermitian(LinearOperator(M))
 
 "Cheap check that the operator is positive (semi-)definite."
 function check_positive_definite(op :: AbstractLinearOperator; semi=false)
@@ -332,7 +327,7 @@ function check_positive_definite(op :: AbstractLinearOperator; semi=false)
   return semi ? (vw ≥ 0) : (vw > 0)
 end
 
-check_positive_definite(M :: KindOfMatrix) = check_positive_definite(LinearOperator(M))
+check_positive_definite(M :: AbstractMatrix) = check_positive_definite(LinearOperator(M))
 
 # Special linear operators.
 
@@ -433,7 +428,7 @@ end
 """Inverse of a matrix as a linear operator using `\\`.
 Useful for triangular matrices. Note that each application of this
 operator applies `\\`."""
-opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
+opInverse(M :: AbstractMatrix; symmetric=false, hermitian=false) =
   LinearOperator(size(M,2), size(M,1), typeof(M[1,1]), symmetric, hermitian,
                  v -> M \ v, u -> M.' \ u, w -> M' \ w);
 
@@ -441,7 +436,7 @@ opInverse(M :: KindOfMatrix; symmetric=false, hermitian=false) =
 using its Cholesky factorization. The factorization is computed only once.
 The optional `check` argument will perform cheap hermicity and definiteness
 checks."""
-function opCholesky(M :: KindOfMatrix; check=false)
+function opCholesky(M :: AbstractMatrix; check=false)
   (m, n) = size(M)
   if m != n
     error("Shape mismatch")
@@ -508,7 +503,7 @@ opHouseholder(h :: Vector) = LinearOperator(length(h), length(h), typeof(h[1]),
 
 
 "A symmetric/hermitian operator based on the diagonal and lower triangle."
-function opHermitian(d :: Vector, T :: KindOfMatrix)
+function opHermitian(d :: Vector, T :: AbstractMatrix)
   L = tril(T, -1);
   return LinearOperator(length(d), length(d), typeof(d[1]),
                         !(typeof(d[1]) <: Complex), true,
@@ -519,7 +514,7 @@ end
 
 
 "A symmetric/hermitian operator based on a matrix."
-function opHermitian(T :: KindOfMatrix)
+function opHermitian(T :: AbstractMatrix)
   d = diag(T);
   return opHermitian(d, T);
 end
