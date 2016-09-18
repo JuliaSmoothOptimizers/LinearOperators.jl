@@ -9,8 +9,15 @@ export AbstractLinearOperator,
        RestrictionOperator, ExtensionOperator
 
 
-abstract AbstractLinearOperator;
+# import methods we overload
+import Base.eltype, Base.size, Base.show
+import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
+import Base.transpose, Base.ctranspose
+import Base.full
+import Base.conj
+import Base.hcat, Base.vcat
 
+abstract AbstractLinearOperator
 
 """Abstract object to represent a linear operator.
 The usual arithmetic operations may be applied to operators
@@ -30,7 +37,6 @@ type LinearOperator <: AbstractLinearOperator
 end
 
 
-import Base.size
 
 "Return the size of a linear operator as a tuple"
 size(op :: AbstractLinearOperator) = (op.nrow, op.ncol)
@@ -55,8 +61,6 @@ hermitian(op :: AbstractLinearOperator) = op.hermitian
 "Determine whether the operator is symmetric"
 symmetric(op :: AbstractLinearOperator) = op.symmetric
 
-
-import Base.show
 
 "Display basic information about a linear operator"
 function show(io :: IO, op :: AbstractLinearOperator)
@@ -112,9 +116,6 @@ LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
                  prod, Nullable{Function}(), Nullable{Function}())
 
 
-import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
-import Base.transpose, Base.ctranspose
-
 # Apply an operator to a vector.
 function (*)(op :: AbstractLinearOperator, v :: Vector)
   (m, n) = size(op)
@@ -124,7 +125,6 @@ function (*)(op :: AbstractLinearOperator, v :: Vector)
   return op.prod(v)
 end
 
-import Base.full
 
 "Materialize an operator as a dense array using `op.ncol` products"
 function full(op :: AbstractLinearOperator)
@@ -199,7 +199,6 @@ function ctranspose(op :: LinearOperator)
                         Nullable{Function}(op.prod))
 end
 
-import Base.conj
 function conj(op :: AbstractLinearOperator)
   return LinearOperator(op.nrow, op.ncol, op.dtype, op.symmetric, op.hermitian,
                         v -> conj(op.prod(conj(v))),
@@ -373,7 +372,6 @@ function opDiagonal(nrow :: Int, ncol :: Int, d :: Vector)
 end
 
 
-import Base.hcat
 function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   A.nrow != B.nrow && error("hcat: inconsistent row sizes")
 
@@ -396,7 +394,6 @@ function hcat(ops :: AbstractLinearOperator...)
   return op
 end
 
-import Base.vcat
 
 function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   A.ncol != B.ncol && error("vcat: inconsistent column sizes")
