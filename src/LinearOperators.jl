@@ -1,8 +1,6 @@
 # Linear Operators for Julia
 module LinearOperators
 
-using Compat  # for Nullable types.
-
 export AbstractLinearOperator,
        LinearOperator, opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
@@ -114,10 +112,8 @@ LinearOperator(nrow :: Int, ncol :: Int, dtype :: DataType,
                  prod, Nullable{Function}(), Nullable{Function}())
 
 
-if VERSION ≥ v"0.4.0-dev"
-  import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
-  import Base.transpose, Base.ctranspose
-end
+import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
+import Base.transpose, Base.ctranspose
 
 # Apply an operator to a vector.
 function (*)(op :: AbstractLinearOperator, v :: Vector)
@@ -453,11 +449,7 @@ function opCholesky(M :: AbstractMatrix; check=false)
                           u -> conj(LL \ conj(u)),  # M.' = conj(M)
                           w -> LL \ w)
   else
-    if VERSION < v"0.4.0-dev"
-      L = chol(M, :L)
-    else
-      L = chol(M, Val{:L})
-    end
+    L = chol(M, Val{:L})
     return LinearOperator(m, m, typeof(M[1,1]),
                           !(typeof(M[1,1]) <: Complex), true,
                           v -> L' \ (L \ v),
@@ -479,11 +471,7 @@ function opLDL(M :: SparseMatrixCSC; check=false)
   if check
     check_hermitian(M) || error("Matrix is not Hermitian")
   end
-  if VERSION < v"0.4.0-dev"
-    LDL = cholfact(M);
-  else
-    LDL = ldltfact(M)
-  end
+  LDL = ldltfact(M)
   return LinearOperator(m, m, typeof(M[1,1]),
                         !(typeof(M[1,1]) <: Complex), true,
                         v -> LDL \ v,
