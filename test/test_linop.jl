@@ -6,13 +6,17 @@ A1 = rand(nrow, ncol) + rand(nrow, ncol) * im;
 op = LinearOperator(A1);
 show(op);
 
+# Test data type.
+@test eltype(op) == eltype(A1)
+@test !isreal(op)
+
 # Test size().
 @test(size(op) == (nrow, ncol));
 @test(shape(op) == (nrow, ncol));
 @test(size(op, 1) == nrow);
 @test(size(op, 2) == ncol);
-@test_throws ErrorException size(op, 3)
-@test_throws ErrorException op * rand(ncol + 1)
+@test_throws LinearOperatorException size(op, 3)
+@test_throws LinearOperatorException op * rand(ncol + 1)
 
 # Test boolean operators.
 @test(symmetric(op) == false);
@@ -93,8 +97,8 @@ u = rand(nrow) + rand(nrow) * im;
 @test(norm(opC.' * u - C.' * u) <= rtol * norm(u));
 @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
 
-@test_throws ErrorException LinearOperator(A1) + LinearOperator(B2);
-@test_throws ErrorException LinearOperator(B2) * LinearOperator(A1);
+@test_throws LinearOperatorException LinearOperator(A1) + LinearOperator(B2);
+@test_throws LinearOperatorException LinearOperator(B2) * LinearOperator(A1);
 
 # Matrix * operator.
 A1B2 = A1 * B2;
@@ -203,8 +207,8 @@ Binv = opCholesky(B, check=true);
 @test(norm(B.' \ v - Binv.' * v) <= rtol * norm(v));
 @test(norm(B' \ v - Binv' * v) <= rtol * norm(v));
 
-@test_throws ErrorException opCholesky(rand(3,5));
-@test_throws ErrorException opCholesky(rand(5,5), check=true);
+@test_throws LinearOperatorException opCholesky(rand(3,5));
+@test_throws LinearOperatorException opCholesky(rand(5,5), check=true);
 
 # Test opHouseholder.
 H = opHouseholder(v);
@@ -224,10 +228,11 @@ H = opHermitian(C);
 @test(! check_positive_definite(LinearOperator(-A'*A)));
 
 # Test inference.
-op = LinearOperator(5, 3, Complex128, false, false,
+op = LinearOperator(5, 3, false, false,
                     p -> ones(5) + im * ones(5));
-@test_throws ErrorException op.'
-@test_throws ErrorException op'
+@test eltype(op) == Complex128
+@test_throws LinearOperatorException op.'  # cannot be inferred
+@test_throws LinearOperatorException op'   # cannot be inferred
 
 op2 = conj(op);
 @test(vecnorm(full(op2) - conj(full(op))) <= ϵ * vecnorm(full(op)));
@@ -236,11 +241,11 @@ A = rand(5,3) + im * rand(5,3);
 op = LinearOperator(A);
 @test(check_ctranspose(A));
 @test(check_ctranspose(op));
-@test_throws ErrorException opCholesky(A)  # Shape mismatch
+@test_throws LinearOperatorException opCholesky(A)  # Shape mismatch
 
 A = rand(5,5) + im * rand(5,5);
-@test_throws ErrorException opCholesky(A, check=true)  # Not Hermitian / positive definite
-@test_throws ErrorException opCholesky(-A'*A, check=true)  # Not positive definite
+@test_throws LinearOperatorException opCholesky(A, check=true)  # Not Hermitian / positive definite
+@test_throws LinearOperatorException opCholesky(-A'*A, check=true)  # Not positive definite
 
 # Test Cholesky operator on SQD matrix.
 A = rand(3,3); A = A'*A;
