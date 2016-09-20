@@ -31,7 +31,6 @@ LSR1Data(n :: Int, mem :: Int; kwargs...) = LSR1Data(Float64, n, mem; kwargs...)
 type LSR1Operator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
-  dtype   :: DataType
   symmetric :: Bool
   hermitian :: Bool
   prod   :: Function           # apply the operator to a vector
@@ -66,7 +65,7 @@ function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=fal
     return q
   end
 
-  return LSR1Operator{T}(n, n, T, true, true,
+  return LSR1Operator{T}(n, n, true, true,
                          x -> lsr1_multiply(lsr1_data, x),
                          Nullable{Function}(),
                          Nullable{Function}(),
