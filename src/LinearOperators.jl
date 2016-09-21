@@ -469,7 +469,7 @@ function opCholesky(M :: AbstractMatrix; check :: Bool=false)
                                       u -> conj(LL \ conj(u)),  # M.' = conj(M)
                                       w -> LL \ w)
   else
-    L = chol(M, Val{:L})
+    L = chol(M)'
     return LinearOperator{eltype(L)}(m, m, isreal(M), true,
                                      v -> L' \ (L \ v),
                                      u -> L.' \ (conj(L \ conj(u))),
