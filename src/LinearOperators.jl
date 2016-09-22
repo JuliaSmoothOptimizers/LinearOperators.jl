@@ -75,7 +75,7 @@ function show(io :: IO, op :: AbstractLinearOperator)
   s  = "Linear operator\n"
   s *= @sprintf("  nrow: %s\n", op.nrow)
   s *= @sprintf("  ncol: %d\n", op.ncol)
-  s *= @sprintf("  dtype: %s\n", eltype(op))
+  s *= @sprintf("  eltype: %s\n", eltype(op))
   s *= @sprintf("  symmetric: %s\n", op.symmetric)
   s *= @sprintf("  hermitian: %s\n", op.hermitian)
   s *= @sprintf("  prod:   %s\n", string(op.prod))
