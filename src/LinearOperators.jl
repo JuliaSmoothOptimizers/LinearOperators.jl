@@ -102,6 +102,17 @@ symmetric."""
 LinearOperator{T}(M :: SymTridiagonal{T}) =
     LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
 
+"""Constructs a linear operator from a symmetric matrix. If
+its elements are real, it is also Hermitian, otherwise complex
+symmetric."""
+LinearOperator{T}(M :: Symmetric{T}) =
+    LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
+
+"""Constructs a linear operator from a Hermitian matrix. If
+its elements are real, it is also symmetric."""
+LinearOperator{T}(M :: Hermitian{T}) =
+    LinearOperator(M; symmetric=eltype(M) <: Real, hermitian=true)
+
 # the only advantage of this constructor is optional args
 # use LinearOperator{Float64} if you mean real instead of complex
 "Construct a linear operator from functions."
