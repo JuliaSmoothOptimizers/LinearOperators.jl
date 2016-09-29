@@ -6,7 +6,7 @@ export AbstractLinearOperator, LinearOperator,
        opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
-       shape, hermitian, symmetric,
+       shape, hermitian, ishermitian, symmetric, issymmetric,
        RestrictionOperator, ExtensionOperator
 
 
@@ -20,6 +20,7 @@ import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
 import Base.transpose, Base.ctranspose
 import Base.full
 import Base.conj
+import Base.issymmetric, Base.ishermitian
 import Base.hcat, Base.vcat
 
 abstract AbstractLinearOperator{T}
@@ -65,9 +66,11 @@ shape(op :: AbstractLinearOperator) = size(op)
 
 "Determine whether the operator is Hermitian"
 hermitian(op :: AbstractLinearOperator) = op.hermitian
+ishermitian(op :: AbstractLinearOperator) = op.hermitian
 
 "Determine whether the operator is symmetric"
 symmetric(op :: AbstractLinearOperator) = op.symmetric
+issymmetric(op :: AbstractLinearOperator) = op.symmetric
 
 
 "Display basic information about a linear operator"
