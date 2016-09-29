@@ -143,7 +143,7 @@ end
 
 
 # Apply an operator to a vector.
-function *(op :: AbstractLinearOperator, v :: Vector)
+function *(op :: AbstractLinearOperator, v :: AbstractVector)
   size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
   op.prod(v)
 end
@@ -388,14 +388,14 @@ opZeros(T :: DataType, nrow :: Int, ncol :: Int) = LinearOperator{T}(nrow, ncol,
 opZeros(nrow :: Int, ncol :: Int) = opZeros(Float64, nrow, ncol)
 
 "Diagonal operator with the vector `d` on its main diagonal."
-opDiagonal{T}(d :: Vector{T}) = LinearOperator{T}(length(d), length(d), true, isreal(d),
-                                                  v -> v .* d,
-                                                  u -> u .* d,
-                                                  w -> w .* conj(d))
+opDiagonal{T}(d :: AbstractVector{T}) = LinearOperator{T}(length(d), length(d), true, isreal(d),
+                                                          v -> v .* d,
+                                                          u -> u .* d,
+                                                          w -> w .* conj(d))
 
 """Rectangular diagonal operator of size `nrow`-by-`ncol`
 with the vector `d` on its main diagonal."""
-function opDiagonal{T}(nrow :: Int, ncol :: Int, d :: Vector{T})
+function opDiagonal{T}(nrow :: Int, ncol :: Int, d :: AbstractVector{T})
   nrow == ncol <= length(d) && (return opDiagonal(d[1:nrow]))
   if nrow > ncol
     D = LinearOperator{T}(nrow, ncol, false, false,
@@ -512,15 +512,14 @@ end
 
 """Apply a Householder transformation defined by the vector `h`.
 The result is `x -> (I - 2 h h') x`."""
-opHouseholder{T}(h :: Vector{T}) = LinearOperator{T}(length(h), length(h), isreal(h), true,
-                                                     v -> (v - 2 * dot(h, v) * h),
-                                                     Nullable{Function}(),  # Will be inferred.
-                                                     w -> (w - 2 * dot(h, w) * h))
-
+opHouseholder{T}(h :: AbstractVector{T}) = LinearOperator{T}(length(h), length(h), isreal(h), true,
+                                                             v -> (v - 2 * dot(h, v) * h),
+                                                             Nullable{Function}(),  # Will be inferred.
+                                                             w -> (w - 2 * dot(h, w) * h))
 
 
 "A symmetric/hermitian operator based on the diagonal and lower triangle."
-function opHermitian{S,T}(d :: Vector{S}, A :: AbstractMatrix{T})
+function opHermitian{S,T}(d :: AbstractVector{S}, A :: AbstractMatrix{T})
   m, n = size(A)
   m == n == length(d) || throw(LinearOperatorException("shape mismatch"))
   L = tril(A, -1)
@@ -540,7 +539,7 @@ end
 
 include("qn.jl")  # quasi-Newton operators
 
-function RestrictionOperator(I :: Vector{Int}, ncol :: Int)
+function RestrictionOperator(I :: AbstractVector{Int}, ncol :: Int)
   if any(I .> ncol | I .< 1)
     throw(LinearOperatorException("`I` should be a collection of index {1,…,n}, in this case, n=$ncol"))
   end
@@ -553,6 +552,6 @@ function RestrictionOperator(I :: Vector{Int}, ncol :: Int)
   return LinearOperator{Int}(nrow, ncol, false, false, x -> x[I], tprod, tprod)
 end  
 
-ExtensionOperator(I :: Vector{Int}, ncol :: Int) = RestrictionOperator(I, ncol)'
+ExtensionOperator(I :: AbstractVector{Int}, ncol :: Int) = RestrictionOperator(I, ncol)'
 
 end  # module
