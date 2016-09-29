@@ -3,6 +3,7 @@ module LinearOperators
 
 export AbstractLinearOperator, LinearOperator,
        LinearOperatorException,
+       A_mul_B!,
        opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
@@ -17,6 +18,7 @@ end
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
+import Base.A_mul_B!
 import Base.transpose, Base.ctranspose
 import Base.full
 import Base.conj
@@ -146,6 +148,11 @@ end
 function *(op :: AbstractLinearOperator, v :: AbstractVector)
   size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
   op.prod(v)
+end
+
+function A_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
+  y[:] = op * x
+  return y
 end
 
 # function *{T}(op :: AbstractLinearOperator{T}, v :: Vector{T})
