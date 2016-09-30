@@ -131,18 +131,6 @@ function LinearOperator(nrow :: Int, ncol :: Int,
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
-# "Construct a real symmetric or complex hermitian linear operator from a function."
-# LinearOperator(nrow :: Int, T :: DataType, prod :: Function) =
-#   LinearOperator{T}(nrow, nrow, T <: Real, T <: Real || T <: Complex,
-#                     prod, Nullable{Function}(prod), Nullable{Function}(prod))
-
-# "Construct a linear operator from a single function."
-# LinearOperator(nrow :: Int, ncol :: Int,
-#                symmetric :: Bool, hermitian :: Bool,
-#                prod :: Function) =
-#   LinearOperator(nrow, ncol, symmetric, hermitian,
-#                  prod, Nullable{Function}(), Nullable{Function}())
-
 
 # Apply an operator to a vector.
 function *(op :: AbstractLinearOperator, v :: AbstractVector)
@@ -154,22 +142,6 @@ function A_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: Abstra
   y[:] = op * x
   return y
 end
-
-# function *{T}(op :: AbstractLinearOperator{T}, v :: Vector{T})
-#   size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
-#   op.prod(v)
-# end
-
-# *{T, S}(op::AbstractLinearOperator{T}, v::Vector{S}) = op * convert(Vector{T}, v)
-
-# function *{T, S}(op::AbstractLinearOperator{T}, v::Vector{S})
-#   if S <: T
-#     return op * convert(Vector{T}, v)
-#   end
-#   U = promote_type(T, S)
-#   opU = LinearOperator{U}(size(op)..., op.symmetric, op.hermitian, op.prod, op.tprod, op.ctprod)
-#   return opU * convert(Vector{U}, v)
-# end
 
 
 "Materialize an operator as a dense array using `op.ncol` products"
