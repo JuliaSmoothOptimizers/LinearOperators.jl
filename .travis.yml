@@ -5,9 +5,13 @@ os:
   - linux
 
 julia:
-  - 0.3
   - 0.4
+  - release
   - nightly
+
+branches:
+  only:
+    - master
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi

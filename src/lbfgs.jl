@@ -2,61 +2,61 @@ export LBFGSOperator, InverseLBFGSOperator, reset!
 
 
 "A data type to hold information relative to LBFGS operators."
-type LBFGSData
+type LBFGSData{T}
   mem :: Int
   scaling :: Bool
-  scaling_factor :: Float64
-  s   :: Array
-  y   :: Array
-  ys  :: Vector
-  α   :: Vector
-  a   :: Array
-  b   :: Array
+  scaling_factor :: T
+  s   :: Array{T}
+  y   :: Array{T}
+  ys  :: Vector{T}
+  α   :: Vector{T}
+  a   :: Array{T}
+  b   :: Array{T}
   insert :: Int
-
-  function LBFGSData(n :: Int, mem :: Int;
-                     dtype :: DataType=Float64, scaling :: Bool=false, inverse :: Bool=true)
-    return new(max(mem, 1),
-               scaling,
-               1.0,
-               zeros(dtype, n, mem),
-               zeros(dtype, n, mem),
-               zeros(dtype, mem),
-               inverse ? zeros(dtype, mem) : dtype[],
-               inverse ? dtype[] : zeros(dtype, n, mem),
-               inverse ? dtype[] : zeros(dtype, n, mem),
-               1)
-  end
 end
 
+function LBFGSData(T :: DataType, n :: Int, mem :: Int; scaling :: Bool=false, inverse :: Bool=true)
+  LBFGSData{T}(max(mem, 1),
+               scaling,
+               convert(T, 1),
+               zeros(T, n, mem),
+               zeros(T, n, mem),
+               zeros(T, mem),
+               inverse ? zeros(T, mem) : T[],
+               inverse ? T[] : zeros(T, n, mem),
+               inverse ? T[] : zeros(T, n, mem),
+               1)
+end
+
+LBFGSData(n :: Int, mem :: Int; kwargs...) = LBFGSData(Float64, n, mem; kwargs...)
+
 "A type for limited-memory BFGS approximations."
-type LBFGSOperator <: AbstractLinearOperator
+type LBFGSOperator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
-  dtype   :: DataType
   symmetric :: Bool
   hermitian :: Bool
   prod   :: Function           # apply the operator to a vector
   tprod  :: Nullable{Function} # apply the transpose operator to a vector
   ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
   inverse :: Bool
-  data :: LBFGSData
+  data :: LBFGSData{T}
 end
 
 
 "Construct a limited-memory BFGS approximation in inverse form."
-function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
+function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
 
-  lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling)
+  lbfgs_data = LBFGSData(T, n, mem; inverse=true, scaling=scaling)
 
   function lbfgs_multiply(data :: LBFGSData, x :: Array)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
 
-    if dtype == typeof(x[1])
+    if T == eltype(x)
       q = copy(x)
     else
-      result_type = promote_type(dtype, typeof(x[1]))
+      result_type = promote_type(T, eltype(x))
       q = convert(Array{result_type}, x)
     end
 
@@ -81,27 +81,29 @@ function InverseLBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scalin
     return q
   end
 
-  return LBFGSOperator(n, n, dtype, true, true,
-                       x -> lbfgs_multiply(lbfgs_data, x),
-                       Nullable{Function}(),
-                       Nullable{Function}(),
-                       true,
-                       lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true,
+                          x -> lbfgs_multiply(lbfgs_data, x),
+                          Nullable{Function}(),
+                          Nullable{Function}(),
+                          true,
+                          lbfgs_data)
 end
+
+InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(Float64, n, mem; kwargs...)
 
 
 "Construct a limited-memory BFGS approximation in forward form."
-function LBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
-  lbfgs_data = LBFGSData(n, mem, dtype=dtype, scaling=scaling, inverse=false)
+function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
+  lbfgs_data = LBFGSData(T, n, mem, inverse=false, scaling=scaling)
 
   function lbfgs_multiply(data :: LBFGSData, x :: Array)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
 
-    if dtype == typeof(x[1])
+    if T == eltype(x)
       q = copy(x)
     else
-      result_type = promote_type(dtype, typeof(x[1]))
+      result_type = promote_type(T, eltype(x))
       q = convert(Array{result_type}, x)
     end
 
@@ -117,14 +119,15 @@ function LBFGSOperator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bo
     return q
   end
 
-  return LBFGSOperator(n, n, dtype, true, true,
-                       x -> lbfgs_multiply(lbfgs_data, x),
-                       Nullable{Function}(),
-                       Nullable{Function}(),
-                       false,
-                       lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true,
+                          x -> lbfgs_multiply(lbfgs_data, x),
+                          Nullable{Function}(),
+                          Nullable{Function}(),
+                          false,
+                          lbfgs_data)
 end
 
+LBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = LBFGSOperator(Float64, n, mem; kwargs...)
 
 "Push a new {s,y} pair into a L-BFGS operator."
 function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
@@ -172,11 +175,11 @@ end
 
 
 "Extract the diagonal of a L-BFGS operator in forward mode."
-function diag(op :: LBFGSOperator)
-  op.inverse && throw("only the diagonal of a forward L-BFGS approximation is available")
+function diag{T}(op :: LBFGSOperator{T})
+  op.inverse && throw(LinearOperatorException("only the diagonal of a forward L-BFGS approximation is available"))
   data = op.data
 
-  d = ones(op.nrow)
+  d = ones(T, op.nrow)
   data.scaling && (d[:] /= data.scaling_factor)
 
   for i = 1 : data.mem

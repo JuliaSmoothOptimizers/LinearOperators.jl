@@ -1,56 +1,56 @@
 export LSR1Operator, reset!  #, InverseLSR1Operator
 
 "A data type to hold information relative to LSR1 operators."
-type LSR1Data
+type LSR1Data{T}
   mem :: Int
   scaling :: Bool
-  scaling_factor :: Float64
-  s   :: Array
-  y   :: Array
-  ys  :: Vector
-  a   :: Array
-  as  :: Array
+  scaling_factor :: T
+  s   :: Array{T}
+  y   :: Array{T}
+  ys  :: Vector{T}
+  a   :: Array{T}
+  as  :: Array{T}
   insert :: Int
-
-  function LSR1Data(n :: Int, mem :: Int;
-                     dtype :: DataType=Float64, scaling :: Bool=false, inverse :: Bool=true)
-    return new(max(mem, 1),
-               scaling,
-               1.0,
-               zeros(dtype, n, mem),
-               zeros(dtype, n, mem),
-               zeros(dtype, mem),
-               zeros(dtype, n, mem),
-               zeros(dtype, mem),
-               1)
-  end
 end
 
+function LSR1Data(T :: DataType, n :: Int, mem :: Int; scaling :: Bool=false, inverse :: Bool=true)
+  LSR1Data{T}(max(mem, 1),
+              scaling,
+              convert(T, 1),
+              zeros(T, n, mem),
+              zeros(T, n, mem),
+              zeros(T, mem),
+              zeros(T, n, mem),
+              zeros(T, mem),
+              1)
+end
+
+LSR1Data(n :: Int, mem :: Int; kwargs...) = LSR1Data(Float64, n, mem; kwargs...)
+
 "A type for limited-memory SR1 approximations."
-type LSR1Operator <: AbstractLinearOperator
+type LSR1Operator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
-  dtype   :: DataType
   symmetric :: Bool
   hermitian :: Bool
   prod   :: Function           # apply the operator to a vector
   tprod  :: Nullable{Function} # apply the transpose operator to a vector
   ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
   inverse :: Bool
-  data :: LSR1Data
+  data :: LSR1Data{T}
 end
 
 "Construct a limited-memory SR1 approximation in forward form."
-function LSR1Operator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Bool=false)
-  lsr1_data = LSR1Data(n, mem, dtype=dtype, scaling=scaling, inverse=false)
+function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
+  lsr1_data = LSR1Data(T, n, mem, scaling=scaling, inverse=false)
 
   function lsr1_multiply(data :: LSR1Data, x :: Array)
     # Multiply operator with a vector.
 
-    if dtype == typeof(x[1])
+    if T == eltype(x)
       q = copy(x)
     else
-      result_type = promote_type(dtype, typeof(x[1]))
+      result_type = promote_type(T, eltype(x))
       q = convert(Array{result_type}, x)
     end
 
@@ -65,13 +65,15 @@ function LSR1Operator(n, mem :: Int=5; dtype :: DataType=Float64, scaling :: Boo
     return q
   end
 
-  return LSR1Operator(n, n, dtype, true, true,
-                      x -> lsr1_multiply(lsr1_data, x),
-                      Nullable{Function}(),
-                      Nullable{Function}(),
-                      false,
-                      lsr1_data)
+  return LSR1Operator{T}(n, n, true, true,
+                         x -> lsr1_multiply(lsr1_data, x),
+                         Nullable{Function}(),
+                         Nullable{Function}(),
+                         false,
+                         lsr1_data)
 end
+
+LSR1Operator(n :: Int, mem :: Int=5; kwargs...) = LSR1Operator(Float64, n, mem; kwargs...)
 
 
 "Push a new {s,y} pair into a L-SR1 operator."
@@ -131,11 +133,11 @@ end
 
 
 "Extract the diagonal of a L-SR1 operator in forward mode."
-function diag(op :: LSR1Operator)
+function diag{T}(op :: LSR1Operator{T})
   op.inverse && throw("only the diagonal of a forward L-SR1 approximation is available")
   data = op.data
 
-  d = ones(op.nrow)
+  d = ones(T, op.nrow)
   data.scaling && (d[:] /= data.scaling_factor)
 
   for i = 1 : data.mem

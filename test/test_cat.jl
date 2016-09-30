@@ -13,7 +13,7 @@ rhs = randn(200)
 @test(norm(Do * rhs - D * rhs) <= rtol * norm(D * rhs))
 @test(norm(Do2 * rhs - D * rhs) <= rtol * norm(D * rhs))
 
-@test_throws ErrorException [LinearOperator(rand(5,5)) opEye(3)]
+@test_throws LinearOperatorException [LinearOperator(rand(5,5)) opEye(3)]
 
 # test vcat
 A   = sprandn(100, 100, 0.5)
@@ -30,5 +30,5 @@ rhs = randn(100)
 @test(norm(Do * rhs - D * rhs) <= rtol * norm(D * rhs))
 @test(norm(Do2 * rhs - D * rhs) <= rtol * norm(D * rhs))
 
-@test_throws ErrorException [LinearOperator(rand(5,5)) ; opEye(3)]
+@test_throws LinearOperatorException [LinearOperator(rand(5,5)) ; opEye(3)]
 
