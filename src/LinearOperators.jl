@@ -138,11 +138,6 @@ function *(op :: AbstractLinearOperator, v :: AbstractVector)
   op.prod(v)
 end
 
-function A_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
-  y[:] = op * x
-  return y
-end
-
 
 "Materialize an operator as a dense array using `op.ncol` products"
 function full(op :: AbstractLinearOperator)
@@ -221,6 +216,21 @@ function conj{T}(op :: AbstractLinearOperator{T})
                            v -> conj(op.prod(conj(v))),
                            op.ctprod,
                            op.tprod)
+end
+
+function A_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
+  y[:] = op * x
+  return y
+end
+
+function At_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
+  y[:] = op.' * x
+  return y
+end
+
+function Ac_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
+  y[:] = op' * x
+  return y
 end
 
 # Binary operations.
