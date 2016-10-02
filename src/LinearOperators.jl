@@ -3,7 +3,7 @@ module LinearOperators
 
 export AbstractLinearOperator, LinearOperator,
        LinearOperatorException,
-       A_mul_B!,
+       A_mul_B!, At_mul_B!, Ac_mul_B!,
        opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
