@@ -8,12 +8,15 @@ export AbstractLinearOperator, LinearOperator,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
        shape, hermitian, ishermitian, symmetric, issymmetric,
-       RestrictionOperator, ExtensionOperator
+       opRestriction, opExtension
 
 
 type LinearOperatorException <: Exception
   msg :: AbstractString
 end
+
+# when indexing, Colon() is treated separately
+typealias LinearOperatorIndexType Union{UnitRange{Int}, StepRange{Int, Int}, AbstractVector{Int}}
 
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
@@ -528,10 +531,8 @@ end
 
 include("qn.jl")  # quasi-Newton operators
 
-function RestrictionOperator(I :: AbstractVector{Int}, ncol :: Int)
-  if any(I .> ncol | I .< 1)
-    throw(LinearOperatorException("`I` should be a collection of index {1,…,n}, in this case, n=$ncol"))
-  end
+function opRestriction(I :: LinearOperatorIndexType, ncol :: Int)
+  all(1 .≤ I .≤ ncol) || throw(LinearOperatorException("indices should be between 1 and $ncol"))
   nrow = length(I)
   tprod(x) = begin
     z = zeros(eltype(x), ncol)
@@ -539,8 +540,26 @@ function RestrictionOperator(I :: AbstractVector{Int}, ncol :: Int)
     return z
   end
   return LinearOperator{Int}(nrow, ncol, false, false, x -> x[I], tprod, tprod)
-end  
+end
 
-ExtensionOperator(I :: AbstractVector{Int}, ncol :: Int) = RestrictionOperator(I, ncol)'
+opRestriction(::Colon, ncol :: Int) = opEye(Int, ncol)
+
+opRestriction(k :: Int, ncol :: Int) = opRestriction([k], ncol)
+
+opExtension(I :: LinearOperatorIndexType, ncol :: Int) = opRestriction(I, ncol)'
+
+opExtension(::Colon, ncol :: Int) = opEye(Int, ncol)
+
+opExtension(k :: Int, ncol :: Int) = opExtension([k], ncol)
+
+# indexing for linear operators
+import Base.getindex
+function getindex(op :: AbstractLinearOperator,
+                  rows :: Union{LinearOperatorIndexType, Int, Colon},
+                  cols :: Union{LinearOperatorIndexType, Int, Colon})
+  R = opRestriction(rows, size(op, 1))
+  E = opExtension(cols, size(op, 2))
+  return R * op * E
+end
 
 end  # module

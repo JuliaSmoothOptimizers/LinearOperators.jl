@@ -264,16 +264,24 @@ e = ones(size(K,1));
 # Test the Restriction and Extension index operators
 n = 10
 I = [1;2;4;7]
-m = length(I)
-P = RestrictionOperator(I, n)
-Z = ExtensionOperator(I, n)
-
+r = 3:6
+s = 1:2:7
+k = 4
 v = rand(n)
-w = v[I]
-vz = zeros(n); vz[I] = v[I]
-@test P*v == w
-@test P'w == vz
-@test Z*w == vz
-@test Z'*v == w
-@test (P*Z)*w == w
-@test (Z*P)*v == vz
+
+for idx in (I, r, s, Colon(), k)
+  P = opRestriction(idx, n)
+  Z = opExtension(idx, n)
+
+  # 1d slices are different; in Julia, v[idx] is a scalar
+  w = v[idx]
+  typeof(idx) <: Number && (w = [w])
+  vz = zeros(n); vz[idx] = v[idx]
+
+  @test P * v == w
+  @test P' * w == vz
+  @test Z * w == vz
+  @test Z' * v == w
+  @test (P * Z) * w == w
+  @test (Z * P) * v == vz
+end
