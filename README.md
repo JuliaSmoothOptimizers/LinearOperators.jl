@@ -9,12 +9,12 @@ Operators behave like matrices but are defined by their effect when applied to a
 
 ## Compatibility
 
-Julia 0.3 and 0.4.
+Julia 0.4 and up.
 
 ## How to Install
 
 ````JULIA
-Pkg.clone("https://github.com/JuliaSmoothOptimizers/LinearOperators.jl.git")
+Pkg.add("LinearOperators")
 ````
 
 ## Example 1
@@ -42,16 +42,16 @@ julia> v = rand(5);
 julia> norm(A \ v - op * v) / norm(v)
 1.6522645623951567e-14
 ````
+In this example, the Cholesky factor is computed only once and can be used many times transparently.
 
 ## Example 3
 
-Operators may be defined from functions. In the example below, the transposed isn't defined, but it may be inferred from the conjugate transposed. Missing operations are represented as [nullable](http://julia.readthedocs.org/en/latest/manual/types/?highlight=nullable#nullable-types-representing-missing-values) functions. Nullable types were introduced in Julia 0.4 but are provided in Julia 0.3 by [Compat.jl](https://github.com/JuliaLang/Compat.jl).
+Operators may be defined from functions. In the example below, the transposed isn't defined, but it may be inferred from the conjugate transposed. Missing operations are represented as [nullable](http://julia.readthedocs.org/en/latest/manual/types/?highlight=nullable#nullable-types-representing-missing-values) functions. Nullable types were introduced in Julia 0.4.
 
 ````JULIA
-julia> using Compat  # only required if you use Julia 0.3.
-julia> dft = LinearOperator(10, 10, Float64, false, false,
+julia> dft = LinearOperator(10, 10, false, false,
                             v -> fft(v),
-                            Nullable{Function}(),  # this operation is "missing".
+                            Nullable{Function}(),  # will be inferred
                             w -> ifft(w));
 julia> x = rand(10);
 julia> y = dft * x;
@@ -64,19 +64,33 @@ julia> 10-element Array{Complex{Float64},1}:
  ...
 ````
 
+By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type `Complex128`.
+This behavior may be overridden by specifying the type explicitly, e.g.,
+```JULIA
+dft = LinearOperator{Float64}(10, 10, false, false,
+                              v -> fft(v),
+                              Nullable{Function}(),
+                              w -> ifft(w));
+```
+
 ## Operators Available
 
-Operator         | Description
------------------|------------
-`LinearOperator` | Base class. Useful to define operators from functions
-`opEye`          | Identity operator
-`opOnes`         | All ones operator
-`opZeros`        | All zeros operator
-`opDiagonal`     | Square (equivalent to `diagm()`) or rectangular diagonal operator
-`opInverse`      | Equivalent to `\`
-`opCholesky`     | More efficient than `opInverse` for symmetric positive definite matrices
-`opHouseholder`  | Apply a Householder transformation `I-2hh'`
-`opHermitian`    | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
+Operator               | Description
+-----------------------|------------
+`LinearOperator`       | Base class. Useful to define operators from functions
+`opEye`                | Identity operator
+`opOnes`               | All ones operator
+`opZeros`              | All zeros operator
+`opDiagonal`           | Square (equivalent to `diagm()`) or rectangular diagonal operator
+`opInverse`            | Equivalent to `\`
+`opCholesky`           | More efficient than `opInverse` for symmetric positive definite matrices
+`opHouseholder`        | Apply a Householder transformation `I-2hh'`
+`opHermitian`          | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
+`RestrictionOperator`  | Represent a selection of "columns" when composed with an existing operator
+`ExtensionOperator`    | Map the application of an existing operator to a higher dimension
+`LBFGSOperator`        | Limited-memory BFGS approximation in operator form (damped or not)
+`InverseLBFGSOperator` | Inverse of a limited-memory BFGS approximation in operator form (damped or not)
+`LSR1Operator`         | Limited-memory SR1 approximation in operator form
 
 ## Utility Functions
 
