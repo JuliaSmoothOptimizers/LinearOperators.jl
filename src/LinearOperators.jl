@@ -364,6 +364,24 @@ opEye(T :: DataType, n :: Int) = LinearOperator{T}(n, n, true, true,
                                                    v -> v[:], u -> u[:], w -> w[:])
 opEye(n :: Int) = opEye(Float64, n)
 
+"Rectangular identity operator of size `nrow`x`ncol` and of data type `T`."
+function opEye(T :: DataType, nrow :: Int, ncol :: Int)
+  nrow == ncol && opEye(T, nrow)
+  if nrow > ncol
+    return LinearOperator{T}(nrow, ncol, false, false,
+                             v -> [v ; zeros(nrow - ncol)],
+                             v -> v[1:ncol],
+                             v -> v[1:ncol])
+  else
+    return LinearOperator{T}(nrow, ncol, false, false,
+                             v -> v[1:nrow],
+                             v -> [v ; zeros(ncol - nrow)],
+                             v -> [v ; zeros(ncol - nrow)])
+  end
+end
+
+opEye(nrow :: Int, ncol :: Int) = opEye(Float64, nrow, ncol)
+
 "Operator of all ones of size `nrow`-by-`ncol` and of data type `T`."
 opOnes(T :: DataType, nrow :: Int, ncol :: Int) = LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol,
                                                                     v -> sum(v) * ones(nrow),

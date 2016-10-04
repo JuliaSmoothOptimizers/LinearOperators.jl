@@ -145,9 +145,26 @@ v = rand(nrow) + rand(nrow) * im;
 @test(abs(norm(I * v - v)) <= ϵ * norm(v));
 @test(abs(norm(I.' * v - v)) <= ϵ * norm(v));
 @test(abs(norm(I' * v - v)) <= ϵ * norm(v));
+@test(vecnorm(full(I) - eye(nrow)) <= ϵ * vecnorm(eye(nrow)));
+
+I = opEye(nrow, ncol)
+v = rand(ncol) + rand(ncol) * im
+v0 = [v ; zeros(nrow - ncol)]
+vu = [v ; rand(nrow - ncol)]
+@test(abs(norm(I * v - v0)) <= ϵ * norm(v))
+@test(abs(norm(I.' * vu - v)) <= ϵ * norm(v))
+@test(abs(norm(I' * vu - v)) <= ϵ * norm(v))
+@test(vecnorm(full(I) - eye(nrow, ncol)) <= ϵ * vecnorm(eye(nrow, ncol)))
+
+I = opEye(ncol, nrow)
+@test(abs(norm(I * vu - v)) <= ϵ * norm(v))
+@test(abs(norm(I.' * v - v0)) <= ϵ * norm(v))
+@test(abs(norm(I' * v - v0)) <= ϵ * norm(v))
+@test(vecnorm(full(I) - eye(ncol, nrow)) <= ϵ * vecnorm(eye(ncol, nrow)))
 
 # Test opOnes.
 E = opOnes(nrow, ncol);
+v  = rand(nrow) + rand(nrow) * im;
 u = rand(ncol) + rand(ncol) * im;
 @test(norm(E * u - sum(u) * ones(nrow)) <= rtol * norm(u));
 @test(norm(E.' * v - sum(v) * ones(ncol)) <= rtol * norm(v));
