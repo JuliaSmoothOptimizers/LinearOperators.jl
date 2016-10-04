@@ -18,7 +18,7 @@ end
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
-import Base.A_mul_B!
+import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
 import Base.transpose, Base.ctranspose
 import Base.full
 import Base.conj
