@@ -44,7 +44,13 @@ type LBFGSOperator{T} <: AbstractLinearOperator{T}
 end
 
 
-"Construct a limited-memory BFGS approximation in inverse form."
+"""
+    InverseLBFGSOperator(T, n, [mem=5; scaling=false])
+    InverseLBFGSOperator(n, [mem=5; scaling=false])
+
+Construct a limited-memory BFGS approximation in inverse form. If the type `T`
+is omitted, then `Float64` is used.
+"""
 function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
 
   lbfgs_data = LBFGSData(T, n, mem; inverse=true, scaling=scaling)
@@ -92,7 +98,13 @@ end
 InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(Float64, n, mem; kwargs...)
 
 
-"Construct a limited-memory BFGS approximation in forward form."
+"""
+    LBFGSOperator(T, n, [mem=5; scaling=false])
+    LBFGSOperator(n, [mem=5; scaling=false])
+
+Construct a limited-memory BFGS approximation in forward form. If the type `T`
+is omitted, then `Float64` is used.
+"""
 function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
   lbfgs_data = LBFGSData(T, n, mem, inverse=false, scaling=scaling)
 
@@ -129,7 +141,11 @@ end
 
 LBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = LBFGSOperator(Float64, n, mem; kwargs...)
 
-"Push a new {s,y} pair into a L-BFGS operator."
+"""
+    push!(op, s, y)
+
+Push a new {s,y} pair into a L-BFGS operator.
+"""
 function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
 
   ys = dot(y, s)
@@ -174,7 +190,11 @@ function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
 end
 
 
-"Extract the diagonal of a L-BFGS operator in forward mode."
+"""
+    diag(op)
+
+Extract the diagonal of a L-BFGS operator in forward mode.
+"""
 function diag{T}(op :: LBFGSOperator{T})
   op.inverse && throw(LinearOperatorException("only the diagonal of a forward L-BFGS approximation is available"))
   data = op.data
@@ -193,7 +213,11 @@ function diag{T}(op :: LBFGSOperator{T})
   return d
 end
 
-"Resets the given LBFGS data."
+"""
+    reset!(data)
+
+Resets the given LBFGS data.
+"""
 function reset!(data :: LBFGSData)
   fill!(data.s, 0)
   fill!(data.y, 0)
@@ -205,7 +229,11 @@ function reset!(data :: LBFGSData)
   return data
 end
 
-"Resets the LBFGS data of the given operator."
+"""
+    reset!(op)
+
+Resets the LBFGS data of the given operator.
+"""
 function reset!(op :: LBFGSOperator)
   reset!(op.data)
   return op

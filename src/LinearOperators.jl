@@ -51,11 +51,18 @@ type LinearOperator{T} <: AbstractLinearOperator{T}
   ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
 end
 
+"""
+    m, n = size(op)
 
-"Return the size of a linear operator as a tuple"
+Return the size of a linear operator as a tuple.
+"""
 size(op :: AbstractLinearOperator) = (op.nrow, op.ncol)
 
-"Return the size of a linear operator along dimension `d`"
+"""
+    m = size(op, d)
+
+Return the size of a linear operator along dimension `d`.
+"""
 function size(op :: AbstractLinearOperator, d :: Int)
   if d == 1
     return op.nrow
@@ -66,19 +73,37 @@ function size(op :: AbstractLinearOperator, d :: Int)
   throw(LinearOperatorException("Linear operators only have 2 dimensions for now"))
 end
 
-"An alias for size"
+"""
+    m, n = shape(op)
+
+An alias for size.
+"""
 shape(op :: AbstractLinearOperator) = size(op)
 
-"Determine whether the operator is Hermitian"
+"""
+    hermitian(op)
+    ishermitian(op)
+
+Determine whether the operator is Hermitian.
+"""
 hermitian(op :: AbstractLinearOperator) = op.hermitian
 ishermitian(op :: AbstractLinearOperator) = op.hermitian
 
-"Determine whether the operator is symmetric"
+"""
+    symmetric(op)
+    issymmetric(op)
+
+Determine whether the operator is symmetric.
+"""
 symmetric(op :: AbstractLinearOperator) = op.symmetric
 issymmetric(op :: AbstractLinearOperator) = op.symmetric
 
 
-"Display basic information about a linear operator"
+"""
+    show(io, op)
+
+Display basic information about a linear operator.
+"""
 function show(io :: IO, op :: AbstractLinearOperator)
   s  = "Linear operator\n"
   s *= @sprintf("  nrow: %s\n", op.nrow)
@@ -95,35 +120,56 @@ end
 
 
 # Constructors.
-"""Construct a linear operator from a dense or sparse matrix.
+"""
+    LinearOperator(M; symmetric=false, hermitian=false)
+
+Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
-is symmetric and/or hermitian."""
+is symmetric and/or hermitian.
+"""
 LinearOperator{T}(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) =
   LinearOperator{T}(size(M)..., symmetric, hermitian,
                     v -> M * v,
                     Nullable{Function}(u -> M.' * u),
                     Nullable{Function}(w -> M' * w))
 
-"""Constructs a linear operator from a symmetric tridiagonal matrix. If
+"""
+    LinearOperator(M)
+
+Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
-symmetric."""
+symmetric.
+"""
 LinearOperator{T}(M :: SymTridiagonal{T}) =
     LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
 
-"""Constructs a linear operator from a symmetric matrix. If
+"""
+    LinearOperator(M)
+
+Constructs a linear operator from a symmetric matrix. If
 its elements are real, it is also Hermitian, otherwise complex
-symmetric."""
+symmetric.
+"""
 LinearOperator{T}(M :: Symmetric{T}) =
     LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
 
-"""Constructs a linear operator from a Hermitian matrix. If
-its elements are real, it is also symmetric."""
+"""
+    LinearOperator(M)
+
+Constructs a linear operator from a Hermitian matrix. If
+its elements are real, it is also symmetric.
+"""
 LinearOperator{T}(M :: Hermitian{T}) =
     LinearOperator(M; symmetric=eltype(M) <: Real, hermitian=true)
 
 # the only advantage of this constructor is optional args
 # use LinearOperator{Float64} if you mean real instead of complex
-"Construct a linear operator from functions."
+"""
+    LinearOperator(nrow, ncol, symmetric, hermitian, prod,
+                    [tprod=Nullable(), ctprod=Nullable()])
+
+Construct a linear operator from functions.
+"""
 function LinearOperator(nrow :: Int, ncol :: Int,
                         symmetric :: Bool, hermitian :: Bool,
                         prod :: Function,
@@ -142,7 +188,11 @@ function *(op :: AbstractLinearOperator, v :: AbstractVector)
 end
 
 
-"Materialize an operator as a dense array using `op.ncol` products"
+"""
+    A = full(op)
+
+Materialize an operator as a dense array using `op.ncol` products.
+"""
 function full(op :: AbstractLinearOperator)
   (m, n) = size(op)
   A = Array{eltype(op)}(m, n)
@@ -314,7 +364,11 @@ end
 
 # Utility functions.
 
-"Cheap check that the operator and its conjugate transposed are related."
+"""
+    check_ctranspose(op)
+
+Cheap check that the operator and its conjugate transposed are related.
+"""
 function check_ctranspose(op :: AbstractLinearOperator)
   (m, n) = size(op)
   x = rand(n)
@@ -327,7 +381,11 @@ end
 
 check_ctranspose(M :: AbstractMatrix) = check_ctranspose(LinearOperator(M))
 
-"Cheap check that the operator is Hermitian."
+"""
+    check_hermitian(op)
+
+Cheap check that the operator is Hermitian.
+"""
 function check_hermitian(op :: AbstractLinearOperator)
   m, n = size(op)
   v = rand(n)
@@ -341,7 +399,11 @@ end
 
 check_hermitian(M :: AbstractMatrix) = check_hermitian(LinearOperator(M))
 
-"Cheap check that the operator is positive (semi-)definite."
+"""
+    check_positive_definite(op; semi=false)
+
+Cheap check that the operator is positive (semi-)definite.
+"""
 function check_positive_definite(op :: AbstractLinearOperator; semi=false)
   m, n = size(op)
   v = rand(n)
@@ -359,12 +421,23 @@ check_positive_definite(M :: AbstractMatrix) = check_positive_definite(LinearOpe
 
 # Special linear operators.
 
-"Identity operator of order `n` and of data type `T`."
+"""
+    opEye(T, n)
+    opEye(n)
+
+Identity operator of order `n` and of data type `T` (defaults to `Float64`).
+"""
 opEye(T :: DataType, n :: Int) = LinearOperator{T}(n, n, true, true,
                                                    v -> v[:], u -> u[:], w -> w[:])
 opEye(n :: Int) = opEye(Float64, n)
 
-"Rectangular identity operator of size `nrow`x`ncol` and of data type `T`."
+"""
+    opEye(T, nrow, ncol)
+    opEye(nrow, ncol)
+
+Rectangular identity operator of size `nrow`x`ncol` and of data type `T`
+(defaults to `Float64`).
+"""
 function opEye(T :: DataType, nrow :: Int, ncol :: Int)
   nrow == ncol && opEye(T, nrow)
   if nrow > ncol
@@ -382,14 +455,26 @@ end
 
 opEye(nrow :: Int, ncol :: Int) = opEye(Float64, nrow, ncol)
 
-"Operator of all ones of size `nrow`-by-`ncol` and of data type `T`."
+"""
+    opOnes(T, nrow, ncol)
+    opOnes(nrow, ncol)
+
+Operator of all ones of size `nrow`-by-`ncol` and of data type `T` (defaults to
+`Float64`).
+"""
 opOnes(T :: DataType, nrow :: Int, ncol :: Int) = LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol,
                                                                     v -> sum(v) * ones(nrow),
                                                                     u -> sum(u) * ones(ncol),
                                                                     w -> sum(w) * ones(ncol))
 opOnes(nrow :: Int, ncol :: Int) = opOnes(Float64, nrow, ncol)
 
-"Zero operator of size `nrow`-by-`ncol` and of data type `T`."
+"""
+    opZeros(T, nrow, ncol)
+    opZeros(nrow, ncol)
+
+Zero operator of size `nrow`-by-`ncol` and of data type `T` (defaults to
+`Float64`).
+"""
 opZeros(T :: DataType, nrow :: Int, ncol :: Int) = LinearOperator{T}(nrow, ncol,
                                                                      nrow == ncol, nrow == ncol,
                                                                      v -> zeros(nrow),
@@ -397,14 +482,22 @@ opZeros(T :: DataType, nrow :: Int, ncol :: Int) = LinearOperator{T}(nrow, ncol,
                                                                      w -> zeros(ncol))
 opZeros(nrow :: Int, ncol :: Int) = opZeros(Float64, nrow, ncol)
 
-"Diagonal operator with the vector `d` on its main diagonal."
+"""
+    opDiagonal(d)
+
+Diagonal operator with the vector `d` on its main diagonal.
+"""
 opDiagonal{T}(d :: AbstractVector{T}) = LinearOperator{T}(length(d), length(d), true, isreal(d),
                                                           v -> v .* d,
                                                           u -> u .* d,
                                                           w -> w .* conj(d))
 
-"""Rectangular diagonal operator of size `nrow`-by-`ncol`
-with the vector `d` on its main diagonal."""
+"""
+    opDiagonal(nrow, ncol, d)
+
+Rectangular diagonal operator of size `nrow`-by-`ncol` with the vector `d` on
+its main diagonal.
+"""
 function opDiagonal{T}(nrow :: Int, ncol :: Int, d :: AbstractVector{T})
   nrow == ncol <= length(d) && (return opDiagonal(d[1:nrow]))
   if nrow > ncol
@@ -468,17 +561,25 @@ function vcat(ops :: AbstractLinearOperator...)
 end
 
 
-"""Inverse of a matrix as a linear operator using `\\`.
+"""
+    opInverse(M; symmetric=false, hermitian=false)
+
+Inverse of a matrix as a linear operator using `\\`.
 Useful for triangular matrices. Note that each application of this
-operator applies `\\`."""
+operator applies `\\`.
+"""
 opInverse{T}(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) =
   LinearOperator{T}(size(M,2), size(M,1), symmetric, hermitian,
                     v -> M \ v, u -> M.' \ u, w -> M' \ w)
 
-"""Inverse of a positive definite matrix as a linear operator
+"""
+    opCholesky(M, [check=false])
+
+Inverse of a positive definite matrix as a linear operator
 using its Cholesky factorization. The factorization is computed only once.
 The optional `check` argument will perform cheap hermicity and definiteness
-checks."""
+checks.
+"""
 function opCholesky(M :: AbstractMatrix; check :: Bool=false)
   (m, n) = size(M)
   m == n || throw(LinearOperatorException("shape mismatch"))
@@ -502,10 +603,13 @@ function opCholesky(M :: AbstractMatrix; check :: Bool=false)
   #TODO: use iterative refinement.
 end
 
-"""Inverse of a symmetric matrix as a linear operator
-using its LDL' factorization if it exists. The factorization is computed
-only once. The optional `check` argument will perform a cheap hermicity
-check."""
+"""
+    opLDL(M, [check=false])
+
+Inverse of a symmetric matrix as a linear operator using its LDL' factorization
+if it exists. The factorization is computed only once. The optional `check`
+argument will perform a cheap hermicity check.
+"""
 function opLDL(M :: AbstractMatrix; check :: Bool=false)
   (m, n) = size(M)
   m == n || throw(LinearOperatorException("shape mismatch"))
@@ -520,15 +624,23 @@ function opLDL(M :: AbstractMatrix; check :: Bool=false)
   #TODO: use iterative refinement.
 end
 
-"""Apply a Householder transformation defined by the vector `h`.
-The result is `x -> (I - 2 h h') x`."""
+"""
+    opHouseholder(h)
+
+Apply a Householder transformation defined by the vector `h`.
+The result is `x -> (I - 2 h h') x`.
+"""
 opHouseholder{T}(h :: AbstractVector{T}) = LinearOperator{T}(length(h), length(h), isreal(h), true,
                                                              v -> (v - 2 * dot(h, v) * h),
                                                              Nullable{Function}(),  # Will be inferred.
                                                              w -> (w - 2 * dot(h, w) * h))
 
 
-"A symmetric/hermitian operator based on the diagonal and lower triangle."
+"""
+    opHermitian(d, A)
+
+A symmetric/hermitian operator based on the diagonal `d` and lower triangle of `A`.
+"""
 function opHermitian{S,T}(d :: AbstractVector{S}, A :: AbstractMatrix{T})
   m, n = size(A)
   m == n == length(d) || throw(LinearOperatorException("shape mismatch"))
@@ -541,7 +653,11 @@ function opHermitian{S,T}(d :: AbstractVector{S}, A :: AbstractMatrix{T})
 end
 
 
-"A symmetric/hermitian operator based on a matrix."
+"""
+    opHermitian(A)
+
+A symmetric/hermitian operator based on a matrix.
+"""
 function opHermitian(T :: AbstractMatrix)
   d = diag(T)
   return opHermitian(d, T)
@@ -549,6 +665,17 @@ end
 
 include("qn.jl")  # quasi-Newton operators
 
+"""
+    Z = opRestriction(I, ncol)
+    Z = opRestriction(:, ncol)
+
+Creates a LinearOperator restricting a `ncol`-sized vector to indices `I`.
+The operation `Z * v` is equivalent to `v[I]`. `I` can be `:`.
+
+    Z = opRestriction(k, ncol)
+
+Alias for `opRestriction([k], ncol)`.
+"""
 function opRestriction(I :: LinearOperatorIndexType, ncol :: Int)
   all(1 .≤ I .≤ ncol) || throw(LinearOperatorException("indices should be between 1 and $ncol"))
   nrow = length(I)
@@ -564,6 +691,19 @@ opRestriction(::Colon, ncol :: Int) = opEye(Int, ncol)
 
 opRestriction(k :: Int, ncol :: Int) = opRestriction([k], ncol)
 
+"""
+    Z = opExtension(I, ncol)
+    Z = opExtension(:, ncol)
+
+Creates a LinearOperator extending a vector of size `length(I)` to size `ncol`,
+where the position of the elements on the new vector are given by the indices
+`I`.
+The operation `w = Z * v` is equivalent to `w = zeros(ncol); w[I] = v`.
+
+    Z = opExtension(k, ncol)
+
+Alias for `opExtension([k], ncol)`.
+"""
 opExtension(I :: LinearOperatorIndexType, ncol :: Int) = opRestriction(I, ncol)'
 
 opExtension(::Colon, ncol :: Int) = opEye(Int, ncol)
