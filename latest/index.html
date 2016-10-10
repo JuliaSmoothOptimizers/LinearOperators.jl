@@ -417,16 +417,16 @@
 </tr>
 <tr>
 <td align="right"><code>symmetric</code></td>
-<td align="right">Determine whether the operator is Symmetric</td>
+<td align="right">Determine whether the operator is symmetric</td>
 </tr>
 </tbody>
 </table>
 <p><a id='Other-Operations-on-Operators-1'></a></p>
 <h2 id="other-operations-on-operators">Other Operations on Operators</h2>
-<p>Operators can be transposed (<code>A.'</code>), conjugated (<code>conj(A)</code>) and conjugate-transposed (<code>A'</code>). Operators can be sliced (<code>A[:,3], A[2:4,1:5], A[1,1]</code>), but unlike matrices, they always return operators (see <a href="#differences">differences</a>).</p>
+<p>Operators can be transposed (<code>A.'</code>), conjugated (<code>conj(A)</code>) and conjugate-transposed (<code>A'</code>). Operators can be sliced (<code>A[:,3]</code>, <code>A[2:4,1:5]</code>, <code>A[1,1]</code>), but unlike matrices, slices always return operators (see <a href="#differences">differences</a>).</p>
 <p><a id='Differences-1'></a></p>
 <h2 id="differences">Differences</h2>
-<p>Unlike matrices, an operator never "becomes" a vector or a number. We feel this increases compatibility among all operations, but may lead to errors if left unchecked.</p>
+<p>Unlike matrices, an operator never reduces to a vector or a number.</p>
 <div class="code"><pre><span></span><span class="k">using</span> <span class="n">LinearOperators</span> <span class="c">#hide</span>
 <span class="n">A</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">opA</span> <span class="o">=</span> <span class="n">LinearOperator</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
@@ -435,11 +435,11 @@
 
 
 <div class="code"><pre><span></span>5-element Array{Float64,1}:
- 2.11413
- 0.420676
- 1.29065
- 2.51709
- 0.976359
+ 2.37145
+ 2.26471
+ 0.350932
+ 2.59868
+ 1.39565
 </pre></div>
 
 
@@ -468,15 +468,15 @@
 
 
 <div class="code"><pre><span></span>5-element Array{Float64,1}:
- 2.11413
- 0.420676
- 1.29065
- 2.51709
- 0.976359
+ 2.37145
+ 2.26471
+ 0.350932
+ 2.59868
+ 1.39565
 </pre></div>
 
 
-<p>This is also true for <code>A[i,J]</code>, which returns vectors on 0.5, and for the scalar <code>A[i,j]</code>. Below, <code>opA[1,1]</code> is an operator with the element <code>A[1,1]</code>.</p>
+<p>This is also true for <code>A[i,J]</code>, which returns vectors on Julia 0.5, and for the scalar <code>A[i,j]</code>. Similarly, <code>opA[1,1]</code> is an operator of size (1,1):"</p>
 <div class="code"><pre><span></span><span class="p">(</span><span class="n">opA</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">[</span><span class="mi">3</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
 </pre></div>
 
@@ -491,11 +491,11 @@
 
 
 <div class="code"><pre><span></span>5x1 Array{Float64,2}:
- 0.704712
- 0.140225
- 0.430217
- 0.83903
- 0.325453
+ 0.790482
+ 0.754903
+ 0.116977
+ 0.866227
+ 0.465216
 </pre></div>
 
 

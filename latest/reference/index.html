@@ -269,7 +269,8 @@
 
 <p>Constructs a linear operator from a Hermitian matrix. If its elements are real, it is also symmetric.</p>
 <div class="code"><pre><span></span>LinearOperator(nrow, ncol, symmetric, hermitian, prod,
-                [tprod=Nullable(), ctprod=Nullable()])
+                [tprod=Nullable{Function}(),
+                ctprod=Nullable{Function}()])
 </pre></div>
 
 
@@ -329,7 +330,7 @@ opZeros(nrow, ncol)
 </pre></div>
 
 
-<p>Inverse of a positive definite matrix as a linear operator using its Cholesky factorization. The factorization is computed only once. The optional <code>check</code> argument will perform cheap hermicity and definiteness checks.</p>
+<p>Inverse of a Hermitian and positive definite matrix as a linear operator using its Cholesky factorization. The factorization is computed only once. The optional <code>check</code> argument will perform cheap hermicity and definiteness checks.</p>
 <p><a id='LinearOperators.opHouseholder' href='#LinearOperators.opHouseholder'>#</a>
 <strong><code>LinearOperators.opHouseholder</code></strong> &mdash; <em>Function</em>.</p>
 <div class="code"><pre><span></span>opHouseholder(h)
