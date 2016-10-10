@@ -18,4 +18,5 @@ script:
   - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("LinearOperators"); Pkg.test("LinearOperators"; coverage=true)'
 
 after_success:
+  - julia -e 'Pkg.add("Documenter"); cd(Pkg.dir("LinearOperators")); include(joinpath("docs", "make.jl"))'
   - julia -e 'cd(Pkg.dir("LinearOperators")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder()); Codecov.submit(process_folder())'
