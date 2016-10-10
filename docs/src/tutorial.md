@@ -85,7 +85,7 @@ v = collect(1:5)
 R = opRestriction([2;5], 5)
 R * v
 ```
-Notice that it corresponds to a matrix with lines of the identity given by the
+Notice that it corresponds to a matrix with rows of the identity given by the
 indices.
 ```@example ex1
 full(R)
