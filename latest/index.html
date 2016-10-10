@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<!--[if lt IE 7 ]><html class="no-js ie6"><![endif]-->
+<!--[if IE 7 ]><html class="no-js ie7"><![endif]-->
+<!--[if IE 8 ]><html class="no-js ie8"><![endif]-->
+<!--[if IE 9 ]><html class="no-js ie9"><![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1">
+    
+      
+        <title>LinearOperators.jl - Description...</title>
+      
+      
+        <meta name="description" content="Description...">
+      
+      
+      
+        <meta name="author" content="JuliaSmoothOptimizers">
+      
+    
+    <meta property="og:url" content="None">
+    <meta property="og:title" content="LinearOperators.jl">
+    <meta property="og:image" content="None/./">
+    <meta name="apple-mobile-web-app-title" content="LinearOperators.jl">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    
+    <link rel="shortcut icon" type="image/x-icon" href="./assets/images/favicon-e565ddfa3b.ico">
+    <link rel="icon" type="image/x-icon" href="./assets/images/favicon-e565ddfa3b.ico">
+    <style>
+      @font-face {
+      	font-family: 'Icon';
+      	src: url('./assets/fonts/icon.eot?52m981');
+      	src: url('./assets/fonts/icon.eot?#iefix52m981')
+               format('embedded-opentype'),
+      		   url('./assets/fonts/icon.woff?52m981')
+               format('woff'),
+      		   url('./assets/fonts/icon.ttf?52m981')
+               format('truetype'),
+      		   url('./assets/fonts/icon.svg?52m981#icon')
+               format('svg');
+      	font-weight: normal;
+      	font-style: normal;
+      }
+    </style>
+    <link rel="stylesheet" href="./assets/stylesheets/application-a422ff04cc.css">
+    
+      <link rel="stylesheet" href="./assets/stylesheets/palettes-05ab2406df.css">
+    
+    
+      
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Ubuntu:400,700|Ubuntu+Mono">
+      <style>
+        body, input {
+          font-family: 'Ubuntu', Helvetica, Arial, sans-serif;
+        }
+        pre, code {
+          font-family: 'Ubuntu Mono', 'Courier New', 'Courier', monospace;
+        }
+      </style>
+    
+    
+      <link rel="stylesheet" href="./assets/Documenter.css">
+    
+      <link rel="stylesheet" href="./assets/style.css">
+    
+    <script src="./assets/javascripts/modernizr-4ab42b99fd.js"></script>
+    
+  </head>
+  
+  
+  
+  <body class="palette-primary-deep-orange palette-accent-indigo">
+    
+      
+      
+    
+    <div class="backdrop">
+      <div class="backdrop-paper"></div>
+    </div>
+    <input class="toggle" type="checkbox" id="toggle-drawer">
+    <input class="toggle" type="checkbox" id="toggle-search">
+    <label class="toggle-button overlay" for="toggle-drawer"></label>
+    <header class="header">
+      <nav aria-label="Header">
+  <div class="bar default">
+    <div class="button button-menu" role="button" aria-label="Menu">
+      <label class="toggle-button icon icon-menu" for="toggle-drawer">
+        <span></span>
+      </label>
+    </div>
+    <div class="stretch">
+      <div class="title">
+        
+          <span class="path">
+            
+          </span>
+        
+        LinearOperators.jl
+      </div>
+    </div>
+    
+    
+      
+      <div class="button button-github" role="button" aria-label="GitHub">
+        <a href="https://github.com/JuliaSmoothOptimizers" title="@JuliaSmoothOptimizers on GitHub" target="_blank" class="toggle-button icon icon-github"></a>
+      </div>
+    
+    <div class="button button-search" role="button" aria-label="Search">
+      <label class="toggle-button icon icon-search" title="Search" for="toggle-search"></label>
+    </div>
+  </div>
+  <div class="bar search">
+    <div class="button button-close" role="button" aria-label="Close">
+      <label class="toggle-button icon icon-back" for="toggle-search"></label>
+    </div>
+    <div class="stretch">
+      <div class="field">
+        <input class="query" type="text" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck>
+      </div>
+    </div>
+    <div class="button button-reset" role="button" aria-label="Search">
+      <button class="toggle-button icon icon-close" id="reset-search"></button>
+    </div>
+  </div>
+</nav>
+    </header>
+    <main class="main">
+      
+      <div class="drawer">
+        <nav aria-label="Navigation">
+  
+  <a href="https://github.com/JuliaSmoothOptimizers/LinearOperators.jl" class="project">
+    <div class="banner">
+      
+      <div class="name">
+        <strong>
+          LinearOperators.jl
+          <span class="version">
+            
+          </span>
+        </strong>
+        
+          <br>
+          JuliaSmoothOptimizers/LinearOperators.jl
+        
+      </div>
+    </div>
+  </a>
+  <div class="scrollable">
+    <div class="wrapper">
+      
+        <ul class="repo">
+          <li class="repo-download">
+            
+            <a href="https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/archive/master.zip" target="_blank" title="Download" data-action="download">
+              <i class="icon icon-download"></i> Download
+            </a>
+          </li>
+          <li class="repo-stars">
+            <a href="https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/stargazers" target="_blank" title="Stargazers" data-action="star">
+              <i class="icon icon-star"></i> Stars
+              <span class="count">&ndash;</span>
+            </a>
+          </li>
+        </ul>
+        <hr>
+      
+      <div class="toc">
+        <ul>
+          
+            
+  <li>
+    <a class="current" title="Home" href=".">
+      Home
+    </a>
+    
+      
+        
+      
+      
+        <ul>
+          
+            <li class="anchor">
+              <a title="Compatibility" href="#compatibility">
+                Compatibility
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="How to Install" href="#how-to-install">
+                How to Install
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Operators Available" href="#operators-available">
+                Operators Available
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Utility Functions" href="#utility-functions">
+                Utility Functions
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Other Operations on Operators" href="#other-operations-on-operators">
+                Other Operations on Operators
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Differences" href="#differences">
+                Differences
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Other Operators" href="#other-operators">
+                Other Operators
+              </a>
+            </li>
+          
+            <li class="anchor">
+              <a title="Testing" href="#testing">
+                Testing
+              </a>
+            </li>
+          
+        </ul>
+      
+    
+  </li>
+
+          
+            
+  <li>
+    <a class="" title="Tutorial" href="tutorial/">
+      Tutorial
+    </a>
+    
+  </li>
+
+          
+            
+  <li>
+    <a class="" title="Reference" href="reference/">
+      Reference
+    </a>
+    
+  </li>
+
+          
+        </ul>
+        
+          <hr>
+          <span class="section">The author</span>
+          <ul>
+            
+            
+              
+              <li>
+                <a href="https://github.com/JuliaSmoothOptimizers" target="_blank" title="@JuliaSmoothOptimizers on GitHub">
+                  @JuliaSmoothOptimizers on GitHub
+                </a>
+              </li>
+            
+          </ul>
+        
+      </div>
+    </div>
+  </div>
+</nav>
+      </div>
+      <article class="article">
+        <div class="wrapper">
+          
+          <p><a id='A-Julia-Linear-Operator-Package-1'></a></p>
+<h1 id="a-julia-linear-operator-package">A Julia Linear Operator Package</h1>
+<p>Operators behave like matrices (with <a href="#differences">exceptions</a>) but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.</p>
+<p><a id='Compatibility-1'></a></p>
+<h2 id="compatibility">Compatibility</h2>
+<p>Julia 0.4 and up.</p>
+<p><a id='How-to-Install-1'></a></p>
+<h2 id="how-to-install">How to Install</h2>
+<div class="code"><pre><span></span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;LinearOperators&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a id='Operators-Available-1'></a></p>
+<h2 id="operators-available">Operators Available</h2>
+<table>
+<thead>
+<tr>
+<th align="right">Operator</th>
+<th align="right">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right"><code>LinearOperator</code></td>
+<td align="right">Base class. Useful to define operators from functions</td>
+</tr>
+<tr>
+<td align="right"><code>opEye</code></td>
+<td align="right">Identity operator</td>
+</tr>
+<tr>
+<td align="right"><code>opOnes</code></td>
+<td align="right">All ones operator</td>
+</tr>
+<tr>
+<td align="right"><code>opZeros</code></td>
+<td align="right">All zeros operator</td>
+</tr>
+<tr>
+<td align="right"><code>opDiagonal</code></td>
+<td align="right">Square (equivalent to <code>diagm()</code>) or rectangular diagonal operator</td>
+</tr>
+<tr>
+<td align="right"><code>opInverse</code></td>
+<td align="right">Equivalent to <code>\</code></td>
+</tr>
+<tr>
+<td align="right"><code>opCholesky</code></td>
+<td align="right">More efficient than <code>opInverse</code> for symmetric positive definite matrices</td>
+</tr>
+<tr>
+<td align="right"><code>opHouseholder</code></td>
+<td align="right">Apply a Householder transformation <code>I-2hh'</code></td>
+</tr>
+<tr>
+<td align="right"><code>opHermitian</code></td>
+<td align="right">Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle</td>
+</tr>
+<tr>
+<td align="right"><code>opRestriction</code></td>
+<td align="right">Represent a selection of "rows" when composed on the left with an existing operator</td>
+</tr>
+<tr>
+<td align="right"><code>opExtension</code></td>
+<td align="right">Represent a selection of "columns" when composed on the right with an existing operator</td>
+</tr>
+<tr>
+<td align="right"><code>LBFGSOperator</code></td>
+<td align="right">Limited-memory BFGS approximation in operator form (damped or not)</td>
+</tr>
+<tr>
+<td align="right"><code>InverseLBFGSOperator</code></td>
+<td align="right">Inverse of a limited-memory BFGS approximation in operator form (damped or not)</td>
+</tr>
+<tr>
+<td align="right"><code>LSR1Operator</code></td>
+<td align="right">Limited-memory SR1 approximation in operator form</td>
+</tr>
+</tbody>
+</table>
+<p><a id='Utility-Functions-1'></a></p>
+<h2 id="utility-functions">Utility Functions</h2>
+<table>
+<thead>
+<tr>
+<th align="right">Function</th>
+<th align="right">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right"><code>check_ctranspose</code></td>
+<td align="right">Cheap check that <code>A'</code> is correctly implemented</td>
+</tr>
+<tr>
+<td align="right"><code>check_hermitian</code></td>
+<td align="right">Cheap check that <code>A = A'</code></td>
+</tr>
+<tr>
+<td align="right"><code>check_positive_definite</code></td>
+<td align="right">Cheap check that an operator is positive (semi-)definite</td>
+</tr>
+<tr>
+<td align="right"><code>diag</code></td>
+<td align="right">Extract the diagonal of an operator</td>
+</tr>
+<tr>
+<td align="right"><code>full</code></td>
+<td align="right">Convert an abstract operator to a dense array</td>
+</tr>
+<tr>
+<td align="right"><code>hermitian</code></td>
+<td align="right">Determine whether the operator is Hermitian</td>
+</tr>
+<tr>
+<td align="right"><code>push!</code></td>
+<td align="right" s_y="s,y">For L-BFGS or L-SR1 operators, push a new pair </td>
+</tr>
+<tr>
+<td align="right"><code>reset!</code></td>
+<td align="right">For L-BFGS or L-SR1 operators, reset the data</td>
+</tr>
+<tr>
+<td align="right"><code>shape</code></td>
+<td align="right">Return the size of a linear operator</td>
+</tr>
+<tr>
+<td align="right"><code>show</code></td>
+<td align="right">Display basic information about an operator</td>
+</tr>
+<tr>
+<td align="right"><code>size</code></td>
+<td align="right">Return the size of a linear operator</td>
+</tr>
+<tr>
+<td align="right"><code>symmetric</code></td>
+<td align="right">Determine whether the operator is Symmetric</td>
+</tr>
+</tbody>
+</table>
+<p><a id='Other-Operations-on-Operators-1'></a></p>
+<h2 id="other-operations-on-operators">Other Operations on Operators</h2>
+<p>Operators can be transposed (<code>A.'</code>), conjugated (<code>conj(A)</code>) and conjugate-transposed (<code>A'</code>). Operators can be sliced (<code>A[:,3], A[2:4,1:5], A[1,1]</code>), but unlike matrices, they always return operators (see <a href="#differences">differences</a>).</p>
+<p><a id='Differences-1'></a></p>
+<h2 id="differences">Differences</h2>
+<p>Unlike matrices, an operator never "becomes" a vector or a number. We feel this increases compatibility among all operations, but may lead to errors if left unchecked.</p>
+<div class="code"><pre><span></span><span class="k">using</span> <span class="n">LinearOperators</span> <span class="c">#hide</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">opA</span> <span class="o">=</span> <span class="n">LinearOperator</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="n">A</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span> <span class="c"># Vector</span>
+</pre></div>
+
+
+<div class="code"><pre><span></span>5-element Array{Float64,1}:
+ 2.11413
+ 0.420676
+ 1.29065
+ 2.51709
+ 0.976359
+</pre></div>
+
+
+<div class="code"><pre><span></span><span class="n">opA</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span> <span class="c"># LinearOperator</span>
+</pre></div>
+
+
+<div class="code"><pre><span></span>Linear operator
+  nrow: 5
+  ncol: 1
+  eltype: Float64
+  symmetric: false
+  hermitian: false
+  prod:   (anonymous function)
+  tprod:  Nullable((anonymous function))
+  ctprod: Nullable((anonymous function))
+</pre></div>
+
+
+<div class="code"><pre><span></span><span class="c"># A[:,1] * [3] # ERROR</span>
+</pre></div>
+
+
+<div class="code"><pre><span></span><span class="n">opA</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="c"># Vector</span>
+</pre></div>
+
+
+<div class="code"><pre><span></span>5-element Array{Float64,1}:
+ 2.11413
+ 0.420676
+ 1.29065
+ 2.51709
+ 0.976359
+</pre></div>
+
+
+<p>This is also true for <code>A[i,J]</code>, which returns vectors on 0.5, and for the scalar <code>A[i,j]</code>. Below, <code>opA[1,1]</code> is an operator with the element <code>A[1,1]</code>.</p>
+<div class="code"><pre><span></span><span class="p">(</span><span class="n">opA</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">[</span><span class="mi">3</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">A</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+</pre></div>
+
+
+<div class="code"><pre><span></span>0.0
+</pre></div>
+
+
+<p>In the same spirit, the operator <code>full</code> always returns a matrix.</p>
+<div class="code"><pre><span></span><span class="n">full</span><span class="p">(</span><span class="n">opA</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+
+
+<div class="code"><pre><span></span>5x1 Array{Float64,2}:
+ 0.704712
+ 0.140225
+ 0.430217
+ 0.83903
+ 0.325453
+</pre></div>
+
+
+<p><a id='Other-Operators-1'></a></p>
+<h2 id="other-operators">Other Operators</h2>
+<ul>
+<li><a href="https://github.com/optimizers/lldl">LLDL</a> features a limited-memory   LDLᵀ factorization operator that may be used as preconditioner   in iterative methods</li>
+<li><a href="https://github.com/JuliaSmoothOptimizers/MUMPS.jl">MUMPS.jl</a> features a full   distributed-memory factorization operator that may be used to represent the   preconditioner in, e.g., constraint-preconditioned Krylov methods.</li>
+</ul>
+<p><a id='Testing-1'></a></p>
+<h2 id="testing">Testing</h2>
+<div class="code"><pre><span></span><span class="n">julia</span><span class="o">&gt;</span> <span class="n">Pkg</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="s">&quot;LinearOperators&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p><a href="http://www.gnu.org/licenses/gpl.html" title="GPLv3"><img alt="GPLv3" src="http://www.gnu.org/graphics/gplv3-88x31.png" /></a></p>
+          <aside class="copyright" role="note">
+            
+            Documentation built with
+            <a href="http://www.mkdocs.org" target="_blank">MkDocs</a>
+            using the
+            <a href="http://squidfunk.github.io/mkdocs-material/" target="_blank">
+              Material
+            </a>
+            theme.
+          </aside>
+          
+            <footer class="footer">
+              
+  <nav class="pagination" aria-label="Footer">
+    <div class="previous">
+      
+    </div>
+    <div class="next">
+      
+        <a href="tutorial/" title="Tutorial">
+          <span class="direction">
+            Next
+          </span>
+          <div class="page">
+            <div class="stretch">
+              <div class="title">
+                Tutorial
+              </div>
+            </div>
+            <div class="button button-next" role="button" aria-label="Next">
+              <i class="icon icon-forward"></i>
+            </div>
+          </div>
+        </a>
+      
+    </div>
+  </nav>
+
+            </footer>
+          
+        </div>
+      </article>
+      <div class="results" role="status" aria-live="polite">
+        <div class="scrollable">
+          <div class="wrapper">
+            <div class="meta"></div>
+            <div class="list"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script>
+      var base_url = '.';
+      var repo_id  = 'JuliaSmoothOptimizers/LinearOperators.jl';
+    </script>
+    <script src="./assets/javascripts/application-997097ee0c.js"></script>
+    
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+      <script src="./assets/mathjaxhelper.js"></script>
+    
+    
+  </body>
+</html>
