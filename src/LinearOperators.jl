@@ -166,7 +166,8 @@ LinearOperator{T}(M :: Hermitian{T}) =
 # use LinearOperator{Float64} if you mean real instead of complex
 """
     LinearOperator(nrow, ncol, symmetric, hermitian, prod,
-                    [tprod=Nullable(), ctprod=Nullable()])
+                    [tprod=Nullable{Function}(),
+                    ctprod=Nullable{Function}()])
 
 Construct a linear operator from functions.
 """
@@ -575,7 +576,7 @@ opInverse{T}(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) =
 """
     opCholesky(M, [check=false])
 
-Inverse of a positive definite matrix as a linear operator
+Inverse of a Hermitian and positive definite matrix as a linear operator
 using its Cholesky factorization. The factorization is computed only once.
 The optional `check` argument will perform cheap hermicity and definiteness
 checks.

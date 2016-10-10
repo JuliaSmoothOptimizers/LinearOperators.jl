@@ -49,20 +49,18 @@ Function           | Description
 `shape`            | Return the size of a linear operator
 `show`             | Display basic information about an operator
 `size`             | Return the size of a linear operator
-`symmetric`        | Determine whether the operator is Symmetric
+`symmetric`        | Determine whether the operator is symmetric
 
 
 ## Other Operations on Operators
 
 Operators can be transposed (`A.'`), conjugated (`conj(A)`) and conjugate-transposed (`A'`).
-Operators can be sliced (`A[:,3], A[2:4,1:5], A[1,1]`), but unlike matrices, they always return
+Operators can be sliced (`A[:,3]`, `A[2:4,1:5]`, `A[1,1]`), but unlike matrices, slices always return
 operators (see [differences](#differences)).
 
 ## Differences
 
-Unlike matrices, an operator never "becomes" a vector or a number. We feel this
-increases compatibility among all operations, but may lead to errors if left
-unchecked.
+Unlike matrices, an operator never reduces to a vector or a number.
 
 ```@example exdiff
 using LinearOperators #hide
@@ -79,9 +77,9 @@ opA[:,1] * 3 # LinearOperator
 ```@example exdiff
 opA[:,1] * [3] # Vector
 ```
-This is also true for `A[i,J]`, which returns vectors on 0.5, and for the scalar
+This is also true for `A[i,J]`, which returns vectors on Julia 0.5, and for the scalar
 `A[i,j]`.
-Below, `opA[1,1]` is an operator with the element `A[1,1]`.
+Similarly, `opA[1,1]` is an operator of size (1,1):"
 ```@example exdiff
 (opA[1,1] * [3])[1] - A[1,1] * 3
 ```
