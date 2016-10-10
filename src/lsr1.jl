@@ -40,7 +40,13 @@ type LSR1Operator{T} <: AbstractLinearOperator{T}
   data :: LSR1Data{T}
 end
 
-"Construct a limited-memory SR1 approximation in forward form."
+"""
+    LSR1Operator(T, n, [mem=5; scaling=false)
+    LSR1Operator(n, [mem=5; scaling=false)
+
+Construct a limited-memory SR1 approximation in forward form. If the type `T` is
+omitted, then `Float64` is used.
+"""
 function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
   lsr1_data = LSR1Data(T, n, mem, scaling=scaling, inverse=false)
 
@@ -76,7 +82,11 @@ end
 LSR1Operator(n :: Int, mem :: Int=5; kwargs...) = LSR1Operator(Float64, n, mem; kwargs...)
 
 
-"Push a new {s,y} pair into a L-SR1 operator."
+"""
+    push!(op, s, y)
+
+Push a new {s,y} pair into a L-SR1 operator.
+"""
 function push!(op :: LSR1Operator, s :: Vector, y :: Vector)
 
   # op.counters.updates += 1
@@ -132,7 +142,11 @@ function push!(op :: LSR1Operator, s :: Vector, y :: Vector)
 end
 
 
-"Extract the diagonal of a L-SR1 operator in forward mode."
+"""
+    diag(op)
+
+Extract the diagonal of a L-SR1 operator in forward mode.
+"""
 function diag{T}(op :: LSR1Operator{T})
   op.inverse && throw("only the diagonal of a forward L-SR1 approximation is available")
   data = op.data
@@ -151,7 +165,11 @@ function diag{T}(op :: LSR1Operator{T})
   return d
 end
 
-"Reset the given LSR1 data."
+"""
+    reset!(data)
+
+Reset the given LSR1 data.
+"""
 function reset!(data :: LSR1Data)
   fill!(data.s, 0)
   fill!(data.y, 0)
@@ -162,7 +180,11 @@ function reset!(data :: LSR1Data)
   return data
 end
 
-"Resets the LSR1 data of the given operator."
+"""
+    reset!(op)
+
+Resets the LSR1 data of the given operator.
+"""
 function reset!(op :: LSR1Operator)
   reset!(op.data)
   return op

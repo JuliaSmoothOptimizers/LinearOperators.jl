@@ -1,12 +1,9 @@
-# A [Julia](http://julialang.org) Linear Operator Package
+# A Julia Linear Operator Package
 
-[![Build Status](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/kp1o6ejuu6kgskvp/branch/master?svg=true)](https://ci.appveyor.com/project/dpo/linearoperators-jl/branch/master)
-[![Coveralls](https://coveralls.io/repos/JuliaSmoothOptimizers/LinearOperators.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
-[![codecov.io](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
-[![docs](https://img.shields.io/badge/docs-latest-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/latest)
-
-Operators behave like matrices (with some exceptions - see below) but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
+Operators behave like matrices (with [exceptions](#differences)) but are defined
+by their effect when applied to a vector.
+They can be transposed, conjugated, or combined with other operators cheaply.
+The costly operation is deferred until multiplied with a vector.
 
 ## Compatibility
 
@@ -14,14 +11,9 @@ Julia 0.4 and up.
 
 ## How to Install
 
-````JULIA
+```julia
 Pkg.add("LinearOperators")
-````
-
-## How to use
-
-Check the
-[tutorial](https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/latest/tutorial).
+```
 
 ## Operators Available
 
@@ -64,7 +56,7 @@ Function           | Description
 
 Operators can be transposed (`A.'`), conjugated (`conj(A)`) and conjugate-transposed (`A'`).
 Operators can be sliced (`A[:,3], A[2:4,1:5], A[1,1]`), but unlike matrices, they always return
-operators (see differences below).
+operators (see [differences](#differences)).
 
 ## Differences
 
@@ -72,33 +64,37 @@ Unlike matrices, an operator never "becomes" a vector or a number. We feel this
 increases compatibility among all operations, but may lead to errors if left
 unchecked.
 
-````JULIA
+```@example exdiff
+using LinearOperators #hide
 A = rand(5,5)
 opA = LinearOperator(A)
 A[:,1] * 3 # Vector
+```
+```@example exdiff
 opA[:,1] * 3 # LinearOperator
-A[:,1] * [3] # ERROR
+```
+```@example exdiff
+# A[:,1] * [3] # ERROR
+```
+```@example exdiff
 opA[:,1] * [3] # Vector
-````
-
+```
 This is also true for `A[i,J]`, which returns vectors on 0.5, and for the scalar
 `A[i,j]`.
 Below, `opA[1,1]` is an operator with the element `A[1,1]`.
-````JULIA
-opA[1,1] # LinearOperator
-A[1,1] # Number
-````
+```@example exdiff
+(opA[1,1] * [3])[1] - A[1,1] * 3
+```
 
 In the same spirit, the operator `full` always returns a matrix.
-````JULIA
-full(opA[:,1]) # nx1 matrix
-````
-
+```@example exdiff
+full(opA[:,1])
+```
 
 ## Other Operators
 
 * [LLDL](https://github.com/optimizers/lldl) features a limited-memory
-  LDL<sup>T</sup> factorization operator that may be used as preconditioner
+  LDLᵀ factorization operator that may be used as preconditioner
   in iterative methods
 * [MUMPS.jl](https://github.com/JuliaSmoothOptimizers/MUMPS.jl) features a full
   distributed-memory factorization operator that may be used to represent the
@@ -106,8 +102,8 @@ full(opA[:,1]) # nx1 matrix
 
 ## Testing
 
-````JULIA
+```julia
 julia> Pkg.test("LinearOperators")
-````
+```
 
 [![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)](http://www.gnu.org/licenses/gpl.html "GPLv3")
