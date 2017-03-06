@@ -22,7 +22,6 @@ const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, Abstr
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*
 if VERSION < v"0.6.0-"
-  println("Loading .+")
   import Base.(.+), Base.(.-), Base.(.*)
 end
 import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
