@@ -16,11 +16,15 @@ type LinearOperatorException <: Exception
 end
 
 # when indexing, Colon() is treated separately
-typealias LinearOperatorIndexType Union{UnitRange{Int}, StepRange{Int, Int}, AbstractVector{Int}}
+const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, AbstractVector{Int}}
 
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
-import Base.+, Base.-, Base.*, Base.(.+), Base.(.-), Base.(.*)
+import Base.+, Base.-, Base.*
+if VERSION < v"0.6.0-"
+  println("Loading .+")
+  import Base.(.+), Base.(.-), Base.(.*)
+end
 import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
 import Base.transpose, Base.ctranspose
 import Base.full
@@ -324,8 +328,10 @@ function *(x :: Number, op :: AbstractLinearOperator)
                     w -> (op' * w) * x')
 end
 
-.*(op :: AbstractLinearOperator, x :: Number) = op * x
-.*(x :: Number, op :: AbstractLinearOperator) = x * op
+if VERSION < v"0.6.0-"
+  .*(op :: AbstractLinearOperator, x :: Number) = op * x
+  .*(x :: Number, op :: AbstractLinearOperator) = x * op
+end
 
 # Operator + operator.
 function +(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
@@ -348,8 +354,13 @@ end
 +(op :: AbstractLinearOperator, M :: AbstractMatrix) = op + LinearOperator(M)
 
 # Operator .+ scalar.
-.+(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
-.+(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
+if VERSION < v"0.6.0-"
+  .+(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
+  .+(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
+else
+  +(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
+  +(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
+end
 
 # Operator - operator
 -(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator) = op1 + (-op2)
@@ -359,8 +370,13 @@ end
 -(op :: AbstractLinearOperator, M :: AbstractMatrix) = op - LinearOperator(M)
 
 # Operator - scalar.
-.-(op :: AbstractLinearOperator, x :: Number) = op .+ (-x)
-.-(x :: Number, op :: AbstractLinearOperator) = x .+ (-op)
+if VERSION < v"0.6.0-"
+  .-(op :: AbstractLinearOperator, x :: Number) = op .+ (-x)
+  .-(x :: Number, op :: AbstractLinearOperator) = x .+ (-op)
+else
+  -(op :: AbstractLinearOperator, x :: Number) = op + (-x)
+  -(x :: Number, op :: AbstractLinearOperator) = x + (-op)
+end
 
 
 # Utility functions.
