@@ -1,6 +1,8 @@
 # Linear Operators for Julia
 module LinearOperators
 
+using Compat
+
 export AbstractLinearOperator, LinearOperator,
        LinearOperatorException,
        A_mul_B!, At_mul_B!, Ac_mul_B!,
@@ -31,7 +33,7 @@ import Base.conj
 import Base.issymmetric, Base.ishermitian
 import Base.hcat, Base.vcat
 
-abstract AbstractLinearOperator{T}
+@compat abstract type AbstractLinearOperator{T} end
 
 eltype{T}(A :: AbstractLinearOperator{T}) = T
 isreal{T}(A :: AbstractLinearOperator{T}) = T <: Real
