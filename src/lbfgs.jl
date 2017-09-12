@@ -165,15 +165,19 @@ function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
     if op.inverse
       By = op * y
       yBy = dot(y, By)
-      θ = ys ≥ op.data.damp_factor * yBy ? 1.0 : ((1.0 - op.data.damp_factor) * yBy / (yBy - ys))
-      damped_s = θ * s + (1 - θ) * By
-      ys = dot(y, damped_s)
+      if ys < op.data.damp_factor * yBy
+        θ = (1 - op.data.damp_factor) * yBy / (yBy - ys)
+        s = θ * s + (1 - θ) * By  # damped s
+        ys = op.data.damp_factor * yBy  # = θ * ys + (1 - θ) * yBy = dot(y, damped_s)
+      end
     else
       Bs = op * s
       sBs = dot(s, Bs)
-      θ = ys ≥ op.data.damp_factor * sBs ? 1.0 : ((1.0 - op.data.damp_factor) * sBs / (sBs - ys))
-      damped_y = θ * y + (1 - θ) * Bs
-      ys = dot(damped_y, s)
+      if ys < op.data.damp_factor * sBs
+        θ = (1 - op.data.damp_factor) * sBs / (sBs - ys)
+        y = θ * y + (1 - θ) * Bs  # damped y
+        ys = op.data.damp_factor * sBs  # = θ * ys + (1 - θ) * sBs = dot(damped_y, s)
+      end
     end
   else
     if ys <= 1.0e-20
