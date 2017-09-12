@@ -95,12 +95,10 @@ for i = 1 : mem+2
   s = rand(n)
   y = rand(n)
   ys = dot(y, s)
-  if ys > B.data.damp_factor * dot(s, B * s)
+  if ys > B.data.damp_factor * dot(s, B * s) && ys > B.data.damp_factor * dot(y, H * y)
     insert_B += 1
-    push!(B, s, y)
-  end
-  if ys > B.data.damp_factor * dot(y, H * y)
     insert_H += 1
+    push!(B, s, y)
     push!(H, s, y)
   end
 end
