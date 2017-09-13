@@ -24,7 +24,7 @@ for t = 1:2 # Run again after reset!
   push!(H, s,  z); @assert H.data.insert == 1
 
   # Insert a few {s,y} pairs.
-  insert = 1
+  insert = 0
   for i = 1 : mem+2
     s = rand(n)
     y = rand(n)
@@ -35,8 +35,8 @@ for t = 1:2 # Run again after reset!
     end
   end
 
-  @assert B.data.insert == mod(insert, B.data.mem)
-  @assert H.data.insert == mod(insert, H.data.mem)
+  @assert B.data.insert == mod(insert, B.data.mem) + 1
+  @assert H.data.insert == mod(insert, H.data.mem) + 1
 
   @test check_positive_definite(B)
   @test check_positive_definite(H)
@@ -90,7 +90,7 @@ end
 B = LBFGSOperator(n, mem, damped=true)
 H = InverseLBFGSOperator(n, mem, damped=true)
 
-insert_B = insert_H = 1
+insert_B = insert_H = 0
 for i = 1 : mem+2
   s = rand(n)
   y = rand(n)
@@ -103,8 +103,8 @@ for i = 1 : mem+2
   end
 end
 
-@assert B.data.insert == mod(insert_B, B.data.mem)
-@assert H.data.insert == mod(insert_H, H.data.mem)
+@assert B.data.insert == mod(insert_B, B.data.mem) + 1
+@assert H.data.insert == mod(insert_H, H.data.mem) + 1
 
 @test check_positive_definite(B)
 @test check_positive_definite(H)
