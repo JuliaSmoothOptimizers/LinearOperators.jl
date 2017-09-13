@@ -23,7 +23,7 @@ const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, Abstr
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*
-if VERSION < v"0.6.0-"
+@static if VERSION < v"0.6.0-"
   import Base.(.+), Base.(.-), Base.(.*)
 end
 import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
@@ -329,7 +329,7 @@ function *(x :: Number, op :: AbstractLinearOperator)
                     w -> (op' * w) * x')
 end
 
-if VERSION < v"0.6.0-"
+@static if VERSION < v"0.6.0-"
   .*(op :: AbstractLinearOperator, x :: Number) = op * x
   .*(x :: Number, op :: AbstractLinearOperator) = x * op
 end
@@ -355,7 +355,7 @@ end
 +(op :: AbstractLinearOperator, M :: AbstractMatrix) = op + LinearOperator(M)
 
 # Operator .+ scalar.
-if VERSION < v"0.6.0-"
+@static if VERSION < v"0.6.0-"
   .+(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
   .+(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
 else
@@ -371,7 +371,7 @@ end
 -(op :: AbstractLinearOperator, M :: AbstractMatrix) = op - LinearOperator(M)
 
 # Operator - scalar.
-if VERSION < v"0.6.0-"
+@static if VERSION < v"0.6.0-"
   .-(op :: AbstractLinearOperator, x :: Number) = op .+ (-x)
   .-(x :: Number, op :: AbstractLinearOperator) = x .+ (-op)
 else
