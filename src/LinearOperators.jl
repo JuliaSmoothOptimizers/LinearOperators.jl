@@ -1,3 +1,4 @@
+__precompile__()
 # Linear Operators for Julia
 module LinearOperators
 
