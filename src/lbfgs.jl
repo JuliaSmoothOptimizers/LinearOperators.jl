@@ -153,31 +153,34 @@ LBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = LBFGSOperator(Float64, n, mem
 
 """
     push!(op, s, y)
+    push!(op, s, y, α, g)
 
 Push a new {s,y} pair into a L-BFGS operator.
+The second calling sequence is used in inverse LBFGS updating in conjunction with damping,
+where α is the most recent steplength and g the gradient used when solving `d=-Hg`.
+In forward updating with damping, it is not necessary to supply α and g.
 """
-function push!(op :: LBFGSOperator, s :: Vector, y :: Vector)
+function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g :: Vector=zeros(y))
 
   ys = dot(y, s)
+  σ₂ = 0.99
+  σ₃ = 10.0
 
   if op.data.damped
     # Powell's damped update strategy
-    if op.inverse
-      By = op * y
-      yBy = dot(y, By)
-      if ys < op.data.damp_factor * yBy
-        θ = (1 - op.data.damp_factor) * yBy / (yBy - ys)
-        s = θ * s + (1 - θ) * By  # damped s
-        ys = op.data.damp_factor * yBy  # = θ * ys + (1 - θ) * yBy = dot(y, damped_s)
-      end
-    else
-      Bs = op * s
-      sBs = dot(s, Bs)
-      if ys < op.data.damp_factor * sBs
-        θ = (1 - op.data.damp_factor) * sBs / (sBs - ys)
-        y = θ * y + (1 - θ) * Bs  # damped y
-        ys = op.data.damp_factor * sBs  # = θ * ys + (1 - θ) * sBs = dot(damped_y, s)
-      end
+    Bs = op.inverse ? (- α * g) : (op * s)
+    sBs = dot(s, Bs)
+    damp = false
+    if ys < (1 - σ₂) * sBs
+      θ = σ₂ * sBs / (sBs - ys)
+      damp = true
+    elseif ys > (1 + σ₃) * sBs
+      θ = σ₃ * sBs / (ys - sBs)
+      damp = true
+    end
+    if damp
+      y = θ * y + (1 - θ) * Bs  # damped y
+      ys = θ * ys + (1 - θ) * sBs
     end
   else
     if ys <= 1.0e-20
