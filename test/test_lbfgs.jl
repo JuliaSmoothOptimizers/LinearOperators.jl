@@ -92,14 +92,17 @@ H = InverseLBFGSOperator(n, mem, damped=true)
 
 insert_B = insert_H = 0
 for i = 1 : mem+2
-  s = rand(n)
   y = rand(n)
   ys = dot(y, s)
+  g = rand(n)
+  d = -H * g
+  α = rand()
+  s = α * d
   if ys > B.data.damp_factor * dot(s, B * s) && ys > B.data.damp_factor * dot(y, H * y)
     insert_B += 1
     insert_H += 1
     push!(B, s, y)
-    push!(H, s, y)
+    push!(H, s, y, α, g)
   end
 end
 
