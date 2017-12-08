@@ -13,7 +13,7 @@ type LSR1Data{T}
   insert :: Int
 end
 
-function LSR1Data(T :: DataType, n :: Int, mem :: Int; scaling :: Bool=false, inverse :: Bool=true)
+function LSR1Data(T :: DataType, n :: Int, mem :: Int; scaling :: Bool=true, inverse :: Bool=true)
   LSR1Data{T}(max(mem, 1),
               scaling,
               convert(T, 1),
@@ -47,7 +47,7 @@ end
 Construct a limited-memory SR1 approximation in forward form. If the type `T` is
 omitted, then `Float64` is used.
 """
-function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=false)
+function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=true)
   lsr1_data = LSR1Data(T, n, mem, scaling=scaling, inverse=false)
 
   function lsr1_multiply(data :: LSR1Data, x :: Array)

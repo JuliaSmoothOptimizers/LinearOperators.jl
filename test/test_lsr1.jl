@@ -4,7 +4,7 @@ rtol = sqrt(ϵ)
 # test limited-memory SR1
 n = 10
 mem = 5
-B = LSR1Operator(n, mem)
+B = LSR1Operator(n, mem, scaling=false)
 
 for t = 1:2
   @assert norm(diag(B) - diag(full(B))) <= rtol
@@ -35,7 +35,7 @@ end
 
 # test against full SR1 without scaling
 mem = n
-LB = LSR1Operator(n, mem)
+LB = LSR1Operator(n, mem, scaling=false)
 B = eye(n)
 
 function sr1!(B, s, y)

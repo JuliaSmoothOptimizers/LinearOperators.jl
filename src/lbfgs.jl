@@ -18,7 +18,7 @@ type LBFGSData{T}
 end
 
 function LBFGSData(T :: DataType, n :: Int, mem :: Int;
-                   scaling :: Bool=false, damped :: Bool=false, inverse :: Bool=true)
+                   scaling :: Bool=true, damped :: Bool=false, inverse :: Bool=true)
   LBFGSData{T}(max(mem, 1),
                scaling,
                convert(T, 1),
@@ -50,8 +50,8 @@ end
 
 
 """
-    InverseLBFGSOperator(T, n, [mem=5; scaling=false])
-    InverseLBFGSOperator(n, [mem=5; scaling=false])
+    InverseLBFGSOperator(T, n, [mem=5; scaling=true])
+    InverseLBFGSOperator(n, [mem=5; scaling=true])
 
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
 is omitted, then `Float64` is used.
@@ -106,8 +106,8 @@ InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(F
 
 
 """
-    LBFGSOperator(T, n, [mem=5; scaling=false])
-    LBFGSOperator(n, [mem=5; scaling=false])
+    LBFGSOperator(T, n, [mem=5; scaling=true])
+    LBFGSOperator(n, [mem=5; scaling=true])
 
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
 is omitted, then `Float64` is used.

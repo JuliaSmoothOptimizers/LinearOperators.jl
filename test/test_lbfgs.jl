@@ -4,8 +4,8 @@ rtol = sqrt(ϵ)
 # test limited-memory BFGS
 n = 10
 mem = 5
-B = LBFGSOperator(n, mem)
-H = InverseLBFGSOperator(n, mem)
+B = LBFGSOperator(n, mem, scaling=false)
+H = InverseLBFGSOperator(n, mem, scaling=false)
 
 for t = 1:2 # Run again after reset!
   @assert norm(diag(B) - diag(full(B))) <= rtol
@@ -60,7 +60,7 @@ end
 
 # test against full BFGS without scaling
 mem = n
-LB = LBFGSOperator(n, mem)
+LB = LBFGSOperator(n, mem, scaling=false)
 B = eye(n)
 
 function bfgs!(B, s, y, damped=false)
@@ -87,8 +87,8 @@ for k = 1 : mem
 end
 
 # test damped L-BFGS
-B = LBFGSOperator(n, mem, damped=true)
-H = InverseLBFGSOperator(n, mem, damped=true)
+B = LBFGSOperator(n, mem, damped=true, scaling=false)
+H = InverseLBFGSOperator(n, mem, damped=true, scaling=false)
 
 insert_B = insert_H = 0
 for i = 1 : mem+2
@@ -121,7 +121,7 @@ end
 
 # test against full BFGS without scaling
 mem = n
-LB = LBFGSOperator(n, mem, damped=true)
+LB = LBFGSOperator(n, mem, damped=true, scaling=false)
 B = eye(n)
 
 @assert norm(full(LB) - B) < rtol * norm(B)
