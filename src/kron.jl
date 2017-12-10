@@ -1,5 +1,9 @@
 import Base.kron
 
+@static if VERSION < v"0.5.0-"
+  issymetric(A) = issym(A)
+end
+
 # (A ⊗ B)×vec(X) = vec(BXAᵀ)
 function kron(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   m, n = size(A)
