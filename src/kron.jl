@@ -1,15 +1,5 @@
 export opKron
 
-type opKron{T} <: AbstractLinearOperator{T}
-  nrow :: Int
-  ncol :: Int
-  symmetric :: Bool
-  hermitian :: Bool
-  prod   :: Function
-  tprod  :: Nullable{Function}
-  ctprod :: Nullable{Function}
-end
-
 function opKron(A :: AbstractMatrix,
                 B :: Union{AbstractMatrix, AbstractLinearOperator})
   m, n = size(A)
@@ -62,5 +52,5 @@ function opKron(A :: AbstractMatrix,
   end
   symm = issymmetric(A) && issymmetric(B)
   herm = ishermitian(A) && ishermitian(B)
-  return opKron{T}(m * p, n * q, symm, herm, prod, tprod, ctprod)
+  return LinearOperator{T}(m * p, n * q, symm, herm, prod, tprod, ctprod)
 end
