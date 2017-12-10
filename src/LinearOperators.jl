@@ -683,6 +683,7 @@ function opHermitian(T :: AbstractMatrix)
 end
 
 include("qn.jl")  # quasi-Newton operators
+include("kron.jl")
 
 """
     Z = opRestriction(I, ncol)
