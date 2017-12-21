@@ -33,6 +33,7 @@ Operator               | Description
 `LBFGSOperator`        | Limited-memory BFGS approximation in operator form (damped or not)
 `InverseLBFGSOperator` | Inverse of a limited-memory BFGS approximation in operator form (damped or not)
 `LSR1Operator`         | Limited-memory SR1 approximation in operator form
+`kron`                 | Kronecker tensor product in linear operator form
 
 ## Utility Functions
 

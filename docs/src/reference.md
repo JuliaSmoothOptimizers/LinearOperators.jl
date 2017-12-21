@@ -15,6 +15,7 @@ opExtension
 LBFGSOperator
 InverseLBFGSOperator
 LSR1Operator
+kron
 ```
 
 ## Utility functions
