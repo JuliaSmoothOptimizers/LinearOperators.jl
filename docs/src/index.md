@@ -1,6 +1,6 @@
 # A Julia Linear Operator Package
 
-Operators behave like matrices (with [exceptions](#differences)) but are defined
+Operators behave like matrices (with [exceptions](#Differences-1)) but are defined
 by their effect when applied to a vector.
 They can be transposed, conjugated, or combined with other operators cheaply.
 The costly operation is deferred until multiplied with a vector.
@@ -26,6 +26,7 @@ Operator               | Description
 `opDiagonal`           | Square (equivalent to `diagm()`) or rectangular diagonal operator
 `opInverse`            | Equivalent to `\`
 `opCholesky`           | More efficient than `opInverse` for symmetric positive definite matrices
+`opLDL`                | Similar to `opCholesky`, for general sparse symmetric matrices
 `opHouseholder`        | Apply a Householder transformation `I-2hh'`
 `opHermitian`          | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
 `opRestriction`        | Represent a selection of "rows" when composed on the left with an existing operator
@@ -57,7 +58,7 @@ Function           | Description
 
 Operators can be transposed (`A.'`), conjugated (`conj(A)`) and conjugate-transposed (`A'`).
 Operators can be sliced (`A[:,3]`, `A[2:4,1:5]`, `A[1,1]`), but unlike matrices, slices always return
-operators (see [differences](#differences)).
+operators (see [differences](#Differences-1)).
 
 ## Differences
 
