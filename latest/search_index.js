@@ -237,7 +237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "LinearOperators.InverseLBFGSOperator",
     "category": "Function",
-    "text": "InverseLBFGSOperator(T, n, [mem=5; scaling=false])\nInverseLBFGSOperator(n, [mem=5; scaling=false])\n\nConstruct a limited-memory BFGS approximation in inverse form. If the type T is omitted, then Float64 is used.\n\n\n\n"
+    "text": "InverseLBFGSOperator(T, n, [mem=5; scaling=true])\nInverseLBFGSOperator(n, [mem=5; scaling=true])\n\nConstruct a limited-memory BFGS approximation in inverse form. If the type T is omitted, then Float64 is used.\n\n\n\n"
 },
 
 {
@@ -309,7 +309,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "Base.push!",
     "category": "Function",
-    "text": "push!(op, s, y)\n\nPush a new {s,y} pair into a L-BFGS operator.\n\n\n\npush!(op, s, y)\n\nPush a new {s,y} pair into a L-SR1 operator.\n\n\n\n"
+    "text": "push!(op, s, y)\npush!(op, s, y, α, g)\n\nPush a new {s,y} pair into a L-BFGS operator. The second calling sequence is used in inverse LBFGS updating in conjunction with damping, where α is the most recent steplength and g the gradient used when solving d=-Hg. In forward updating with damping, it is not necessary to supply α and g.\n\n\n\npush!(op, s, y)\n\nPush a new {s,y} pair into a L-SR1 operator.\n\n\n\n"
 },
 
 {
