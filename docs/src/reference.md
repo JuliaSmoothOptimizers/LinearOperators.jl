@@ -8,6 +8,7 @@ opZeros
 opDiagonal
 opInverse
 opCholesky
+opLDL
 opHouseholder
 opHermitian
 opRestriction
