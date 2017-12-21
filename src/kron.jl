@@ -5,6 +5,12 @@ import Base.kron
 end
 
 # (A ⊗ B)×vec(X) = vec(BXAᵀ)
+"""`kron(A, B)`
+
+Kronecker tensor product of A and B in linear operator form, if either
+or both are linear operators. If both A and B are matrices, then
+`Base.kron` is used.
+"""
 function kron(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   m, n = size(A)
   p, q = size(B)
