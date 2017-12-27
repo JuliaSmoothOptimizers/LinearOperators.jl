@@ -9,9 +9,9 @@ for A in Any[rand(2, 3), rand(-3:3, 2, 3),
     T2 = kron(A, LinearOperator(B))
     T3 = kron(LinearOperator(A), LinearOperator(B))
     for T in [T1, T2, T3]
-      @test K == full(T)
-      @test K' == full(T')
-      @test K.' == full(T.')
+      @test norm(K - full(T)) < eps()
+      @test norm(K' - full(T')) < eps()
+      @test norm(K.' - full(T.')) < eps()
       m, n = size(K)
       err = 0.0
       for t = 1:100
