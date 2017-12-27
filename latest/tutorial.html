@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · LinearOperators.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/style.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><a href="index.html"><img class="logo" src="assets/logo.png" alt="LinearOperators.jl logo"/></a><h1>LinearOperators.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">Home</a></li><li class="current"><a class="toctext" href="tutorial.html">Tutorial</a><ul class="internal"><li><a class="toctext" href="#Using-matrices-1">Using matrices</a></li><li><a class="toctext" href="#Inverse-1">Inverse</a></li><li><a class="toctext" href="#Using-functions-1">Using functions</a></li><li><a class="toctext" href="#Limited-memory-BFGS-1">Limited memory BFGS</a></li><li><a class="toctext" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></li></ul></li><li><a class="toctext" href="reference.html">Reference</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="tutorial.html">Tutorial</a></li></ul><a class="edit-page" href="https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/tree/814e3d80d4f70634f88f87d74e1bad8b5774fef0/docs/src/tutorial.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Tutorial</span><a class="fa fa-bars" href="#"></a></div></header><h2><a class="nav-anchor" id="Using-matrices-1" href="#Using-matrices-1">Using matrices</a></h2><p>Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.</p><div><pre><code class="language-julia">using LinearOperators
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · LinearOperators.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/style.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><a href="index.html"><img class="logo" src="assets/logo.png" alt="LinearOperators.jl logo"/></a><h1>LinearOperators.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">Home</a></li><li class="current"><a class="toctext" href="tutorial.html">Tutorial</a><ul class="internal"><li><a class="toctext" href="#Using-matrices-1">Using matrices</a></li><li><a class="toctext" href="#Inverse-1">Inverse</a></li><li><a class="toctext" href="#Using-functions-1">Using functions</a></li><li><a class="toctext" href="#Limited-memory-BFGS-1">Limited memory BFGS</a></li><li><a class="toctext" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></li></ul></li><li><a class="toctext" href="reference.html">Reference</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="tutorial.html">Tutorial</a></li></ul><a class="edit-page" href="https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/tree/ba494d7dc69473b0e742a66d5f42c5aebd024873/docs/src/tutorial.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Tutorial</span><a class="fa fa-bars" href="#"></a></div></header><h2><a class="nav-anchor" id="Using-matrices-1" href="#Using-matrices-1">Using matrices</a></h2><p>Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.</p><div><pre><code class="language-julia">using LinearOperators
 A1 = rand(5,7)
 A2 = sprand(7,3,.3)
 op1 = LinearOperator(A1)
@@ -7,31 +7,31 @@ op2 = LinearOperator(A2)
 op = op1 * op2  # Does not form A1 * A2
 x = rand(3)
 y = op * x</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.6412
- 0.124104
- 0.674971
- 0.661211
- 0.77232</code></pre></div><h2><a class="nav-anchor" id="Inverse-1" href="#Inverse-1">Inverse</a></h2><p>Operators may be defined to represent (approximate) inverses.</p><div><pre><code class="language-julia">A = rand(5,5)
+ 2.04644
+ 2.48134
+ 2.19039
+ 0.995368
+ 1.66361</code></pre></div><h2><a class="nav-anchor" id="Inverse-1" href="#Inverse-1">Inverse</a></h2><p>Operators may be defined to represent (approximate) inverses.</p><div><pre><code class="language-julia">A = rand(5,5)
 A = A&#39; * A
 op = opCholesky(A)  # Use, e.g., as a preconditioner
 v = rand(5)
-norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">9.81978600093573e-11</code></pre></div><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2><a class="nav-anchor" id="Using-functions-1" href="#Using-functions-1">Using functions</a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <a href="http://julia.readthedocs.org/en/latest/manual/types/?highlight=nullable#nullable-types-representing-missing-values">nullable</a> functions. Nullable types were introduced in Julia 0.4.</p><div><pre><code class="language-julia">dft = LinearOperator(10, 10, false, false,
+norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">4.291566080692247e-14</code></pre></div><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2><a class="nav-anchor" id="Using-functions-1" href="#Using-functions-1">Using functions</a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <a href="http://julia.readthedocs.org/en/latest/manual/types/?highlight=nullable#nullable-types-representing-missing-values">nullable</a> functions. Nullable types were introduced in Julia 0.4.</p><div><pre><code class="language-julia">dft = LinearOperator(10, 10, false, false,
                      v -&gt; fft(v),
                      Nullable{Function}(),  # will be inferred
                      w -&gt; ifft(w))
 x = rand(10)
 y = dft * x
-norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">1.9341972280437705e-16</code></pre></div><div><pre><code class="language-julia">dft.&#39; * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
-  0.717312-0.0im
-  0.324621-0.0im
-  0.820136+0.0im
-  0.252433-0.0im
- 0.0127845-0.0im
-  0.278098-0.0im
-  0.311286-0.0im
-  0.139245-0.0im
-  0.490231-0.0im
-  0.429937-0.0im</code></pre></div><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><pre><code class="language-julia">dft = LinearOperator{Float64}(10, 10, false, false,
+norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">1.3597399555105182e-16</code></pre></div><div><pre><code class="language-julia">dft.&#39; * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
+  0.696649-0.0im
+  0.591112-0.0im
+  0.436968+0.0im
+   0.57873-0.0im
+  0.266934-0.0im
+ 0.0231847-0.0im
+  0.930569-0.0im
+  0.250481-0.0im
+   0.31736-0.0im
+  0.143091-0.0im</code></pre></div><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><pre><code class="language-julia">dft = LinearOperator{Float64}(10, 10, false, false,
                               v -&gt; fft(v),
                               Nullable{Function}(),
                               w -&gt; ifft(w))</code></pre><h2><a class="nav-anchor" id="Limited-memory-BFGS-1" href="#Limited-memory-BFGS-1">Limited memory BFGS</a></h2><p>Two other useful operators are the Limited-Memory BFGS in forward and inverse form.</p><div><pre><code class="language-julia">B = LBFGSOperator(20)
@@ -44,7 +44,7 @@ for i = 1:100
   push!(H, s, y)
   r += norm(B * H * s - s)
 end
-r</code></pre><pre><code class="language-none">185.8959090573068</code></pre></div><p>There is also a LSR1 operator that behaves similarly to these ones.</p><h2><a class="nav-anchor" id="Restriction,-extension-and-slices-1" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></h2><p>The restriction operator restricts a vector to a set of indices.</p><div><pre><code class="language-julia">v = collect(1:5)
+r</code></pre><pre><code class="language-none">201.97546886870765</code></pre></div><p>There is also a LSR1 operator that behaves similarly to these ones.</p><h2><a class="nav-anchor" id="Restriction,-extension-and-slices-1" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></h2><p>The restriction operator restricts a vector to a set of indices.</p><div><pre><code class="language-julia">v = collect(1:5)
 R = opRestriction([2;5], 5)
 R * v</code></pre><pre><code class="language-none">2-element Array{Int64,1}:
  2
@@ -62,16 +62,16 @@ opA = LinearOperator(A)
 I = [1;3;5]
 J = 2:4
 A[I,J] * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 1.84691
- 0.627216
- 1.32558</code></pre></div><div><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 1.84691
- 0.627216
- 1.32558</code></pre></div><p>A main <a href="home/#differences">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><div><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 3.2779</code></pre></div><div><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.983203
- 0.178723
- 0.455697
- 0.826845
- 0.447613</code></pre></div><div><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 0.983203</code></pre></div><footer><hr/><a class="previous" href="index.html"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="reference.html"><span class="direction">Next</span><span class="title">Reference</span></a></footer></article></body></html>
+ 2.20328
+ 1.18912
+ 1.32463</code></pre></div><div><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
+ 2.20328
+ 1.18912
+ 1.32463</code></pre></div><p>A main <a href="home/#differences">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><div><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 2.44088</code></pre></div><div><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
+ 0.0576956
+ 0.535002
+ 0.257579
+ 0.320148
+ 0.0156165</code></pre></div><div><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 0.0576956</code></pre></div><footer><hr/><a class="previous" href="index.html"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="reference.html"><span class="direction">Next</span><span class="title">Reference</span></a></footer></article></body></html>
