@@ -37,7 +37,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Operators Available",
     "category": "section",
-    "text": "Operator Description\nLinearOperator Base class. Useful to define operators from functions\nopEye Identity operator\nopOnes All ones operator\nopZeros All zeros operator\nopDiagonal Square (equivalent to diagm()) or rectangular diagonal operator\nopInverse Equivalent to \\\nopCholesky More efficient than opInverse for symmetric positive definite matrices\nopHouseholder Apply a Householder transformation I-2hh'\nopHermitian Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle\nopRestriction Represent a selection of \"rows\" when composed on the left with an existing operator\nopExtension Represent a selection of \"columns\" when composed on the right with an existing operator\nLBFGSOperator Limited-memory BFGS approximation in operator form (damped or not)\nInverseLBFGSOperator Inverse of a limited-memory BFGS approximation in operator form (damped or not)\nLSR1Operator Limited-memory SR1 approximation in operator form"
+    "text": "Operator Description\nLinearOperator Base class. Useful to define operators from functions\nopEye Identity operator\nopOnes All ones operator\nopZeros All zeros operator\nopDiagonal Square (equivalent to diagm()) or rectangular diagonal operator\nopInverse Equivalent to \\\nopCholesky More efficient than opInverse for symmetric positive definite matrices\nopLDL Similar to opCholesky, for general sparse symmetric matrices\nopHouseholder Apply a Householder transformation I-2hh'\nopHermitian Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle\nopRestriction Represent a selection of \"rows\" when composed on the left with an existing operator\nopExtension Represent a selection of \"columns\" when composed on the right with an existing operator\nLBFGSOperator Limited-memory BFGS approximation in operator form (damped or not)\nInverseLBFGSOperator Inverse of a limited-memory BFGS approximation in operator form (damped or not)\nLSR1Operator Limited-memory SR1 approximation in operator form\nkron Kronecker tensor product in linear operator form"
 },
 
 {
@@ -193,6 +193,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference.html#LinearOperators.opLDL",
+    "page": "Reference",
+    "title": "LinearOperators.opLDL",
+    "category": "Function",
+    "text": "opLDL(M, [check=false])\n\nInverse of a symmetric matrix as a linear operator using its LDL' factorization if it exists. The factorization is computed only once. The optional check argument will perform a cheap hermicity check.\n\n\n\n"
+},
+
+{
     "location": "reference.html#LinearOperators.opHouseholder",
     "page": "Reference",
     "title": "LinearOperators.opHouseholder",
@@ -249,11 +257,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "reference.html#Base.kron",
+    "page": "Reference",
+    "title": "Base.kron",
+    "category": "Function",
+    "text": "kron(A, B)\n\nKronecker tensor product of A and B in linear operator form, if either or both are linear operators. If both A and B are matrices, then Base.kron is used.\n\n\n\n"
+},
+
+{
     "location": "reference.html#Operators-1",
     "page": "Reference",
     "title": "Operators",
     "category": "section",
-    "text": "LinearOperator\nopEye\nopOnes\nopZeros\nopDiagonal\nopInverse\nopCholesky\nopHouseholder\nopHermitian\nopRestriction\nopExtension\nLBFGSOperator\nInverseLBFGSOperator\nLSR1Operator"
+    "text": "LinearOperator\nopEye\nopOnes\nopZeros\nopDiagonal\nopInverse\nopCholesky\nopLDL\nopHouseholder\nopHermitian\nopRestriction\nopExtension\nLBFGSOperator\nInverseLBFGSOperator\nLSR1Operator\nkron"
 },
 
 {
