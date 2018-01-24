@@ -1,7 +1,7 @@
 export LSR1Operator, reset!  #, InverseLSR1Operator
 
 "A data type to hold information relative to LSR1 operators."
-type LSR1Data{T}
+mutable struct LSR1Data{T}
   mem :: Int
   scaling :: Bool
   scaling_factor :: T
@@ -28,7 +28,7 @@ end
 LSR1Data(n :: Int, mem :: Int; kwargs...) = LSR1Data(Float64, n, mem; kwargs...)
 
 "A type for limited-memory SR1 approximations."
-type LSR1Operator{T} <: AbstractLinearOperator{T}
+mutable struct LSR1Operator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool

@@ -14,7 +14,7 @@ export AbstractLinearOperator, LinearOperator,
        opRestriction, opExtension
 
 
-type LinearOperatorException <: Exception
+mutable struct LinearOperatorException <: Exception
   msg :: AbstractString
 end
 
@@ -24,9 +24,6 @@ const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, Abstr
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*
-@static if VERSION < v"0.6.0-"
-  import Base.(.+), Base.(.-), Base.(.*)
-end
 import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
 import Base.transpose, Base.ctranspose
 import Base.full
@@ -48,7 +45,7 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-type LinearOperator{T} <: AbstractLinearOperator{T}
+mutable struct LinearOperator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool

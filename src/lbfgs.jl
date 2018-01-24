@@ -2,7 +2,7 @@ export LBFGSOperator, InverseLBFGSOperator, reset!
 
 
 "A data type to hold information relative to LBFGS operators."
-type LBFGSData{T}
+mutable struct LBFGSData{T}
   mem :: Int
   scaling :: Bool
   scaling_factor :: T
@@ -36,7 +36,7 @@ end
 LBFGSData(n :: Int, mem :: Int; kwargs...) = LBFGSData(Float64, n, mem; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-type LBFGSOperator{T} <: AbstractLinearOperator{T}
+mutable struct LBFGSOperator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
