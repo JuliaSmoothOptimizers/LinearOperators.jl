@@ -17,11 +17,11 @@ function kron(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   T = promote_type(eltype(A), eltype(B))
   function prod(x)
     X = reshape(x, q, n)
-    return full(B * X * A.')[:]
+    return full(B * X * transpose(A))[:]
   end
   function tprod(x)
     X = reshape(x, p, m)
-    return full(B.' * X * A)[:]
+    return full(transpose(B) * X * A)[:]
   end
   function ctprod(x)
     X = reshape(x, p, m)

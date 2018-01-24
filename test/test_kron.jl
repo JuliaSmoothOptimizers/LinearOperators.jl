@@ -12,7 +12,7 @@ for A in Any[rand(2, 3), rand(-3:3, 2, 3),
     for T in [T1, T2, T3]
       @test norm(K - full(T), 1) < eps() * normK
       @test norm(K' - full(T'), 1) < eps() * normK
-      @test norm(K.' - full(T.'), 1) < eps() * normK
+      @test norm(transpose(K) - full(transpose(T)), 1) < eps() * normK
       m, n = size(K)
       err = 0.0
       for t = 1:100
@@ -26,8 +26,8 @@ for A in Any[rand(2, 3), rand(-3:3, 2, 3),
         Tx = T' * x
         err += norm(Kx - Tx)
 
-        Kx = K.' * x
-        Tx = T.' * x
+        Kx = transpose(K) * x
+        Tx = transpose(T) * x
         err += norm(Kx - Tx)
       end
       @test err < 1e-12
