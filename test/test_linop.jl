@@ -212,7 +212,7 @@ function test_linop()
   # Test opInverse.
   (U, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
   (V, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
-  Σ = diagm(0 => rand(nrow) + 0.1);
+  Σ = diagm(0 => rand(nrow) .+ 0.1);
   A = U * Σ * V';
   Ainv = opInverse(A);
   v = rand(nrow) + rand(nrow) * im;
