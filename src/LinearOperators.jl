@@ -2,7 +2,7 @@ __precompile__()
 # Linear Operators for Julia
 module LinearOperators
 
-using Compat
+using Compat, Compat.Printf, Compat.LinearAlgebra, Compat.SparseArrays
 
 export AbstractLinearOperator, LinearOperator,
        LinearOperatorException,
@@ -30,6 +30,7 @@ import Base.transpose
   import Base.ctranspose
 else
   import Base.adjoint
+  import LinearAlgebra.diag
 end
 import Base.full
 import Base.conj
@@ -186,7 +187,7 @@ function LinearOperator(nrow :: Int, ncol :: Int,
                         tprod :: Union{Function,Nothing}=nothing,
                         ctprod :: Union{Function,Nothing}=nothing)
 
-  T = hermitian ? (symmetric ? Float64 : Complex128) : Complex128
+  T = hermitian ? (symmetric ? Float64 : ComplexF64) : ComplexF64
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
@@ -205,7 +206,7 @@ Materialize an operator as a dense array using `op.ncol` products.
 """
 function full(op :: AbstractLinearOperator)
   (m, n) = size(op)
-  A = Array{eltype(op)}(m, n)
+  A = Array{eltype(op)}(uninitialized, m, n)
   ei = zeros(eltype(op), n)
   for i = 1 : n
     ei[i] = 1

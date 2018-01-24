@@ -1,4 +1,4 @@
-using Base.Test, Compat
+using Compat, Compat.Test
 using LinearOperators
 
 include("test_linop.jl")
