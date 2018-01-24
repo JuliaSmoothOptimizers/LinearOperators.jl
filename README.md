@@ -10,7 +10,7 @@ Operators behave like matrices (with some exceptions - see below) but are define
 
 ## Compatibility
 
-Julia 0.4 and up.
+Julia 0.6 and up.
 
 ## How to Install
 
