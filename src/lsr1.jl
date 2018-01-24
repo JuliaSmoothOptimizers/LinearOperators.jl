@@ -146,7 +146,7 @@ end
 
 Extract the diagonal of a L-SR1 operator in forward mode.
 """
-function diag{T}(op :: LSR1Operator{T})
+function diag(op :: LSR1Operator{T}) where T
   op.inverse && throw("only the diagonal of a forward L-SR1 approximation is available")
   data = op.data
 

@@ -228,7 +228,7 @@ end
 
 Extract the diagonal of a L-BFGS operator in forward mode.
 """
-function diag{T}(op :: LBFGSOperator{T})
+function diag(op :: LBFGSOperator{T}) where T
   op.inverse && throw(LinearOperatorException("only the diagonal of a forward L-BFGS approximation is available"))
   data = op.data
 

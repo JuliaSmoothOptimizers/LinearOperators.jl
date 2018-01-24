@@ -34,8 +34,8 @@ import Base.hcat, Base.vcat
 @compat abstract type AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
-eltype{T}(A :: AbstractLinearOperator{T}) = T
-isreal{T}(A :: AbstractLinearOperator{T}) = T <: Real
+eltype(A :: AbstractLinearOperator{T}) where T = T
+isreal(A :: AbstractLinearOperator{T}) where T = T <: Real
 
 
 """
@@ -131,7 +131,7 @@ Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
 """
-LinearOperator{T}(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) =
+LinearOperator(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T =
   LinearOperator{T}(size(M)..., symmetric, hermitian,
                     v -> M * v,
                     u -> transpose(M) * u,
@@ -144,8 +144,8 @@ Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-LinearOperator{T}(M :: SymTridiagonal{T}) =
-    LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
+LinearOperator(M :: SymTridiagonal{T}) where T =
+  LinearOperator{T}(M; symmetric=true, hermitian=eltype(M) <: Real)
 
 """
     LinearOperator(M)
@@ -154,7 +154,7 @@ Constructs a linear operator from a symmetric matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-LinearOperator{T}(M :: Symmetric{T}) =
+LinearOperator(M :: Symmetric{T}) where T =
     LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
 
 """
@@ -163,7 +163,7 @@ LinearOperator{T}(M :: Symmetric{T}) =
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
 """
-LinearOperator{T}(M :: Hermitian{T}) =
+LinearOperator(M :: Hermitian{T}) where T =
     LinearOperator(M; symmetric=eltype(M) <: Real, hermitian=true)
 
 # the only advantage of this constructor is optional args
@@ -212,12 +212,12 @@ end
 
 # Unary operations.
 +(op :: AbstractLinearOperator) = op
--{T}(op :: AbstractLinearOperator{T}) = LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian,
+-(op :: AbstractLinearOperator{T}) where T = LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian,
                                                                v -> -op.prod(v),
                                                                u -> -op.tprod(u),
                                                                w -> -op.ctprod(w))
 
-function transpose{T}(op :: AbstractLinearOperator{T})
+function transpose(op :: AbstractLinearOperator{T}) where T
   if op.symmetric
     return op
   end
@@ -243,7 +243,7 @@ function transpose{T}(op :: AbstractLinearOperator{T})
                            w -> conj(op.prod(w)))      # (A.')' = conj(A)
 end
 
-function ctranspose{T}(op :: LinearOperator{T})
+function adjoint(op :: LinearOperator{T}) where T
   if op.hermitian
     return op
   end
@@ -268,8 +268,12 @@ function ctranspose{T}(op :: LinearOperator{T})
                            u -> conj(op.prod(u)),
                            op.prod)
 end
+if VERSION < v"0.7.0-"
+  ctranspose(op :: LinearOperator{T}) where {T} =
+    adjoint(op)
+end
 
-function conj{T}(op :: AbstractLinearOperator{T})
+function conj(op :: AbstractLinearOperator{T}) where T
   return LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian,
                            v -> conj(op.prod(conj(v))),
                            op.ctprod,
@@ -504,10 +508,10 @@ opZeros(nrow :: Int, ncol :: Int) = opZeros(Float64, nrow, ncol)
 
 Diagonal operator with the vector `d` on its main diagonal.
 """
-opDiagonal{T}(d :: AbstractVector{T}) = LinearOperator{T}(length(d), length(d), true, isreal(d),
-                                                          v -> v .* d,
-                                                          u -> u .* d,
-                                                          w -> w .* conj(d))
+opDiagonal(d :: AbstractVector{T}) where T = LinearOperator{T}(length(d), length(d), true, isreal(d),
+                                                               v -> v .* d,
+                                                               u -> u .* d,
+                                                               w -> w .* conj(d))
 
 """
     opDiagonal(nrow, ncol, d)
@@ -515,7 +519,7 @@ opDiagonal{T}(d :: AbstractVector{T}) = LinearOperator{T}(length(d), length(d), 
 Rectangular diagonal operator of size `nrow`-by-`ncol` with the vector `d` on
 its main diagonal.
 """
-function opDiagonal{T}(nrow :: Int, ncol :: Int, d :: AbstractVector{T})
+function opDiagonal(nrow :: Int, ncol :: Int, d :: AbstractVector{T}) where T
   nrow == ncol <= length(d) && (return opDiagonal(d[1:nrow]))
   if nrow > ncol
     D = LinearOperator{T}(nrow, ncol, false, false,
@@ -593,9 +597,9 @@ Inverse of a matrix as a linear operator using `\\`.
 Useful for triangular matrices. Note that each application of this
 operator applies `\\`.
 """
-opInverse{T}(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) =
+opInverse(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T =
   LinearOperator{T}(size(M,2), size(M,1), symmetric, hermitian,
-                    v -> M \ v, u -> M.' \ u, w -> M' \ w)
+                    v -> M \ v, u -> transpose(M) \ u, w -> M' \ w)
 
 """
     opCholesky(M, [check=false])
@@ -655,7 +659,7 @@ end
 Apply a Householder transformation defined by the vector `h`.
 The result is `x -> (I - 2 h h') x`.
 """
-opHouseholder{T}(h :: AbstractVector{T}) = LinearOperator{T}(length(h), length(h), isreal(h), true,
+opHouseholder(h :: AbstractVector{T}) where T = LinearOperator{T}(length(h), length(h), isreal(h), true,
                                                                   v -> (v - 2 * dot(h, v) * h),
                                                                   nothing,  # Will be inferred.
                                                                   w -> (w - 2 * dot(h, w) * h))
