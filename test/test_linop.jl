@@ -1,3 +1,5 @@
+using Compat.LinearAlgebra, Compat.SparseArrays
+
 (nrow, ncol) = (10, 6);
 ϵ = eps(Float64);
 rtol = sqrt(ϵ);
@@ -185,7 +187,7 @@ u = rand(nrow) + rand(nrow) * im;
 
 # Test rectangular opDiagonal.
 nmin = min(nrow, ncol); nmax = max(nrow, ncol);
-A = zeros(Complex128, nmax, nmin);
+A = zeros(ComplexF64, nmax, nmin);
 v = rand(nmin) + rand(nmin) * im;
 for i = 1 : nmin
   A[i,i] = v[i];
@@ -197,7 +199,7 @@ w = rand(nmax) + rand(nmax) * im;
 @test(norm(transpose(A) * w - transpose(D) * w) <= ϵ * norm(w));
 @test(norm(A' * w - D' * w) <= ϵ * norm(w));
 
-A = zeros(Complex128, nmin, nmax);
+A = zeros(ComplexF64, nmin, nmax);
 for i = 1 : nmin
   A[i,i] = v[i];
 end
@@ -247,7 +249,7 @@ H = opHermitian(C);
 # Test inference.
 op = LinearOperator(5, 3, false, false,
                     p -> ones(5) + im * ones(5));
-@test eltype(op) == Complex128
+@test eltype(op) == ComplexF64
 @test_throws LinearOperatorException transpose(op)  # cannot be inferred
 @test_throws LinearOperatorException op'            # cannot be inferred
 
@@ -271,7 +273,7 @@ C = rand(2,2); C = C'*C;
 K = [A B' ; B -C];
 
 # Dense Cholesky should throw an exception.
-@test_throws Base.LinAlg.PosDefException opCholesky(K);
+@test_throws Compat.LinearAlgebra.PosDefException opCholesky(K);
 
 # Compute the LDL' factorization.
 LDL = opLDL(sparse(K));
