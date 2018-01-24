@@ -25,7 +25,12 @@ const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, Abstr
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*
 import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
-import Base.transpose, Base.ctranspose
+import Base.transpose
+@static if VERSION < v"0.7.0-"
+  import Base.ctranspose
+else
+  import Base.adjoint
+end
 import Base.full
 import Base.conj
 import Base.issymmetric, Base.ishermitian
@@ -286,7 +291,7 @@ function A_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: Abstra
 end
 
 function At_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
-  y[:] = op.' * x
+  y[:] = transpose(op) * x
   return y
 end
 
@@ -307,7 +312,7 @@ function *(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
   S = promote_type(eltype(op1), eltype(op2))
   return LinearOperator{S}(m1, n2, false, false,
                            v -> op1 * (op2 * v),
-                           u -> op2.' * (op1.' * u),
+                           u -> transpose(op2) * (transpose(op1) * u),
                            w -> op2' * (op1' * w))
 end
 
@@ -320,7 +325,7 @@ function *(op :: AbstractLinearOperator, x :: Number)
   S = promote_type(eltype(op), typeof(x))
   LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x),
                     v -> (op * v) * x,
-                    u -> x * (op.' * u),
+                    u -> x * (transpose(op) * u),
                     w -> x' * (op' * w))
 end
 
@@ -328,7 +333,7 @@ function *(x :: Number, op :: AbstractLinearOperator)
   S = promote_type(eltype(op), typeof(x))
   LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x),
                     v -> x * (op * v),
-                    u -> (op.' * u) * x,
+                    u -> (transpose(op) * u) * x,
                     w -> (op' * w) * x')
 end
 
@@ -349,7 +354,7 @@ function +(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
                            op1.symmetric && op2.symmetric,
                            op1.hermitian && op2.hermitian,
                            v -> (op1   * v) + (op2   * v),
-                           u -> (op1.' * u) + (op2.' * u),
+                           u -> (transpose(op1) * u) + (transpose(op2) * u),
                            w -> (op1'  * w) + (op2'  * w))
 end
 
@@ -548,7 +553,7 @@ function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   S = promote_type(eltype(A), eltype(B))
 
   prod(v)   =  A * v[1:A.ncol] + B * v[A.ncol+1:end]
-  tprod(v)  =  [A.' * v; B.' * v;]
+  tprod(v)  =  [transpose(A) * v; transpose(B) * v;]
   ctprod(v) =  [A' * v; B' * v;]
 
   LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
@@ -575,7 +580,7 @@ function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   S = promote_type(eltype(A), eltype(B))
 
   prod(v)   =  [A * v; B * v;]
-  tprod(v)  =  A.' * v +  B.' * v
+  tprod(v)  =  transpose(A) * v +  transpose(B) * v
   ctprod(v) =  A' * v[1:A.nrow] + B' * v[A.nrow+1:end]
 
   return LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
@@ -626,7 +631,7 @@ function opCholesky(M :: AbstractMatrix; check :: Bool=false)
     L = chol(M)'
     return LinearOperator{eltype(L)}(m, m, isreal(M), true,
                                      v -> L' \ (L \ v),
-                                     u -> L.' \ (conj(L \ conj(u))),
+                                     u -> transpose(L) \ (conj(L \ conj(u))),
                                      w -> L' \ (L \ w))
   end
   #TODO: use iterative refinement.
