@@ -50,9 +50,9 @@ mutable struct LinearOperator{T} <: AbstractLinearOperator{T}
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function           # apply the operator to a vector
-  tprod  :: Nullable{Function} # apply the transpose operator to a vector
-  ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
+  prod   :: Function                # apply the operator to a vector
+  tprod  :: Union{Function,Nothing} # apply the transpose operator to a vector
+  ctprod :: Union{Function,Nothing} # apply the transpose conjugate operator to a vector
 end
 
 """
@@ -134,8 +134,8 @@ is symmetric and/or hermitian.
 LinearOperator{T}(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) =
   LinearOperator{T}(size(M)..., symmetric, hermitian,
                     v -> M * v,
-                    Nullable{Function}(u -> M.' * u),
-                    Nullable{Function}(w -> M' * w))
+                    u -> transpose(M) * u,
+                    w -> M' * w)
 
 """
     LinearOperator(M)
@@ -170,16 +170,16 @@ LinearOperator{T}(M :: Hermitian{T}) =
 # use LinearOperator{Float64} if you mean real instead of complex
 """
     LinearOperator(nrow, ncol, symmetric, hermitian, prod,
-                    [tprod=Nullable{Function}(),
-                    ctprod=Nullable{Function}()])
+                    [tprod=nothing,
+                    ctprod=nothing])
 
 Construct a linear operator from functions.
 """
 function LinearOperator(nrow :: Int, ncol :: Int,
                         symmetric :: Bool, hermitian :: Bool,
                         prod :: Function,
-                        tprod :: Union{Function,Nullable{Function}}=Nullable{Function}(),
-                        ctprod :: Union{Function,Nullable{Function}}=Nullable{Function}())
+                        tprod :: Union{Function,Nothing}=nothing,
+                        ctprod :: Union{Function,Nothing}=nothing)
 
   T = hermitian ? (symmetric ? Float64 : Complex128) : Complex128
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
@@ -213,60 +213,60 @@ end
 # Unary operations.
 +(op :: AbstractLinearOperator) = op
 -{T}(op :: AbstractLinearOperator{T}) = LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian,
-                                                          v -> -op.prod(v),
-                                                          Nullable{Function}(u -> -get(op.tprod)(u)),
-                                                          Nullable{Function}(w -> -get(op.ctprod)(w)))
+                                                               v -> -op.prod(v),
+                                                               u -> -op.tprod(u),
+                                                               w -> -op.ctprod(w))
 
 function transpose{T}(op :: AbstractLinearOperator{T})
   if op.symmetric
     return op
   end
-  if !isnull(op.tprod)
+  if op.tprod !== nothing
     return LinearOperator{T}(op.ncol, op.nrow, op.symmetric, op.hermitian,
-                             get(op.tprod),
-                             Nullable{Function}(op.prod),
-                             Nullable{Function}(v -> conj(get(op.tprod)(v))))
+                             op.tprod,
+                             op.prod,
+                             v -> conj(op.tprod(v)))
   end
-  if isnull(op.ctprod)
+  if op.ctprod === nothing
     if op.hermitian
       ctprod = op.prod
     else
       throw(LinearOperatorException("unable to infer transpose operator"))
     end
   else
-    ctprod = get(op.ctprod)
+    ctprod = op.ctprod
   end
 
   return LinearOperator{T}(op.ncol, op.nrow, op.symmetric, op.hermitian,
-                           v -> conj(ctprod(conj(v))),                # A.'v = conj(A' conj(v))
-                           Nullable{Function}(op.prod),               # (A.').' = A
-                           Nullable{Function}(w -> conj(op.prod(w)))) # (A.')' = conj(A)
+                           v -> conj(ctprod(conj(v))), # A.'v = conj(A' conj(v))
+                           op.prod,                    # (A.').' = A
+                           w -> conj(op.prod(w)))      # (A.')' = conj(A)
 end
 
 function ctranspose{T}(op :: LinearOperator{T})
   if op.hermitian
     return op
   end
-  if !isnull(op.ctprod)
+  if op.ctprod !== nothing
     return LinearOperator{T}(op.ncol, op.nrow, op.symmetric, op.hermitian,
-                             get(op.ctprod),
-                             Nullable{Function}(u -> conj(op.prod(u))),
-                             Nullable{Function}(op.prod))
+                             op.ctprod,
+                             u -> conj(op.prod(u)),
+                             op.prod)
   end
-  if isnull(op.tprod)
+  if op.tprod === nothing
     if op.symmetric
       tprod = op.prod
     else
       throw(LinearOperatorException("unable to infer conjugate transpose operator"))
     end
   else
-    tprod = get(op.tprod)
+    tprod = op.tprod
   end
 
   return LinearOperator{T}(op.ncol, op.nrow, op.symmetric, op.hermitian,
                            v -> conj(tprod(v)),
-                           Nullable{Function}(u -> conj(op.prod(u))),
-                           Nullable{Function}(op.prod))
+                           u -> conj(op.prod(u)),
+                           op.prod)
 end
 
 function conj{T}(op :: AbstractLinearOperator{T})
@@ -656,9 +656,9 @@ Apply a Householder transformation defined by the vector `h`.
 The result is `x -> (I - 2 h h') x`.
 """
 opHouseholder{T}(h :: AbstractVector{T}) = LinearOperator{T}(length(h), length(h), isreal(h), true,
-                                                             v -> (v - 2 * dot(h, v) * h),
-                                                             Nullable{Function}(),  # Will be inferred.
-                                                             w -> (w - 2 * dot(h, w) * h))
+                                                                  v -> (v - 2 * dot(h, v) * h),
+                                                                  nothing,  # Will be inferred.
+                                                                  w -> (w - 2 * dot(h, w) * h))
 
 
 """
@@ -666,15 +666,14 @@ opHouseholder{T}(h :: AbstractVector{T}) = LinearOperator{T}(length(h), length(h
 
 A symmetric/hermitian operator based on the diagonal `d` and lower triangle of `A`.
 """
-function opHermitian{S,T}(d :: AbstractVector{S}, A :: AbstractMatrix{T})
+function opHermitian(d :: AbstractVector{S}, A :: AbstractMatrix{T}) where {S, T}
   m, n = size(A)
   m == n == length(d) || throw(LinearOperatorException("shape mismatch"))
   L = tril(A, -1)
   U = promote_type(S, T)
   return LinearOperator{U}(m, m, isreal(A), true,
                            v -> (d .* v + L * v + (v' * L)')[:],
-                           Nullable{Function}(),
-                           Nullable{Function}())
+                           nothing, nothing)
 end
 
 

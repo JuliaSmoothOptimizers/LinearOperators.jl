@@ -41,9 +41,9 @@ mutable struct LBFGSOperator{T} <: AbstractLinearOperator{T}
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function           # apply the operator to a vector
-  tprod  :: Nullable{Function} # apply the transpose operator to a vector
-  ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
+  prod   :: Function                # apply the operator to a vector
+  tprod  :: Union{Function,Nothing} # apply the transpose operator to a vector
+  ctprod :: Union{Function,Nothing} # apply the transpose conjugate operator to a vector
   inverse :: Bool
   data :: LBFGSData{T}
 end
@@ -96,8 +96,7 @@ function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
 
   return LBFGSOperator{T}(n, n, true, true,
                           x -> lbfgs_multiply(lbfgs_data, x),
-                          Nullable{Function}(),
-                          Nullable{Function}(),
+                          nothing, nothing,
                           true,
                           lbfgs_data)
 end
@@ -143,8 +142,7 @@ function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
 
   return LBFGSOperator{T}(n, n, true, true,
                           x -> lbfgs_multiply(lbfgs_data, x),
-                          Nullable{Function}(),
-                          Nullable{Function}(),
+                          nothing, nothing,
                           false,
                           lbfgs_data)
 end

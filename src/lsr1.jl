@@ -33,9 +33,9 @@ mutable struct LSR1Operator{T} <: AbstractLinearOperator{T}
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function           # apply the operator to a vector
-  tprod  :: Nullable{Function} # apply the transpose operator to a vector
-  ctprod :: Nullable{Function} # apply the transpose conjugate operator to a vector
+  prod   :: Function                # apply the operator to a vector
+  tprod  :: Union{Function,Nothing} # apply the transpose operator to a vector
+  ctprod :: Union{Function,Nothing} # apply the transpose conjugate operator to a vector
   inverse :: Bool
   data :: LSR1Data{T}
 end
@@ -73,8 +73,7 @@ function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=tru
 
   return LSR1Operator{T}(n, n, true, true,
                          x -> lsr1_multiply(lsr1_data, x),
-                         Nullable{Function}(),
-                         Nullable{Function}(),
+                         nothing, nothing,
                          false,
                          lsr1_data)
 end
