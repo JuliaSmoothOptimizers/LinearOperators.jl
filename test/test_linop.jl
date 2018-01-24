@@ -136,7 +136,7 @@ function test_linop()
   # Test Hermitian operator.
   A1 = rand(nrow, nrow) + rand(nrow, nrow) * im;
   d = diag(A1); A1 = tril(A1, -1);
-  A2 = A1 + A1' + diagm(d);
+  A2 = A1 + A1' + diagm(0 => d);
   op = opHermitian(d, A1);
   v  = rand(nrow) + rand(nrow) * im;
   Av = A2 * v;
@@ -212,7 +212,7 @@ function test_linop()
   # Test opInverse.
   (U, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
   (V, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
-  Σ = diagm(rand(nrow) + 0.1);
+  Σ = diagm(0 => rand(nrow) + 0.1);
   A = U * Σ * V';
   Ainv = opInverse(A);
   v = rand(nrow) + rand(nrow) * im;
