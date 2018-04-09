@@ -35,6 +35,7 @@ import Base.issymmetric, Base.ishermitian
 import Base.hcat, Base.vcat
 
 @compat abstract type AbstractLinearOperator{T} end
+OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
 eltype{T}(A :: AbstractLinearOperator{T}) = T
 isreal{T}(A :: AbstractLinearOperator{T}) = T <: Real
@@ -534,6 +535,10 @@ function opDiagonal{T}(nrow :: Int, ncol :: Int, d :: AbstractVector{T})
 end
 
 
+hcat(A :: AbstractLinearOperator, B :: AbstractMatrix) = hcat(A, LinearOperator(B))
+
+hcat(A :: AbstractMatrix, B :: AbstractLinearOperator) = hcat(LinearOperator(A), B)
+
 function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   A.nrow == B.nrow || throw(LinearOperatorException("hcat: inconsistent row sizes"))
 
@@ -548,7 +553,7 @@ function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
 end
 
-function hcat(ops :: AbstractLinearOperator...)
+function hcat(ops :: OperatorOrMatrix...)
   op = ops[1]
   for i = 2:length(ops)
     op = [op ops[i]]
@@ -556,6 +561,10 @@ function hcat(ops :: AbstractLinearOperator...)
   return op
 end
 
+
+vcat(A :: AbstractLinearOperator, B :: AbstractMatrix) = vcat(A, LinearOperator(B))
+
+vcat(A :: AbstractMatrix, B :: AbstractLinearOperator) = vcat(LinearOperator(A), B)
 
 function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   A.ncol == B.ncol || throw(LinearOperatorException("vcat: inconsistent column sizes"))
@@ -571,7 +580,7 @@ function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   return LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
 end
 
-function vcat(ops :: AbstractLinearOperator...)
+function vcat(ops :: OperatorOrMatrix...)
   op = ops[1]
   for i = 2:length(ops)
     op = [op; ops[i]]

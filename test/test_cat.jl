@@ -33,3 +33,10 @@ rhs = randn(100)
 
 @test_throws LinearOperatorException [LinearOperator(rand(5,5)) ; opEye(3)]
 
+K = [eye(2) opZeros(2,3) ; opZeros(3,2) opEye(3)]
+v = rand(5)
+@test all(v .== K * v)
+
+K = [opEye(2) ; speye(2)]
+v = rand(2)
+@test all(K * v .== [v ; v])
