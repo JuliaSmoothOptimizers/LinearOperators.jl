@@ -35,7 +35,7 @@ end
 import Base.full
 import Base.conj
 import Base.issymmetric, Base.ishermitian
-import Base.hcat, Base.vcat
+import Base.hcat, Base.vcat, Base.hvcat
 
 @compat abstract type AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
@@ -595,6 +595,17 @@ function vcat(ops :: OperatorOrMatrix...)
   return op
 end
 
+# Removed by https://github.com/JuliaLang/julia/pull/24017
+function hvcat(rows :: Tuple{Vararg{Int}}, ops :: OperatorOrMatrix...)
+  nbr = length(rows)
+  rs = Array{OperatorOrMatrix,1}(nbr)
+  a = 1
+  for i = 1:nbr
+    rs[i] = hcat(ops[a:a-1+rows[i]]...)
+    a += rows[i]
+  end
+  vcat(rs...)
+end
 
 """
     opInverse(M; symmetric=false, hermitian=false)
