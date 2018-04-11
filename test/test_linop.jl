@@ -1,4 +1,4 @@
-using Compat.LinearAlgebra, Compat.SparseArrays
+using Compat, Compat.LinearAlgebra, Compat.SparseArrays
 
 function test_linop()
   (nrow, ncol) = (10, 6);
@@ -143,27 +143,27 @@ function test_linop()
   @test(norm(op * v - Av) <= rtol * norm(Av));
 
   # Test opEye.
-  I = opEye(nrow);
+  opI = opEye(nrow);
   v = rand(nrow) + rand(nrow) * im;
-  @test(abs(norm(I * v - v)) <= ϵ * norm(v));
-  @test(abs(norm(transpose(I) * v - v)) <= ϵ * norm(v));
-  @test(abs(norm(I' * v - v)) <= ϵ * norm(v));
-  @test(vecnorm(full(I) - eye(nrow)) <= ϵ * vecnorm(eye(nrow)));
+  @test(abs(norm(opI * v - v)) <= ϵ * norm(v));
+  @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v));
+  @test(abs(norm(opI' * v - v)) <= ϵ * norm(v));
+  @test(vecnorm(full(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * vecnorm(Matrix(1.0I, nrow, nrow)));
 
-  I = opEye(nrow, ncol)
+  opI = opEye(nrow, ncol)
   v = rand(ncol) + rand(ncol) * im
   v0 = [v ; zeros(nrow - ncol)]
   vu = [v ; rand(nrow - ncol)]
-  @test(abs(norm(I * v - v0)) <= ϵ * norm(v))
-  @test(abs(norm(transpose(I) * vu - v)) <= ϵ * norm(v))
-  @test(abs(norm(I' * vu - v)) <= ϵ * norm(v))
-  @test(vecnorm(full(I) - eye(nrow, ncol)) <= ϵ * vecnorm(eye(nrow, ncol)))
+  @test(abs(norm(opI * v - v0)) <= ϵ * norm(v))
+  @test(abs(norm(transpose(opI) * vu - v)) <= ϵ * norm(v))
+  @test(abs(norm(opI' * vu - v)) <= ϵ * norm(v))
+  @test(vecnorm(full(opI) - Matrix(1.0I, nrow, ncol)) <= ϵ * vecnorm(Matrix(1.0I, nrow, ncol)))
 
-  I = opEye(ncol, nrow)
-  @test(abs(norm(I * vu - v)) <= ϵ * norm(v))
-  @test(abs(norm(transpose(I) * v - v0)) <= ϵ * norm(v))
-  @test(abs(norm(I' * v - v0)) <= ϵ * norm(v))
-  @test(vecnorm(full(I) - eye(ncol, nrow)) <= ϵ * vecnorm(eye(ncol, nrow)))
+  opI = opEye(ncol, nrow)
+  @test(abs(norm(opI * vu - v)) <= ϵ * norm(v))
+  @test(abs(norm(transpose(opI) * v - v0)) <= ϵ * norm(v))
+  @test(abs(norm(opI' * v - v0)) <= ϵ * norm(v))
+  @test(vecnorm(full(opI) - Matrix(1.0I, ncol, nrow)) <= ϵ * vecnorm(Matrix(1.0I, ncol, nrow)))
 
   # Test opOnes.
   E = opOnes(nrow, ncol);
@@ -283,13 +283,13 @@ function test_linop()
 
   # Test the Restriction and Extension index operators
   n = 10
-  I = [1;2;4;7]
+  J = [1;2;4;7]
   r = 3:6
   s = 1:2:7
   k = 4
   v = rand(n)
 
-  for idx in (I, r, s, Colon(), k)
+  for idx in (J, r, s, Colon(), k)
     P = opRestriction(idx, n)
     Z = opExtension(idx, n)
 

@@ -34,11 +34,11 @@ function test_cat()
   @test(norm(Do2 * rhs - D * rhs) <= rtol * norm(D * rhs))
 
   @test_throws LinearOperatorException [LinearOperator(rand(5,5)) ; opEye(3)]
-  K = [eye(2) opZeros(2,3) ; opZeros(3,2) opEye(3)]
+  K = [Matrix(1.0I, 2, 2) opZeros(2,3) ; opZeros(3,2) opEye(3)]
   v = rand(5)
   @test all(v .== K * v)
 
-  K = [opEye(2) ; speye(2)]
+  K = [opEye(2) ; sparse(1.0I, 2, 2)]
   v = rand(2)
   @test all(K * v .== [v ; v])
 end
