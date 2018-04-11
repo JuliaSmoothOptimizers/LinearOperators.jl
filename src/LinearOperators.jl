@@ -24,17 +24,18 @@ const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, Abstr
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*
-import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
 import Base.transpose
 @static if VERSION < v"0.7.0-"
-  import Base.ctranspose
+  import Base.ctranspose, Base.issymmetric, Base.ishermitian
+  import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
 else
   import Base.adjoint
-  import LinearAlgebra.diag
+  import LinearAlgebra.diag, LinearAlgebra.issymmetric,
+         LinearAlgebra.ishermitian, LinearAlgebra.A_mul_B!,
+         LinearAlgebra.At_mul_B!, LinearAlgebra.Ac_mul_B!
 end
 import Base.full
 import Base.conj
-import Base.issymmetric, Base.ishermitian
 import Base.hcat, Base.vcat, Base.hvcat
 
 @compat abstract type AbstractLinearOperator{T} end
