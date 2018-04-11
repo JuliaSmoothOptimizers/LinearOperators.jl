@@ -365,13 +365,8 @@ end
 +(op :: AbstractLinearOperator, M :: AbstractMatrix) = op + LinearOperator(M)
 
 # Operator .+ scalar.
-@static if VERSION < v"0.6.0-"
-  .+(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
-  .+(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
-else
-  +(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
-  +(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
-end
++(op :: AbstractLinearOperator, x :: Number) = op + x * opOnes(op.nrow, op.ncol)
++(x :: Number, op :: AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
 
 # Operator - operator
 -(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator) = op1 + (-op2)
@@ -381,13 +376,8 @@ end
 -(op :: AbstractLinearOperator, M :: AbstractMatrix) = op - LinearOperator(M)
 
 # Operator - scalar.
-@static if VERSION < v"0.6.0-"
-  .-(op :: AbstractLinearOperator, x :: Number) = op .+ (-x)
-  .-(x :: Number, op :: AbstractLinearOperator) = x .+ (-op)
-else
-  -(op :: AbstractLinearOperator, x :: Number) = op + (-x)
-  -(x :: Number, op :: AbstractLinearOperator) = x + (-op)
-end
+-(op :: AbstractLinearOperator, x :: Number) = op + (-x)
+-(x :: Number, op :: AbstractLinearOperator) = x + (-op)
 
 
 # Utility functions.
