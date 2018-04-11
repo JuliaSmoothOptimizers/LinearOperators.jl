@@ -206,7 +206,7 @@ Materialize an operator as a dense array using `op.ncol` products.
 """
 function full(op :: AbstractLinearOperator)
   (m, n) = size(op)
-  A = Array{eltype(op)}(uninitialized, m, n)
+  A = Array{eltype(op)}(undef, m, n)
   ei = zeros(eltype(op), n)
   for i = 1 : n
     ei[i] = 1
@@ -598,7 +598,7 @@ end
 # Removed by https://github.com/JuliaLang/julia/pull/24017
 function hvcat(rows :: Tuple{Vararg{Int}}, ops :: OperatorOrMatrix...)
   nbr = length(rows)
-  rs = Array{OperatorOrMatrix,1}(nbr)
+  rs = Array{OperatorOrMatrix,1}(undef, nbr)
   a = 1
   for i = 1:nbr
     rs[i] = hcat(ops[a:a-1+rows[i]]...)
