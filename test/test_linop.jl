@@ -87,16 +87,16 @@ function test_linop()
 
     B2 = rand(ncol, ncol+1) + rand(ncol, ncol+1) * im;
     @testset "Operator ± scalar" begin
-      opC = LinearOperator(A1) .+ 2.12345;
+      opC = LinearOperator(A1) + 2.12345;
       @test(vecnorm(A1 .+ 2.12345 - full(opC)) <= rtol * vecnorm(A1 .+ 2.12345));
 
-      opC = 2.12345 .+ LinearOperator(A1);
+      opC = 2.12345 + LinearOperator(A1);
       @test(vecnorm(A1 .+ 2.12345 - full(opC)) <= rtol * vecnorm(A1 .+ 2.12345));
 
-      opC = LinearOperator(A1) .- 2.12345;
+      opC = LinearOperator(A1) - 2.12345;
       @test(vecnorm((A1 .- 2.12345) - full(opC)) <= rtol * vecnorm(A1 .- 2.12345));
 
-      opC = 2.12345 .- LinearOperator(A1);
+      opC = 2.12345 - LinearOperator(A1);
       @test(vecnorm((2.12345 .- A1) - full(opC)) <= rtol * vecnorm(2.12345 .- A1));
 
       C = A1 * B2;
@@ -126,16 +126,10 @@ function test_linop()
     @testset "Scalar × operator" begin
       opC = 2.12345 * LinearOperator(A1);
       @test(vecnorm(AA1 - full(opC)) <= rtol * vecnorm(AA1));
-
-      opC = 2.12345 .* LinearOperator(A1);
-      @test(vecnorm(AA1 - full(opC)) <= rtol * vecnorm(AA1));
     end
 
     @testset "Operator × scalar" begin
       opC = LinearOperator(A1) * 2.12345;
-      @test(vecnorm(AA1 - full(opC)) <= rtol * vecnorm(AA1));
-
-      opC = LinearOperator(A1) .* 2.12345;
       @test(vecnorm(AA1 - full(opC)) <= rtol * vecnorm(AA1));
     end
   end
