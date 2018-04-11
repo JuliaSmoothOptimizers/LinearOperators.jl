@@ -11,7 +11,7 @@ function test_lsr1()
     @assert norm(diag(B) - diag(full(B))) <= rtol
 
     @assert B.data.insert == 1
-    @test norm(full(B) - eye(n)) <= ϵ
+    @test norm(full(B) - Matrix(1.0I, n, n)) <= ϵ
 
     # Test that only valid updates are accepted.
     s = rand(n)
@@ -37,7 +37,7 @@ function test_lsr1()
   # test against full SR1 without scaling
   mem = n
   LB = LSR1Operator(n, mem, scaling=false)
-  B = eye(n)
+  B = Matrix(1.0I, n, n)
 
   function sr1!(B, s, y)
     # dense SR1 update

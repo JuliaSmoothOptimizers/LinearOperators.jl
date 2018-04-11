@@ -13,8 +13,8 @@ function test_lbfgs()
 
     @assert B.data.insert == 1
     @assert H.data.insert == 1
-    @test norm(full(B) - eye(n)) <= ϵ
-    @test norm(full(H) - eye(n)) <= ϵ
+    @test norm(full(B) - Matrix(1.0I, n, n)) <= ϵ
+    @test norm(full(H) - Matrix(1.0I, n, n)) <= ϵ
 
     # Test that nonpositive curvature can't be added.
     s = rand(n)
@@ -47,7 +47,7 @@ function test_lbfgs()
 
     @assert norm(diag(B) - diag(full(B))) <= rtol
 
-    @test norm(full(H * B) - eye(n)) <= rtol
+    @test norm(full(H * B) - Matrix(1.0I, n, n)) <= rtol
 
     # Testing reset! function
     v = rand(n)
@@ -62,7 +62,7 @@ function test_lbfgs()
   # test against full BFGS without scaling
   mem = n
   LB = LBFGSOperator(n, mem, scaling=false)
-  B = eye(n)
+  B = Matrix(1.0I, n, n)
 
   function bfgs!(B, s, y, damped=false)
     # dense BFGS update
@@ -119,12 +119,12 @@ function test_lbfgs()
 
   @assert norm(diag(B) - diag(full(B))) <= rtol
 
-  @test norm(full(H * B) - eye(n)) <= rtol
+  @test norm(full(H * B) - Matrix(1.0I, n, n)) <= rtol
 
   # test against full BFGS without scaling
   mem = n
   LB = LBFGSOperator(n, mem, damped=true, scaling=false)
-  B = eye(n)
+  B = Matrix(1.0I, n, n)
 
   @assert norm(full(LB) - B) < rtol * norm(B)
   @assert norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
