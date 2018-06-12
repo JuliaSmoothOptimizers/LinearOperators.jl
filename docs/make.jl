@@ -14,6 +14,6 @@ makedocs(
 deploydocs(deps = nothing, make = nothing,
   repo = "github.com/JuliaSmoothOptimizers/LinearOperators.jl.git",
   target = "build",
-  julia = "0.5",
+  julia = "0.6",
   latest = "master"
 )
