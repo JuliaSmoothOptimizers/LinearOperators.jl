@@ -1,3 +1,11 @@
+# Tutorial
+
+This section of the documentation describes a few uses of LinearOperators.
+
+```@contents
+Pages = ["tutorial.md"]
+```
+
 ## Using matrices
 
 Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.
