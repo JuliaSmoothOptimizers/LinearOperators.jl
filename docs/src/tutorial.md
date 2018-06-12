@@ -30,14 +30,12 @@ In this example, the Cholesky factor is computed only once and can be used many 
 
 Operators may be defined from functions. In the example below, the transposed
 isn't defined, but it may be inferred from the conjugate transposed. Missing
-operations are represented as
-[nullable](http://julia.readthedocs.org/en/latest/manual/types/?highlight=nullable#nullable-types-representing-missing-values)
-functions. Nullable types were introduced in Julia 0.4.
+operations are represented as `nothing`.
 
 ```@example ex1
 dft = LinearOperator(10, 10, false, false,
                      v -> fft(v),
-                     Nullable{Function}(),  # will be inferred
+                     nothing,       # will be inferred
                      w -> ifft(w))
 x = rand(10)
 y = dft * x
@@ -53,11 +51,11 @@ This behavior may be overridden by specifying the type explicitly, e.g.,
 ```julia
 dft = LinearOperator{Float64}(10, 10, false, false,
                               v -> fft(v),
-                              Nullable{Function}(),
+                              nothing,
                               w -> ifft(w))
 ```
 
-## Limited memory BFGS
+## Limited memory BFGS and SR1
 
 Two other useful operators are the Limited-Memory BFGS in forward and inverse form.
 
@@ -75,7 +73,7 @@ end
 r
 ```
 
-There is also a LSR1 operator that behaves similarly to these ones.
+There is also a LSR1 operator that behaves similarly to these two.
 
 ## Restriction, extension and slices
 
@@ -112,7 +110,7 @@ A[I,J] * ones(3)
 opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)
 ```
 
-A main [difference](home/#differences) with matrices, is that slices **do not** return vectors nor
+A main [difference](@ref differences) with matrices, is that slices **do not** return vectors nor
 numbers.
 ```@example ex1
 opA[1,:] * ones(5)
