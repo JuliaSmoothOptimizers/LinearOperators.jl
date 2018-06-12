@@ -7,7 +7,7 @@ The costly operation is deferred until multiplied with a vector.
 
 ## Compatibility
 
-Julia 0.4 and up.
+Julia 0.6 and up.
 
 ## How to Install
 
@@ -58,9 +58,9 @@ Function           | Description
 
 Operators can be transposed (`A.'`), conjugated (`conj(A)`) and conjugate-transposed (`A'`).
 Operators can be sliced (`A[:,3]`, `A[2:4,1:5]`, `A[1,1]`), but unlike matrices, slices always return
-operators (see [differences](#Differences-1)).
+operators (see [differences](@ref differences)).
 
-## Differences
+## [Differences](@id differences)
 
 Unlike matrices, an operator never reduces to a vector or a number.
 
@@ -79,7 +79,7 @@ opA[:,1] * 3 # LinearOperator
 ```@example exdiff
 opA[:,1] * [3] # Vector
 ```
-This is also true for `A[i,J]`, which returns vectors on Julia 0.5, and for the scalar
+This is also true for `A[i,:]`, which returns vectors on Julia 0.6, and for the scalar
 `A[i,j]`.
 Similarly, `opA[1,1]` is an operator of size (1,1):"
 ```@example exdiff
