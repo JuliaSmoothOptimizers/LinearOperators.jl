@@ -7,31 +7,31 @@ op2 = LinearOperator(A2)
 op = op1 * op2  # Does not form A1 * A2
 x = rand(3)
 y = op * x</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 1.60483
- 1.53616
- 2.23796
- 1.39562
- 2.26195</code></pre></div><h2><a class="nav-anchor" id="Inverse-1" href="#Inverse-1">Inverse</a></h2><p>Operators may be defined to represent (approximate) inverses.</p><div><pre><code class="language-julia">A = rand(5,5)
+ 0.499883
+ 0.259322
+ 0.613863
+ 0.413044
+ 0.2496</code></pre></div><h2><a class="nav-anchor" id="Inverse-1" href="#Inverse-1">Inverse</a></h2><p>Operators may be defined to represent (approximate) inverses.</p><div><pre><code class="language-julia">A = rand(5,5)
 A = A&#39; * A
 op = opCholesky(A)  # Use, e.g., as a preconditioner
 v = rand(5)
-norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">1.5023391745459184e-13</code></pre></div><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2><a class="nav-anchor" id="Using-functions-1" href="#Using-functions-1">Using functions</a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><div><pre><code class="language-julia">dft = LinearOperator(10, 10, false, false,
+norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">4.510810847229075e-14</code></pre></div><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2><a class="nav-anchor" id="Using-functions-1" href="#Using-functions-1">Using functions</a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><div><pre><code class="language-julia">dft = LinearOperator(10, 10, false, false,
                      v -&gt; fft(v),
                      nothing,       # will be inferred
                      w -&gt; ifft(w))
 x = rand(10)
 y = dft * x
-norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">3.1031676915590914e-16</code></pre></div><div><pre><code class="language-julia">dft.&#39; * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
- 0.695757-0.0im
- 0.581565-0.0im
- 0.206568+0.0im
- 0.809784-0.0im
- 0.822617-0.0im
- 0.773975-0.0im
- 0.518861-0.0im
-  0.29074-0.0im
- 0.129533-0.0im
- 0.948444-0.0im</code></pre></div><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><div><pre><code class="language-julia">dft = LinearOperator{Float64}(10, 10, false, false,
+norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">1.4946834900704541e-16</code></pre></div><div><pre><code class="language-julia">dft.&#39; * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
+ 0.580506-0.0im
+ 0.513845-0.0im
+ 0.210501+0.0im
+ 0.650356-0.0im
+  0.22583-0.0im
+ 0.203985-0.0im
+ 0.349018-0.0im
+ 0.858935-0.0im
+ 0.498528-0.0im
+ 0.285015-0.0im</code></pre></div><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><div><pre><code class="language-julia">dft = LinearOperator{Float64}(10, 10, false, false,
                               v -&gt; fft(v),
                               nothing,
                               w -&gt; ifft(w))</code></pre><pre><code class="language-none">Linear operator
@@ -49,7 +49,7 @@ op = LinearOperator(5, 3, false, false,
                     p -&gt; A * p,
                     q -&gt; A&#39; * q)
 v = op * ones(3)
-norm(Ap - v)</code></pre><pre><code class="language-none">3.427950447874807</code></pre></div><p>The same can be done with functions:</p><pre><code class="language-julia">op = LinearOperator(5, 3, false, false,
+norm(Ap - v)</code></pre><pre><code class="language-none">3.6949737970602854</code></pre></div><p>The same can be done with functions:</p><pre><code class="language-julia">op = LinearOperator(5, 3, false, false,
                     p -&gt; Aprod!(Ap, p)
                     q -&gt; Atprod!(Atq, q))</code></pre><p>where <code>Aprod!</code> and <code>Atprod!</code> return <code>Ap</code> and <code>Atq</code>, respectively.</p><h2><a class="nav-anchor" id="Limited-memory-BFGS-and-SR1-1" href="#Limited-memory-BFGS-and-SR1-1">Limited memory BFGS and SR1</a></h2><p>Two other useful operators are the Limited-Memory BFGS in forward and inverse form.</p><div><pre><code class="language-julia">B = LBFGSOperator(20)
 H = InverseLBFGSOperator(20)
@@ -61,7 +61,7 @@ for i = 1:100
   push!(H, s, y)
   r += norm(B * H * s - s)
 end
-r</code></pre><pre><code class="language-none">191.9047059747055</code></pre></div><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2><a class="nav-anchor" id="Restriction,-extension-and-slices-1" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></h2><p>The restriction operator restricts a vector to a set of indices.</p><div><pre><code class="language-julia">v = collect(1:5)
+r</code></pre><pre><code class="language-none">201.4498404612732</code></pre></div><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2><a class="nav-anchor" id="Restriction,-extension-and-slices-1" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></h2><p>The restriction operator restricts a vector to a set of indices.</p><div><pre><code class="language-julia">v = collect(1:5)
 R = opRestriction([2;5], 5)
 R * v</code></pre><pre><code class="language-none">2-element Array{Int64,1}:
  2
@@ -79,16 +79,16 @@ opA = LinearOperator(A)
 I = [1;3;5]
 J = 2:4
 A[I,J] * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 1.72013
- 1.52802
- 0.81132</code></pre></div><div><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 1.72013
- 1.52802
- 0.81132</code></pre></div><p>A main <a href="index.html#differences-1">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><div><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 2.95351</code></pre></div><div><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.945997
- 0.981499
- 0.289545
- 0.983698
- 0.0297766</code></pre></div><div><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 0.945997</code></pre></div><footer><hr/><a class="previous" href="index.html"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="reference.html"><span class="direction">Next</span><span class="title">Reference</span></a></footer></article></body></html>
+ 1.81479
+ 1.87184
+ 1.65919</code></pre></div><div><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
+ 1.81479
+ 1.87184
+ 1.65919</code></pre></div><p>A main <a href="index.html#differences-1">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><div><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 2.98865</code></pre></div><div><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
+ 0.883867
+ 0.322028
+ 0.91408
+ 0.887971
+ 0.167375</code></pre></div><div><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 0.883867</code></pre></div><footer><hr/><a class="previous" href="index.html"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="reference.html"><span class="direction">Next</span><span class="title">Reference</span></a></footer></article></body></html>
