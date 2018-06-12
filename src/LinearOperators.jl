@@ -2,6 +2,7 @@ __precompile__()
 # Linear Operators for Julia
 module LinearOperators
 
+using FastClosures
 using Compat, Compat.Printf, Compat.LinearAlgebra, Compat.SparseArrays
 
 export AbstractLinearOperator, LinearOperator,
@@ -38,11 +39,11 @@ import Base.full
 import Base.conj
 import Base.hcat, Base.vcat, Base.hvcat
 
-@compat abstract type AbstractLinearOperator{T} end
+@compat abstract type AbstractLinearOperator{T,F} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
-eltype(A :: AbstractLinearOperator{T}) where T = T
-isreal(A :: AbstractLinearOperator{T}) where T = T <: Real
+eltype(A :: AbstractLinearOperator{T,F}) where {T,F} = T
+isreal(A :: AbstractLinearOperator{T,F}) where {T,F} = T <: Real
 
 
 """
@@ -52,14 +53,14 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-mutable struct LinearOperator{T} <: AbstractLinearOperator{T}
+mutable struct LinearOperator{T, F <: Function} <: AbstractLinearOperator{T,F}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function                # apply the operator to a vector
-  tprod  :: Union{Function,Nothing} # apply the transpose operator to a vector
-  ctprod :: Union{Function,Nothing} # apply the transpose conjugate operator to a vector
+  prod   :: F                # apply the operator to a vector
+  tprod  :: Union{F,Nothing} # apply the transpose operator to a vector
+  ctprod :: Union{F,Nothing} # apply the transpose conjugate operator to a vector
 end
 
 """
@@ -138,11 +139,15 @@ Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
 """
-LinearOperator(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T =
-  LinearOperator{T}(size(M)..., symmetric, hermitian,
-                    v -> M * v,
-                    u -> transpose(M) * u,
-                    w -> M' * w)
+function LinearOperator(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T
+  nrow, ncol = size(M)
+  Mv = Vector{T}(nrow)
+  prod = @closure v -> A_mul_B!(Mv, M, v)
+  Mtu = Vector{T}(ncol)
+  tprod = @closure u -> At_mul_B!(Mtu, M, u)
+  ctprod = @closure w -> Ac_mul_B!(Mtu, M, w)
+  LinearOperator{T,typeof(prod)}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+end
 
 """
     LinearOperator(M)
@@ -152,7 +157,7 @@ its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
 LinearOperator(M :: SymTridiagonal{T}) where T =
-  LinearOperator{T}(M; symmetric=true, hermitian=eltype(M) <: Real)
+  LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
 
 """
     LinearOperator(M)
@@ -182,14 +187,14 @@ LinearOperator(M :: Hermitian{T}) where T =
 
 Construct a linear operator from functions.
 """
-function LinearOperator(nrow :: Int, ncol :: Int,
-                        symmetric :: Bool, hermitian :: Bool,
-                        prod :: Function,
-                        tprod :: Union{Function,Nothing}=nothing,
-                        ctprod :: Union{Function,Nothing}=nothing)
+function LinearOperator{F<:Function}(nrow :: Int, ncol :: Int,
+                                     symmetric :: Bool, hermitian :: Bool,
+                                     prod :: F,
+                                     tprod :: Union{F,Nothing}=nothing,
+                                     ctprod :: Union{F,Nothing}=nothing)
 
   T = hermitian ? (symmetric ? Float64 : ComplexF64) : ComplexF64
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+  LinearOperator{T,F}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
 
@@ -246,7 +251,7 @@ function transpose(op :: AbstractLinearOperator{T}) where T
 
   return LinearOperator{T}(op.ncol, op.nrow, op.symmetric, op.hermitian,
                            v -> conj(ctprod(conj(v))), # A.'v = conj(A' conj(v))
-                           op.prod,                    # (A.').' = A
+                           op.prod,                             # (A.').' = A
                            w -> conj(op.prod(w)))      # (A.')' = conj(A)
 end
 
