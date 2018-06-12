@@ -48,12 +48,35 @@ dft.' * y
 By default a linear operator defined by functions and that is neither symmetric
 nor hermitian will have element type `Complex128`.
 This behavior may be overridden by specifying the type explicitly, e.g.,
-```julia
+```@example ex1
 dft = LinearOperator{Float64}(10, 10, false, false,
                               v -> fft(v),
                               nothing,
                               w -> ifft(w))
 ```
+
+### Preallocation
+
+It is also possible to use inplace functions by preallocating the required elements. For
+instance:
+```@example ex1
+A = rand(5, 3)
+Ap = Vector{Float64}(5)
+Atq = Vector{Float64}(3)
+op = LinearOperator(5, 3, false, false,
+                    p -> A * p,
+                    q -> A' * q)
+v = op * ones(3)
+norm(Ap - v)
+```
+
+The same can be done with functions:
+```julia ex1
+op = LinearOperator(5, 3, false, false,
+                    p -> Aprod!(Ap, p)
+                    q -> Atprod!(Atq, q))
+```
+where `Aprod!` and `Atprod!` return `Ap` and `Atq`, respectively.
 
 ## Limited memory BFGS and SR1
 
