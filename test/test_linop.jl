@@ -275,7 +275,7 @@ function test_linop()
 
     @testset "Cholesky and LDL" begin
       B = A' * A;
-      Binv = opCholesky(B, check=true);
+      Binv = opCholesky(B)  #, check=true);
       @test(norm(B \ v - Binv * v) <= rtol * norm(v));
       @test(norm(transpose(B) \ v - transpose(Binv) * v) <= rtol * norm(v));
       @test(norm(B' \ v - Binv' * v) <= rtol * norm(v));

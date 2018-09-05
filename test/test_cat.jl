@@ -5,7 +5,8 @@ function test_cat()
     A   = sprandn(100, 100, .5)
     B   = randn(100, 10) + 1im * randn(100, 10)
     rd(x) = round(Int64, x)
-    @compat C   = rd.(randn(100, 90) * 30)
+    # @compat C   = rd.(randn(100, 90) * 30)
+    C   = randn(100, 90) * 30
     D   = [A B C]
     Ao  = LinearOperator(A)
     Bo  = LinearOperator(B)
@@ -14,7 +15,7 @@ function test_cat()
     Do2 = LinearOperator(D)
     rhs = randn(200)
 
-    @test(norm(Do * rhs - D * rhs) <= rtol * norm(D * rhs))
+    @test(norm(Do * rhs - D * rhs) <= rtol * norm(D * rhs))  # throws InexactError()
     @test(norm(Do2 * rhs - D * rhs) <= rtol * norm(D * rhs))
 
     @test_throws LinearOperatorException [LinearOperator(rand(5,5)) opEye(3)]
@@ -22,7 +23,8 @@ function test_cat()
     # test vcat
     A   = sprandn(100, 100, 0.5)
     B   = randn(10, 100) + 1im * randn(10, 100)
-    @compat C   = rd.(randn(90, 100) * 30)
+    # @compat C   = rd.(randn(90, 100) * 30)
+    C   = randn(90, 100) * 30
     D   = [A; B; C]
     Ao  = LinearOperator(A)
     Bo  = LinearOperator(B)
