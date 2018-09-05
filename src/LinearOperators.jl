@@ -415,13 +415,13 @@ end
 
 Cheap check that the operator and its conjugate transposed are related.
 """
-function check_ctranspose(op :: AbstractLinearOperator)
+function check_ctranspose(op :: AbstractLinearOperator{T}) where {T <: Union{AbstractFloat,Complex}}
   (m, n) = size(op)
   x = rand(n)
   y = rand(m)
   yAx = dot(y, op * x)
   xAty = dot(x, op' * y)
-  ε = eps(eltype(op))
+  ε = eps(real(eltype(op)))
   return abs(yAx - conj(xAty)) < (abs(yAx) + ε) * ε^(1/3)
 end
 
@@ -432,7 +432,7 @@ check_ctranspose(M :: AbstractMatrix) = check_ctranspose(LinearOperator(M))
 
 Cheap check that the operator is Hermitian.
 """
-function check_hermitian(op :: AbstractLinearOperator)
+function check_hermitian(op :: AbstractLinearOperator{T}) where {T <: Union{AbstractFloat,Complex}}
   m, n = size(op)
   m == n || throw(LinearOperatorException("shape mismatch"))
   v = rand(n)
@@ -440,7 +440,7 @@ function check_hermitian(op :: AbstractLinearOperator)
   s = dot(w, w);  # = (Av)'(Av) = v' A' A v.
   y = op * w
   t = dot(v, y);  # = v' A A v.
-  ε = eps(eltype(op))
+  ε = eps(real(eltype(op)))
   return abs(s - t) < (abs(s) + ε) * ε^(1/3)
 end
 
@@ -451,13 +451,13 @@ check_hermitian(M :: AbstractMatrix) = check_hermitian(LinearOperator(M))
 
 Cheap check that the operator is positive (semi-)definite.
 """
-function check_positive_definite(op :: AbstractLinearOperator; semi=false)
+function check_positive_definite(op :: AbstractLinearOperator{T}; semi=false) where {T <: Union{AbstractFloat,Complex}}
   m, n = size(op)
   m == n || throw(LinearOperatorException("shape mismatch"))
   v = rand(n)
   w = op * v
   vw = dot(v, w)
-  ε = eps(eltype(op))
+  ε = eps(real(eltype(op)))
   if imag(vw) > sqrt(ε) * abs(vw)
     return false
   end
