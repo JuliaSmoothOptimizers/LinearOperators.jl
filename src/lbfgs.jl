@@ -36,14 +36,14 @@ end
 LBFGSData(n :: Int, mem :: Int; kwargs...) = LBFGSData(Float64, n, mem; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-mutable struct LBFGSOperator{T} <: AbstractLinearOperator{T}
+mutable struct LBFGSOperator{T,F1<:FuncOrVoid,F2<:FuncOrVoid,F3<:FuncOrVoid} <: AbstractLinearOperator{T,F1,F2,F3}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function                # apply the operator to a vector
-  tprod  :: Union{Function,Nothing} # apply the transpose operator to a vector
-  ctprod :: Union{Function,Nothing} # apply the transpose conjugate operator to a vector
+  prod   :: F1  # apply the operator to a vector
+  tprod  :: F2  # apply the transpose operator to a vector
+  ctprod :: F3  # apply the transpose conjugate operator to a vector
   inverse :: Bool
   data :: LBFGSData{T}
 end
@@ -62,16 +62,12 @@ function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n, mem; inverse=true, kwargs...)
 
-  function lbfgs_multiply(data :: LBFGSData, x :: Array)
+  function lbfgs_multiply(data :: LBFGSData, x :: AbstractArray)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
 
-    if T == eltype(x)
-      q = copy(x)
-    else
-      result_type = promote_type(T, eltype(x))
-      q = convert(Array{result_type}, x)
-    end
+    result_type = promote_type(T, eltype(x))
+    q = convert(Array{result_type}, copy(x))
 
     for i = 1 : data.mem
       k = mod(data.insert - i - 1, data.mem) + 1
@@ -94,11 +90,13 @@ function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
     return q
   end
 
-  return LBFGSOperator{T}(n, n, true, true,
-                          x -> lbfgs_multiply(lbfgs_data, x),
-                          nothing, nothing,
-                          true,
-                          lbfgs_data)
+  prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
+  F = typeof(prod)
+  return LBFGSOperator{T,F,F,F}(n, n, true, true,
+                                                 prod,
+                                                 prod, prod,
+                                                 true,
+                                                 lbfgs_data)
 end
 
 InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(Float64, n, mem; kwargs...)
@@ -117,16 +115,12 @@ function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n, mem; inverse=false, kwargs...)
 
-  function lbfgs_multiply(data :: LBFGSData, x :: Array)
+  function lbfgs_multiply(data :: LBFGSData, x :: AbstractArray)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
 
-    if T == eltype(x)
-      q = copy(x)
-    else
-      result_type = promote_type(T, eltype(x))
-      q = convert(Array{result_type}, x)
-    end
+    result_type = promote_type(T, eltype(x))
+    q = convert(Array{result_type}, copy(x))
 
     data.scaling && (q[:] /= data.scaling_factor)
 
@@ -140,11 +134,13 @@ function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
     return q
   end
 
-  return LBFGSOperator{T}(n, n, true, true,
-                          x -> lbfgs_multiply(lbfgs_data, x),
-                          nothing, nothing,
-                          false,
-                          lbfgs_data)
+  prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
+  F = typeof(prod)
+  return LBFGSOperator{T,F,F,F}(n, n, true, true,
+                                                 prod,
+                                                 prod, prod,
+                                                 false,
+                                                 lbfgs_data)
 end
 
 LBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = LBFGSOperator(Float64, n, mem; kwargs...)
