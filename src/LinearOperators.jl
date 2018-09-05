@@ -260,11 +260,11 @@ function transpose(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
     ctprod = op.ctprod
   end
 
-  prod = @closure v -> conj.(ctprod(conj.(v)))  # A.'v = conj(A' conj(v))
-  ctprod = @closure w -> conj.(op.prod(w))       # (A.')' = conj(A)
-  F4 = typeof(prod)
-  F5 = typeof(ctprod)
-  return LinearOperator{T,F4,F1,F5}(op.ncol, op.nrow, op.symmetric, op.hermitian, prod, op.prod, ctprod)
+  newprod = @closure v -> conj.(ctprod(conj.(v)))  # A.'v = conj(A' conj(v))
+  newctprod = @closure w -> conj.(op.prod(w))       # (A.')' = conj(A)
+  F4 = typeof(newprod)
+  F5 = typeof(newctprod)
+  return LinearOperator{T,F4,F1,F5}(op.ncol, op.nrow, op.symmetric, op.hermitian, newprod, op.prod, newctprod)
 end
 
 # TODO: not type stable
