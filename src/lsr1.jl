@@ -28,14 +28,14 @@ end
 LSR1Data(n :: Int, mem :: Int; kwargs...) = LSR1Data(Float64, n, mem; kwargs...)
 
 "A type for limited-memory SR1 approximations."
-mutable struct LSR1Operator{T} <: AbstractLinearOperator{T}
+mutable struct LSR1Operator{T,F1<:FuncOrVoid,F2<:FuncOrVoid,F3<:FuncOrVoid} <: AbstractLinearOperator{T,F1,F2,F3}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: Function                # apply the operator to a vector
-  tprod  :: Union{Function,Nothing} # apply the transpose operator to a vector
-  ctprod :: Union{Function,Nothing} # apply the transpose conjugate operator to a vector
+  prod   :: F1  # apply the operator to a vector
+  tprod  :: F2  # apply the transpose operator to a vector
+  ctprod :: F3  # apply the transpose conjugate operator to a vector
   inverse :: Bool
   data :: LSR1Data{T}
 end
@@ -53,12 +53,8 @@ function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=tru
   function lsr1_multiply(data :: LSR1Data, x :: Array)
     # Multiply operator with a vector.
 
-    if T == eltype(x)
-      q = copy(x)
-    else
-      result_type = promote_type(T, eltype(x))
-      q = convert(Array{result_type}, x)
-    end
+    result_type = promote_type(T, eltype(x))
+    q = convert(Array{result_type}, copy(x))
 
     data.scaling && (q[:] /= data.scaling_factor)
 
@@ -71,11 +67,12 @@ function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=tru
     return q
   end
 
-  return LSR1Operator{T}(n, n, true, true,
-                         x -> lsr1_multiply(lsr1_data, x),
-                         nothing, nothing,
-                         false,
-                         lsr1_data)
+  prod = @closure x -> lsr1_multiply(lsr1_data, x)
+  return LSR1Operator{T,typeof(prod),Void,Void}(n, n, true, true,
+                                                prod,
+                                                nothing, nothing,
+                                                false,
+                                                lsr1_data)
 end
 
 LSR1Operator(n :: Int, mem :: Int=5; kwargs...) = LSR1Operator(Float64, n, mem; kwargs...)
