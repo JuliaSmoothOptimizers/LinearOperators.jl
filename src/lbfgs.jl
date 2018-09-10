@@ -93,10 +93,7 @@ function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
   prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
   F = typeof(prod)
   return LBFGSOperator{T,F,F,F}(n, n, true, true,
-                                                 prod,
-                                                 prod, prod,
-                                                 true,
-                                                 lbfgs_data)
+                                prod, prod, prod, true, lbfgs_data)
 end
 
 InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(Float64, n, mem; kwargs...)
@@ -137,10 +134,7 @@ function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
   prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
   F = typeof(prod)
   return LBFGSOperator{T,F,F,F}(n, n, true, true,
-                                                 prod,
-                                                 prod, prod,
-                                                 false,
-                                                 lbfgs_data)
+                                prod, prod, prod, false, lbfgs_data)
 end
 
 LBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = LBFGSOperator(Float64, n, mem; kwargs...)
