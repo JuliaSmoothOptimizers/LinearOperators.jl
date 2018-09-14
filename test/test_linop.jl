@@ -232,6 +232,14 @@ function test_linop()
       @test(norm(H' * v - C * v) <= rtol * norm(v));
     end
 
+    @testset "Integer" begin
+        A = convert(Array{Int,2}, round.(10 * rand(nrow, nrow) - 5))
+        op = LinearOperator(A)
+        @test check_ctranspose(op)
+        @test check_hermitian(op + op')
+        @test check_positive_definite(op * op')
+    end
+
     @testset "Restriction and Extension" begin
       n = 10
       J = [1;2;4;7]
