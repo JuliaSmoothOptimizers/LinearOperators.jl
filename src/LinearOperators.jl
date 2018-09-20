@@ -238,7 +238,7 @@ function transpose(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
     return op
   end
   if op.tprod !== nothing
-    ctprod = @closure v -> conj.(op.tprod(v))
+    ctprod = @closure v -> conj.(op.prod(conj.(v)))
     F4 = typeof(ctprod)
     return LinearOperator{T,F2,F1,F4}(op.ncol, op.nrow, op.symmetric, op.hermitian, op.tprod, op.prod, ctprod)
   end
@@ -252,8 +252,8 @@ function transpose(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
     ctprod = op.ctprod
   end
 
-  newprod = @closure v -> conj.(ctprod(conj.(v)))  # A.'v = conj(A' conj(v))
-  newctprod = @closure w -> conj.(op.prod(w))       # (A.')' = conj(A)
+  newprod = @closure v -> conj.(ctprod(conj.(v)))    # A.'v = conj(A' conj(v))
+  newctprod = @closure w -> conj.(op.prod(conj.(w))) # (A.')'v = conj(A conj(v))
   F4 = typeof(newprod)
   F5 = typeof(newctprod)
   return LinearOperator{T,F4,F1,F5}(op.ncol, op.nrow, op.symmetric, op.hermitian, newprod, op.prod, newctprod)
@@ -265,7 +265,7 @@ function adjoint(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
     return op
   end
   if op.ctprod !== nothing
-    tprod = @closure u -> conj.(op.prod(u))
+    tprod = @closure u -> conj.(op.prod(conj.(u)))
     F4 = typeof(tprod)
     return LinearOperator{T,F3,F4,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, op.ctprod, tprod, op.prod)
   end
@@ -279,11 +279,11 @@ function adjoint(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
     tprod = op.tprod
   end
 
-  prod = @closure v -> conj.(tprod(v))
-  tprod = @closure u -> conj.(op.prod(u))
-  F4 = typeof(prod)
-  F5 = typeof(tprod)
-  LinearOperator{T,F4,F5,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, prod, tprod, op.prod)
+  newprod = @closure v -> conj.(tprod(conj.(v)))
+  newtprod = @closure u -> conj.(op.prod(conj.(u)))
+  F4 = typeof(newprod)
+  F5 = typeof(newtprod)
+  LinearOperator{T,F4,F5,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, newprod, newtprod, op.prod)
 end
 
 function conj(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
