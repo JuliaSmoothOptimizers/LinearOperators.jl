@@ -115,9 +115,9 @@ function show(io :: IO, op :: AbstractLinearOperator)
   s *= @sprintf("  eltype: %s\n", eltype(op))
   s *= @sprintf("  symmetric: %s\n", op.symmetric)
   s *= @sprintf("  hermitian: %s\n", op.hermitian)
-  s *= @sprintf("  prod:   %s\n", string(op.prod))
-  s *= @sprintf("  tprod:  %s\n", string(op.tprod))
-  s *= @sprintf("  ctprod: %s", string(op.ctprod))
+  #s *= @sprintf("  prod:   %s\n", string(op.prod))
+  #s *= @sprintf("  tprod:  %s\n", string(op.tprod))
+  #s *= @sprintf("  ctprod: %s", string(op.ctprod))
   s *= "\n"
   print(io, s)
 end
