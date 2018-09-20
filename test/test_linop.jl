@@ -232,6 +232,27 @@ function test_linop()
       @test(norm(H' * v - C * v) <= rtol * norm(v));
     end
 
+    @testset "Transpose and adjoint" begin
+      A = rand(nrow, nrow) + rand(nrow, nrow) * im;
+      v = rand(nrow) + rand(nrow) * im;
+
+      op = LinearOperator(nrow, nrow, false, false, v->A*v, v->transpose(A)*v, nothing)
+      @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
+      @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
+      @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
+      @test(norm(A * v - adjoint(adjoint(op)) * v) <= rtol * norm(v))
+      @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
+      @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
+
+      op = LinearOperator(nrow, nrow, false, false, v->A*v, nothing, v->adjoint(A)*v)
+      @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
+      @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
+      @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
+      @test(norm(A * v - adjoint(adjoint(op)) * v) <= rtol * norm(v))
+      @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
+      @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
+    end
+
     @testset "Integer" begin
         A = convert(Array{Int,2}, round.(10 * rand(nrow, nrow) .- 5))
         op = LinearOperator(A)
