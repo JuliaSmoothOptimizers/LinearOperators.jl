@@ -1,6 +1,5 @@
 export LBFGSOperator, InverseLBFGSOperator, reset!
 
-
 "A data type to hold information relative to LBFGS operators."
 mutable struct LBFGSData{T}
   mem :: Int
@@ -8,12 +7,12 @@ mutable struct LBFGSData{T}
   scaling_factor :: T
   damped :: Bool
   damp_factor :: T
-  s   :: Array{T}
-  y   :: Array{T}
+  s   :: Matrix{T}
+  y   :: Matrix{T}
   ys  :: Vector{T}
   α   :: Vector{T}
-  a   :: Array{T}
-  b   :: Array{T}
+  a   :: Matrix{T}
+  b   :: Matrix{T}
   insert :: Int
 end
 
@@ -27,16 +26,16 @@ function LBFGSData(T :: DataType, n :: Int, mem :: Int;
                zeros(T, n, mem),
                zeros(T, n, mem),
                zeros(T, mem),
-               inverse ? zeros(T, mem) : T[],
-               inverse ? T[] : zeros(T, n, mem),
-               inverse ? T[] : zeros(T, n, mem),
+               inverse ? zeros(T, mem) : zeros(T, 0),
+               inverse ? zeros(T, 0, 0) : zeros(T, n, mem),
+               inverse ? zeros(T, 0, 0) : zeros(T, n, mem),
                1)
 end
 
 LBFGSData(n :: Int, mem :: Int; kwargs...) = LBFGSData(Float64, n, mem; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-mutable struct LBFGSOperator{T,F1<:FuncOrVoid,F2<:FuncOrVoid,F3<:FuncOrVoid} <: AbstractLinearOperator{T,F1,F2,F3}
+mutable struct LBFGSOperator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: AbstractLinearOperator{T,F1,F2,F3}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool

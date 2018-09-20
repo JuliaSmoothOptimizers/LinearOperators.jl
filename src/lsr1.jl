@@ -5,11 +5,11 @@ mutable struct LSR1Data{T}
   mem :: Int
   scaling :: Bool
   scaling_factor :: T
-  s   :: Array{T}
-  y   :: Array{T}
+  s   :: Matrix{T}
+  y   :: Matrix{T}
   ys  :: Vector{T}
-  a   :: Array{T}
-  as  :: Array{T}
+  a   :: Matrix{T}
+  as  :: Vector{T}
   insert :: Int
 end
 
@@ -28,7 +28,7 @@ end
 LSR1Data(n :: Int, mem :: Int; kwargs...) = LSR1Data(Float64, n, mem; kwargs...)
 
 "A type for limited-memory SR1 approximations."
-mutable struct LSR1Operator{T,F1<:FuncOrVoid,F2<:FuncOrVoid,F3<:FuncOrVoid} <: AbstractLinearOperator{T,F1,F2,F3}
+mutable struct LSR1Operator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: AbstractLinearOperator{T,F1,F2,F3}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
@@ -68,11 +68,11 @@ function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=tru
   end
 
   prod = @closure x -> lsr1_multiply(lsr1_data, x)
-  return LSR1Operator{T,typeof(prod),Void,Void}(n, n, true, true,
-                                                prod,
-                                                nothing, nothing,
-                                                false,
-                                                lsr1_data)
+  return LSR1Operator{T,typeof(prod),Nothing,Nothing}(n, n, true, true,
+                                                      prod,
+                                                      nothing, nothing,
+                                                      false,
+                                                      lsr1_data)
 end
 
 LSR1Operator(n :: Int, mem :: Int=5; kwargs...) = LSR1Operator(Float64, n, mem; kwargs...)

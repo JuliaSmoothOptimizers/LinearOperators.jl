@@ -5,7 +5,7 @@ function test_cat()
     A   = sprandn(100, 100, .5)
     B   = randn(100, 10) + 1im * randn(100, 10)
     rd(x) = round(Int64, x)
-    # @compat C   = rd.(randn(100, 90) * 30)
+    # C   = rd.(randn(100, 90) * 30)
     C   = randn(100, 90) * 30
     D   = [A B C]
     Ao  = LinearOperator(A)
@@ -23,7 +23,7 @@ function test_cat()
     # test vcat
     A   = sprandn(100, 100, 0.5)
     B   = randn(10, 100) + 1im * randn(10, 100)
-    # @compat C   = rd.(randn(90, 100) * 30)
+    # C   = rd.(randn(90, 100) * 30)
     C   = randn(90, 100) * 30
     D   = [A; B; C]
     Ao  = LinearOperator(A)

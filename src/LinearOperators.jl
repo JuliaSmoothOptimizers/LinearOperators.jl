@@ -2,12 +2,10 @@ __precompile__()
 # Linear Operators for Julia
 module LinearOperators
 
-using FastClosures
-using Compat, Compat.Printf, Compat.LinearAlgebra, Compat.SparseArrays
+using FastClosures, Printf, LinearAlgebra, SparseArrays
 
 export AbstractLinearOperator, LinearOperator,
-       LinearOperatorException,
-       A_mul_B!, At_mul_B!, Ac_mul_B!,
+       LinearOperatorException, mul!,
        opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
@@ -26,26 +24,18 @@ const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, Abstr
 import Base.eltype, Base.isreal, Base.size, Base.show
 import Base.+, Base.-, Base.*
 import Base.transpose
-@static if VERSION < v"0.7.0-"
-  import Base.ctranspose, Base.issymmetric, Base.ishermitian
-  import Base.A_mul_B!, Base.At_mul_B!, Base.Ac_mul_B!
-else
-  import Base.adjoint
-  import LinearAlgebra.diag, LinearAlgebra.issymmetric,
-         LinearAlgebra.ishermitian, LinearAlgebra.A_mul_B!,
-         LinearAlgebra.At_mul_B!, LinearAlgebra.Ac_mul_B!
-end
-import Base.full
+import Base.adjoint
+import LinearAlgebra.issymmetric, LinearAlgebra.ishermitian, LinearAlgebra.mul!
 import Base.conj
 import Base.hcat, Base.vcat, Base.hvcat
 
-@compat abstract type AbstractLinearOperator{T,F1,F2,F3} end
+abstract type AbstractLinearOperator{T,F1,F2,F3} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
 eltype(A :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3} = T
 isreal(A :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3} = T <: Real
 
-const FuncOrVoid = Union{Function, Void}
+const FuncOrNothing = Union{Function, Nothing}
 
 
 """
@@ -55,7 +45,7 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-mutable struct LinearOperator{T,F1<:FuncOrVoid,F2<:FuncOrVoid,F3<:FuncOrVoid} <: AbstractLinearOperator{T,F1,F2,F3}
+mutable struct LinearOperator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: AbstractLinearOperator{T,F1,F2,F3}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
@@ -143,11 +133,11 @@ is symmetric and/or hermitian.
 """
 function LinearOperator(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T
   nrow, ncol = size(M)
-  Mv = Vector{T}(nrow)
-  prod = @closure v -> A_mul_B!(Mv, M, v)
-  Mtu = Vector{T}(ncol)
-  tprod = @closure u -> At_mul_B!(Mtu, M, u)
-  ctprod = @closure w -> Ac_mul_B!(Mtu, M, w)
+    Mv = Vector{T}(undef, nrow)
+  prod = @closure v -> mul!(Mv, M, v)
+  Mtu = Vector{T}(undef, ncol)
+  tprod = @closure u -> mul!(Mtu, transpose(M), u)
+  ctprod = @closure w -> mul!(Mtu, adjoint(M), w)
   F1 = typeof(prod)
   F2 = typeof(tprod)
   F3 = typeof(ctprod)
@@ -192,11 +182,13 @@ LinearOperator(M :: Hermitian{T}) where T =
 
 Construct a linear operator from functions.
 """
-function LinearOperator{F1<:FuncOrVoid,F2<:FuncOrVoid,F3<:FuncOrVoid}(nrow :: Int, ncol :: Int,
-                                                                      symmetric :: Bool, hermitian :: Bool,
-                                                                      prod :: F1,
-                                                                      tprod :: F2=nothing,
-                                                                      ctprod :: F3=nothing)
+function LinearOperator(nrow :: Int, ncol :: Int,
+                        symmetric :: Bool, hermitian :: Bool,
+                        prod :: F1,
+                        tprod :: F2=nothing,
+                        ctprod :: F3=nothing) where {F1 <: FuncOrNothing,
+                                                     F2 <: FuncOrNothing,
+                                                     F3 <: FuncOrNothing}
 
   T = hermitian ? (symmetric ? Float64 : ComplexF64) : ComplexF64
   LinearOperator{T,F1,F2,F3}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
@@ -211,11 +203,11 @@ end
 
 
 """
-    A = full(op)
+    A = Matrix(op)
 
 Materialize an operator as a dense array using `op.ncol` products.
 """
-function full(op :: AbstractLinearOperator)
+function Base.Matrix(op :: AbstractLinearOperator)
   (m, n) = size(op)
   A = Array{eltype(op)}(undef, m, n)
   ei = zeros(eltype(op), n)
@@ -294,28 +286,14 @@ function adjoint(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
   LinearOperator{T,F4,F5,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, prod, tprod, op.prod)
 end
 
-if VERSION < v"0.7.0-"
-  ctranspose(op :: AbstractLinearOperator) = adjoint(op)
-end
-
 function conj(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
   prod = @closure v -> conj(op.prod(conj(v)))
   F4 = typeof(prod)
   LinearOperator{T,F4,F3,F2}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod, op.ctprod, op.tprod)
 end
 
-function A_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
+function mul!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
   @. y = op * x
-  return y
-end
-
-function At_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
-  @. y = transpose(op) * x
-  return y
-end
-
-function Ac_mul_B!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
-  @. y = op' * x
   return y
 end
 
@@ -363,11 +341,6 @@ function *(x :: Number, op :: AbstractLinearOperator)
   F2 = typeof(tprod)
   F3 = typeof(ctprod)
   LinearOperator{S,F1,F2,F3}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod, tprod, ctprod)
-end
-
-@static if VERSION < v"0.6.0-"
-  .*(op :: AbstractLinearOperator, x :: Number) = op * x
-  .*(x :: Number, op :: AbstractLinearOperator) = x * op
 end
 
 # Operator + operator.
@@ -427,8 +400,8 @@ end
 
 function check_ctranspose(op :: AbstractLinearOperator{T}) where T <: Integer
   (m, n) = size(op)
-  x = convert(Vector{T}, (floor.(10 * rand(n)))) - 5
-  y = convert(Vector{T}, (floor.(10 * rand(m)))) - 5
+  x = convert(Vector{T}, (floor.(10 * rand(n)))) .- 5
+  y = convert(Vector{T}, (floor.(10 * rand(m)))) .- 5
   yAx = dot(y, op * x)
   xAty = dot(x, op' * y)
   return yAx == xAty
@@ -456,7 +429,7 @@ end
 function check_hermitian(op :: AbstractLinearOperator{T}) where T <: Integer
   m, n = size(op)
   m == n || throw(LinearOperatorException("shape mismatch"))
-  v = convert(Vector{T}, (floor.(10 * rand(n)))) - 5
+  v = convert(Vector{T}, (floor.(10 * rand(n)))) .- 5
   w = copy(op * v)
   s = dot(w, w)  # = (Av)'(Av) = v' A' A v.
   y = op * w
@@ -488,7 +461,7 @@ end
 function check_positive_definite(op :: AbstractLinearOperator{T}; semi=false) where T <: Integer
   m, n = size(op)
   m == n || throw(LinearOperatorException("shape mismatch"))
-  v = convert(Vector{T}, (floor.(10 * rand(n)))) - 5
+  v = convert(Vector{T}, (floor.(10 * rand(n)))) .- 5
   w = op * v
   vw = dot(v, w)
   return semi ? (vw ≥ 0) : (vw > 0)
@@ -714,26 +687,7 @@ function opCholesky(M :: AbstractMatrix; check :: Bool=false)
     check_hermitian(M) || throw(LinearOperatorException("matrix is not Hermitian"))
     check_positive_definite(M) || throw(LinearOperatorException("matrix is not positive definite"))
   end
-  L = chol(M)'
-  prod = @closure v -> L' \ (L \ v)
-  tprod = @closure u -> transpose(L) \ (conj(L \ conj(u)))
-  ctprod = @closure w -> L' \ (L \ w)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  S = eltype(L)
-  LinearOperator{S,F1,F2,F3}(m, m, isreal(M), true, prod, tprod, ctprod)
-  #TODO: use iterative refinement.
-end
-
-function opCholesky(M :: AbstractSparseMatrix; check :: Bool=false)
-  (m, n) = size(M)
-  m == n || throw(LinearOperatorException("shape mismatch"))
-  if check
-    check_hermitian(M) || throw(LinearOperatorException("matrix is not Hermitian"))
-    check_positive_definite(M) || throw(LinearOperatorException("matrix is not positive definite"))
-  end
-  LL = cholfact(M)
+  LL = cholesky(M)
   prod = @closure v -> LL \ v
   tprod = @closure u -> conj(LL \ conj(u))  # M.' = conj(M)
   ctprod = @closure w -> LL \ w
@@ -758,7 +712,7 @@ function opLDL(M :: AbstractMatrix; check :: Bool=false)
   if check
     check_hermitian(M) || throw(LinearOperatorException("matrix is not Hermitian"))
   end
-  LDL = ldltfact(M)
+  LDL = ldlt(M)
   prod = @closure v -> LDL \ v
   tprod = @closure u -> conj(LDL \ conj(u))  # M.' = conj(M)
   ctprod = @closure w -> LDL \ w
@@ -780,7 +734,7 @@ function opHouseholder(h :: AbstractVector{T}) where T
   n = length(h)
   prod = @closure v -> (v - 2 * dot(h, v) * h)  # tprod will be inferred
   F1 = typeof(prod)
-  LinearOperator{T,F1,Void,F1}(n, n, isreal(h), true, prod, nothing, prod)
+  LinearOperator{T,F1,Nothing,F1}(n, n, isreal(h), true, prod, nothing, prod)
 end
 
 """
@@ -795,7 +749,7 @@ function opHermitian(d :: AbstractVector{S}, A :: AbstractMatrix{T}) where {S, T
   U = promote_type(S, T)
   prod = @closure v -> (d .* v + L * v + (v' * L)')[:]
   F = typeof(prod)
-  LinearOperator{U,F,Void,Void}(m, m, isreal(A), true, prod, nothing, nothing)
+  LinearOperator{U,F,Nothing,Nothing}(m, m, isreal(A), true, prod, nothing, nothing)
 end
 
 

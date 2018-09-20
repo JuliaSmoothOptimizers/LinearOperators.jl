@@ -12,9 +12,9 @@ function test_kron()
         T2 = kron(A, LinearOperator(B))
         T3 = kron(LinearOperator(A), LinearOperator(B))
         for T in [T1, T2, T3]
-          @test norm(K - full(T), 1) < eps() * normK
-          @test norm(K' - full(T'), 1) < eps() * normK
-          @test norm(transpose(K) - full(transpose(T)), 1) < eps() * normK
+          @test norm(K - Matrix(T), 1) < eps() * normK
+          @test norm(K' - Matrix(T'), 1) < eps() * normK
+          @test norm(transpose(K) - Matrix(transpose(T)), 1) < eps() * normK
           m, n = size(K)
           err = 0.0
           for t = 1:100
