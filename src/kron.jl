@@ -13,15 +13,15 @@ function kron(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   T = promote_type(eltype(A), eltype(B))
   function prod(x)
     X = reshape(convert(Vector{T}, x), q, n)
-    return full(B * X * transpose(A))[:]
+    return Matrix(B * X * transpose(A))[:]
   end
   function tprod(x)
     X = reshape(convert(Vector{T}, x), p, m)
-    return full(transpose(B) * X * A)[:]
+    return Matrix(transpose(B) * X * A)[:]
   end
   function ctprod(x)
     X = reshape(convert(Vector{T}, x), p, m)
-    return full(B' * X * conj(A))[:]
+    return Matrix(B' * X * conj(A))[:]
   end
   symm = issymmetric(A) && issymmetric(B)
   herm = ishermitian(A) && ishermitian(B)

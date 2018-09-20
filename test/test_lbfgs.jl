@@ -10,12 +10,12 @@ function test_lbfgs()
     H = InverseLBFGSOperator(n, mem, scaling=false)
 
     for t = 1:2 # Run again after reset!
-      @test norm(diag(B) - diag(full(B))) <= rtol
+      @test norm(diag(B) - diag(Matrix(B))) <= rtol
 
       @test B.data.insert == 1
       @test H.data.insert == 1
-      @test norm(full(B) - Matrix(1.0I, n, n)) <= ϵ
-      @test norm(full(H) - Matrix(1.0I, n, n)) <= ϵ
+      @test norm(Matrix(B) - Matrix(1.0I, n, n)) <= ϵ
+      @test norm(Matrix(H) - Matrix(1.0I, n, n)) <= ϵ
 
       # Test that nonpositive curvature can't be added.
       s = rand(n)
@@ -46,9 +46,9 @@ function test_lbfgs()
       @test check_hermitian(B)
       @test check_hermitian(H)
 
-      @test norm(diag(B) - diag(full(B))) <= rtol
+      @test norm(diag(B) - diag(Matrix(B))) <= rtol
 
-      @test norm(full(H * B) - Matrix(1.0I, n, n)) <= rtol
+      @test norm(Matrix(H * B) - Matrix(1.0I, n, n)) <= rtol
 
       # Testing reset! function
       v = rand(n)
@@ -76,7 +76,7 @@ function test_lbfgs()
       return B
     end
 
-    @test norm(full(LB) - B) < rtol * norm(B)
+    @test norm(Matrix(LB) - B) < rtol * norm(B)
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
     for k = 1 : mem
@@ -84,7 +84,7 @@ function test_lbfgs()
       y = rand(n)
       B = bfgs!(B, s, y)
       LB = push!(LB, s, y)
-      @test norm(full(LB) - B) < rtol * norm(B)
+      @test norm(Matrix(LB) - B) < rtol * norm(B)
       @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
     end
 
@@ -118,16 +118,16 @@ function test_lbfgs()
     @test check_hermitian(B)
     @test check_hermitian(H)
 
-    @test norm(diag(B) - diag(full(B))) <= rtol
+    @test norm(diag(B) - diag(Matrix(B))) <= rtol
 
-    @test norm(full(H * B) - Matrix(1.0I, n, n)) <= rtol
+    @test norm(Matrix(H * B) - Matrix(1.0I, n, n)) <= rtol
 
     # test against full BFGS without scaling
     mem = n
     LB = LBFGSOperator(n, mem, damped=true, scaling=false)
     B = Matrix(1.0I, n, n)
 
-    @test norm(full(LB) - B) < rtol * norm(B)
+    @test norm(Matrix(LB) - B) < rtol * norm(B)
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
     for k = 1 : mem
@@ -135,7 +135,7 @@ function test_lbfgs()
       y = rand(n)
       B = bfgs!(B, s, y, true)
       LB = push!(LB, s, y)
-      @test norm(full(LB) - B) < rtol * norm(B)
+      @test norm(Matrix(LB) - B) < rtol * norm(B)
       @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
     end
   end

@@ -1,4 +1,4 @@
-using Compat, Compat.LinearAlgebra, Compat.SparseArrays
+using LinearAlgebra, SparseArrays
 
 function test_linop()
   (nrow, ncol) = (10, 6);
@@ -30,11 +30,11 @@ function test_linop()
     end
 
     @testset "Full" begin
-      @test(vecnorm(A1 - full(op)) <= ϵ * vecnorm(A1));
+      @test(norm(A1 - Matrix(op)) <= ϵ * norm(A1));
     end
 
     @testset "Unary +." begin
-      @test(vecnorm(A1 - full(+op)) <= ϵ * vecnorm(A1));
+      @test(norm(A1 - Matrix(+op)) <= ϵ * norm(A1));
     end
 
     @testset "LinearOperator(Matrix)" begin
@@ -44,9 +44,9 @@ function test_linop()
         @test(op.nrow == nrow);
         @test(op.ncol == ncol);
 
-        @test(vecnorm(A   - full(op))   <= rtol * vecnorm(A));
-        @test(vecnorm(transpose(A) - full(transpose(op))) <= rtol * vecnorm(A));
-        @test(vecnorm(A'  - full(op'))  <= rtol * vecnorm(A));
+        @test(norm(A   - Matrix(op))   <= rtol * norm(A));
+        @test(norm(transpose(A) - Matrix(transpose(op))) <= rtol * norm(A));
+        @test(norm(A'  - Matrix(op'))  <= rtol * norm(A));
 
         v = rand(ncol) + rand(ncol) * im;
         @test(norm(A * v - op * v) <= rtol * norm(v));
@@ -88,16 +88,16 @@ function test_linop()
     B2 = rand(ncol, ncol+1) + rand(ncol, ncol+1) * im;
     @testset "Operator ± scalar" begin
       opC = LinearOperator(A1) + 2.12345;
-      @test(vecnorm(A1 .+ 2.12345 - full(opC)) <= rtol * vecnorm(A1 .+ 2.12345));
+      @test(norm(A1 .+ 2.12345 - Matrix(opC)) <= rtol * norm(A1 .+ 2.12345));
 
       opC = 2.12345 + LinearOperator(A1);
-      @test(vecnorm(A1 .+ 2.12345 - full(opC)) <= rtol * vecnorm(A1 .+ 2.12345));
+      @test(norm(A1 .+ 2.12345 - Matrix(opC)) <= rtol * norm(A1 .+ 2.12345));
 
       opC = LinearOperator(A1) - 2.12345;
-      @test(vecnorm((A1 .- 2.12345) - full(opC)) <= rtol * vecnorm(A1 .- 2.12345));
+      @test(norm((A1 .- 2.12345) - Matrix(opC)) <= rtol * norm(A1 .- 2.12345));
 
       opC = 2.12345 - LinearOperator(A1);
-      @test(vecnorm((2.12345 .- A1) - full(opC)) <= rtol * vecnorm(2.12345 .- A1));
+      @test(norm((2.12345 .- A1) - Matrix(opC)) <= rtol * norm(2.12345 .- A1));
 
       C = A1 * B2;
       opC = LinearOperator(A1) * LinearOperator(B2);
@@ -114,23 +114,23 @@ function test_linop()
     A1B2 = A1 * B2;
     @testset "Matrix × operator" begin
       opC = A1 * LinearOperator(B2);
-      @test(vecnorm(A1B2 - full(opC)) <= rtol * vecnorm(A1B2));
+      @test(norm(A1B2 - Matrix(opC)) <= rtol * norm(A1B2));
     end
 
     @testset "Operator × matrix" begin
       opC = LinearOperator(A1) * B2;
-      @test(vecnorm(A1B2 - full(opC)) <= rtol * vecnorm(A1B2));
+      @test(norm(A1B2 - Matrix(opC)) <= rtol * norm(A1B2));
     end
 
     AA1 = 2.12345 * A1;
     @testset "Scalar × operator" begin
       opC = 2.12345 * LinearOperator(A1);
-      @test(vecnorm(AA1 - full(opC)) <= rtol * vecnorm(AA1));
+      @test(norm(AA1 - Matrix(opC)) <= rtol * norm(AA1));
     end
 
     @testset "Operator × scalar" begin
       opC = LinearOperator(A1) * 2.12345;
-      @test(vecnorm(AA1 - full(opC)) <= rtol * vecnorm(AA1));
+      @test(norm(AA1 - Matrix(opC)) <= rtol * norm(AA1));
     end
   end
 
@@ -141,7 +141,7 @@ function test_linop()
       @test(abs(norm(opI * v - v)) <= ϵ * norm(v));
       @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v));
       @test(abs(norm(opI' * v - v)) <= ϵ * norm(v));
-      @test(vecnorm(full(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * vecnorm(Matrix(1.0I, nrow, nrow)));
+      @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)));
 
       opI = opEye(nrow, ncol)
       v = rand(ncol) + rand(ncol) * im
@@ -150,13 +150,13 @@ function test_linop()
       @test(abs(norm(opI * v - v0)) <= ϵ * norm(v))
       @test(abs(norm(transpose(opI) * vu - v)) <= ϵ * norm(v))
       @test(abs(norm(opI' * vu - v)) <= ϵ * norm(v))
-      @test(vecnorm(full(opI) - Matrix(1.0I, nrow, ncol)) <= ϵ * vecnorm(Matrix(1.0I, nrow, ncol)))
+      @test(norm(Matrix(opI) - Matrix(1.0I, nrow, ncol)) <= ϵ * norm(Matrix(1.0I, nrow, ncol)))
 
       opI = opEye(ncol, nrow)
       @test(abs(norm(opI * vu - v)) <= ϵ * norm(v))
       @test(abs(norm(transpose(opI) * v - v0)) <= ϵ * norm(v))
       @test(abs(norm(opI' * v - v0)) <= ϵ * norm(v))
-      @test(vecnorm(full(opI) - Matrix(1.0I, ncol, nrow)) <= ϵ * vecnorm(Matrix(1.0I, ncol, nrow)))
+      @test(norm(Matrix(opI) - Matrix(1.0I, ncol, nrow)) <= ϵ * norm(Matrix(1.0I, ncol, nrow)))
     end
 
     @testset "Ones" begin
@@ -233,7 +233,7 @@ function test_linop()
     end
 
     @testset "Integer" begin
-        A = convert(Array{Int,2}, round.(10 * rand(nrow, nrow) - 5))
+        A = convert(Array{Int,2}, round.(10 * rand(nrow, nrow) .- 5))
         op = LinearOperator(A)
         @test check_ctranspose(op)
         @test check_hermitian(op + op')
@@ -298,7 +298,7 @@ function test_linop()
       K = [A B' ; B -C];
 
       # Dense Cholesky should throw an exception.
-      @test_throws Compat.LinearAlgebra.PosDefException opCholesky(K);
+      @test_throws LinearAlgebra.PosDefException opCholesky(K);
 
       # Compute the LDL' factorization.
       LDL = opLDL(sparse(K));
@@ -324,7 +324,7 @@ function test_linop()
     @test_throws LinearOperatorException op'            # cannot be inferred
 
     op2 = conj(op);
-    @test(vecnorm(full(op2) - conj(full(op))) <= ϵ * vecnorm(full(op)));
+    @test(norm(Matrix(op2) - conj(Matrix(op))) <= ϵ * norm(Matrix(op)));
 
     A = rand(5,3) + im * rand(5,3);
     op = LinearOperator(A);
