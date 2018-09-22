@@ -192,6 +192,26 @@ function LinearOperator(nrow :: Int, ncol :: Int,
   LinearOperator{T,F1,F2,F3}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
+"""
+    LinearOperator(type, nrow, ncol, symmetric, hermitian, prod,
+                    [tprod=nothing,
+                    ctprod=nothing])
+
+Construct a linear operator from functions where the type is specified as the first argument. 
+"""
+function LinearOperator(::Type{T}, nrow :: Int, ncol :: Int,
+                        symmetric :: Bool, hermitian :: Bool,
+                        prod :: F1,
+                        tprod :: F2=nothing,
+                        ctprod :: F3=nothing) where {T,
+                                                     F1 <: FuncOrNothing,
+                                                     F2 <: FuncOrNothing,
+                                                     F3 <: FuncOrNothing}
+
+  LinearOperator{T,F1,F2,F3}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+end
+
+
 
 # Apply an operator to a vector.
 function *(op :: AbstractLinearOperator, v :: AbstractVector)
