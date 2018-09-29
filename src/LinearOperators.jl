@@ -478,7 +478,7 @@ check_positive_definite(M :: AbstractMatrix) = check_positive_definite(LinearOpe
 Identity operator of order `n` and of data type `T` (defaults to `Float64`).
 """
 function opEye(T :: DataType, n :: Int)
-  prod = @closure v -> v
+  prod = @closure v -> copy(v)
   F = typeof(prod)
   LinearOperator{T,F,F,F}(n, n, true, true, prod, prod, prod)
 end

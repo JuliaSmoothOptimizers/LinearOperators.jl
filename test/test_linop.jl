@@ -143,6 +143,10 @@ function test_linop()
       @test(abs(norm(opI' * v - v)) <= ϵ * norm(v));
       @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)));
 
+      w = opI * v
+      w[1] = -1.0
+      @test v[1] != w[1]
+
       opI = opEye(nrow, ncol)
       v = rand(ncol) + rand(ncol) * im
       v0 = [v ; zeros(nrow - ncol)]
