@@ -5,7 +5,7 @@ using FastClosures, Printf, LinearAlgebra, SparseArrays
 
 export AbstractLinearOperator, LinearOperator,
        LinearOperatorException, mul!,
-       opEye, opOnes, opZeros, opDiagonal,
+       opEye, unsafe_opEye, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
        shape, hermitian, ishermitian, symmetric, issymmetric,
@@ -483,6 +483,20 @@ function opEye(T :: DataType, n :: Int)
 end
 
 opEye(n :: Int) = opEye(Float64, n)
+
+"""
+    unsafe_opEye(T, n)
+    unsafe_opEye(n)
+
+Nonallocating identity operator of order `n` and of data type `T` (defaults to `Float64`).
+"""
+function unsafe_opEye(T :: DataType, n :: Int)
+  prod = @closure v -> v
+  F = typeof(prod)
+  LinearOperator{T,F,F,F}(n, n, true, true, prod, prod, prod)
+end
+
+unsafe_opEye(n :: Int) = unsafe_opEye(Float64, n)
 
 # TODO: not type stable
 """

@@ -147,6 +147,17 @@ function test_linop()
       w[1] = -1.0
       @test v[1] != w[1]
 
+      opI = unsafe_opEye(nrow);
+      v = rand(nrow) + rand(nrow) * im;
+      @test(abs(norm(opI * v - v)) <= ϵ * norm(v));
+      @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v));
+      @test(abs(norm(opI' * v - v)) <= ϵ * norm(v));
+      @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)));
+
+      w = opI * v
+      w[1] = -1.0
+      @test v[1] == w[1]
+
       opI = opEye(nrow, ncol)
       v = rand(ncol) + rand(ncol) * im
       v0 = [v ; zeros(nrow - ncol)]
