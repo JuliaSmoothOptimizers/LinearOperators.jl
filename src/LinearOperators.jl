@@ -121,7 +121,6 @@ function show(io :: IO, op :: AbstractLinearOperator)
   print(io, s)
 end
 
-
 # Constructors.
 """
     LinearOperator(M; symmetric=false, hermitian=false)
@@ -469,6 +468,29 @@ end
 check_positive_definite(M :: AbstractMatrix) = check_positive_definite(LinearOperator(M))
 
 # Special linear operators.
+
+"""`opEye()`
+
+Identity operator.
+```
+opI = opEye()
+v = rand(5)
+@assert opI * v === v
+```
+"""
+struct opEye <: AbstractLinearOperator{Any,Nothing,Nothing,Nothing} end
+
+*(::opEye, x :: AbstractArray{T,1} where T) = x
+*(x :: AbstractArray{T,1} where T, ::opEye) = x
+*(::opEye, A :: AbstractArray{T,2} where T) = A
+*(A :: AbstractArray{T,2} where T, ::opEye) = A
+*(::opEye, T :: AbstractLinearOperator) = T
+*(T :: AbstractLinearOperator, ::opEye) = T
+*(::opEye, T::opEye) = T
+
+function show(io :: IO, op :: opEye)
+  println(io, "Identity operator")
+end
 
 """
     opEye(T, n)

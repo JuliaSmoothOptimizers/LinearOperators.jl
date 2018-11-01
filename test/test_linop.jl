@@ -163,6 +163,31 @@ function test_linop()
       @test(norm(Matrix(opI) - Matrix(1.0I, ncol, nrow)) <= ϵ * norm(Matrix(1.0I, ncol, nrow)))
     end
 
+    @testset "Identity (non-convertible to matrix)" begin
+      op = opEye()
+
+      v = rand(5)
+      w = op * v
+      @test w === v
+      w = v * op
+
+      @test w === v
+      A2 = op * A1
+      @test A2 === A1
+      A2 = A1 * op
+      @test A2 === A1
+
+      T1 = LinearOperator(A1)
+      T2 = op * T1
+      @test T2 === T1
+      T2 = T1 * op
+      @test T2 === T1
+
+      op2 = opEye()
+      @test op === op2
+      @test op === op * op2 === op2 * op
+    end
+
     @testset "Ones" begin
       E = opOnes(nrow, ncol);
       v = rand(nrow) + rand(nrow) * im;
@@ -361,6 +386,7 @@ function test_linop()
     @test_throws LinearOperatorException opCholesky(A, check=true)  # Not Hermitian / positive definite
     @test_throws LinearOperatorException opCholesky(-A'*A, check=true)  # Not positive definite
   end
+
 end
 
 test_linop()
