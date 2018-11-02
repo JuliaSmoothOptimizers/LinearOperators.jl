@@ -5,7 +5,7 @@ using FastClosures, Printf, LinearAlgebra, SparseArrays
 
 export AbstractLinearOperator, LinearOperator,
        LinearOperatorException, mul!,
-       opEye, opOnes, opZeros, opDiagonal,
+       opEye, opEye!, opOnes, opZeros, opDiagonal,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
        shape, hermitian, ishermitian, symmetric, issymmetric,
@@ -484,6 +484,33 @@ end
 
 opEye(n :: Int) = opEye(Float64, n)
 
+"""
+    opEye!(X :: Vector)
+
+Pre-allocated identity operator using `X` as storage space.
+"""
+function opEye!(X :: Vector)
+  n = length(X)
+  prod = @closure v -> copyto!(X, v)
+  F = typeof(prod)
+  T = eltype(X)
+  LinearOperator{T,F,F,F}(n, n, true, true, prod, prod, prod)
+end
+
+"""
+    opEye!(T, n)
+    opEye!(n)
+
+Pre-allocated identity operator of order `n` and of data type `T` (defaults to
+`Float64`).
+"""
+function opEye!(T :: DataType, n :: Int)
+  X = zeros(T, n)
+  opEye!(X)
+end
+
+opEye!(n :: Int) = opEye!(Float64, n)
+
 # TODO: not type stable
 """
     opEye(T, nrow, ncol)
@@ -509,6 +536,93 @@ function opEye(T :: DataType, nrow :: Int, ncol :: Int)
 end
 
 opEye(nrow :: Int, ncol :: Int) = opEye(Float64, nrow, ncol)
+
+# TODO: not type stable
+"""
+    opEye!(X, Y, nrow, ncol)
+    opEye!(X, Y)
+
+Pre-allocated identity operator using `X` and `Y` as storage space. `Y` is used for
+transpose. `length(X) ≥ nrow` and `length(Y) ≥ ncol`.
+"""
+function opEye!(X :: Vector, Y :: Vector, nrow :: Int, ncol :: Int)
+  T = eltype(X)
+  @assert eltype(Y) == T
+  Xlen = length(X)
+  @assert Xlen ≥ nrow
+  Ylen = length(Y)
+  @assert Ylen ≥ ncol
+
+  prod = if Xlen > ncol && Xlen > nrow
+    @closure v -> begin
+      copyto!(X, 1, v, 1, ncol)
+      X[ncol+1:Xlen] .= zero(T)
+      return X[1:nrow]
+    end
+  elseif Xlen > ncol
+    @closure v -> begin
+      copyto!(X, 1, v, 1, ncol)
+      X[ncol+1:Xlen] .= zero(T)
+      return X
+    end
+  elseif Xlen > nrow
+    @closure v -> begin
+      copyto!(X, 1, v, 1, ncol)
+      return X[1:nrow]
+    end
+  else
+    @closure v -> copyto!(X, 1, v, 1, ncol)
+  end
+  tprod = if Ylen > ncol && Ylen > nrow
+    @closure v -> begin
+      copyto!(Y, 1, v, 1, nrow)
+      Y[nrow+1:Ylen] .= zero(T)
+      return Y[1:ncol]
+    end
+  elseif Ylen > ncol
+    @closure v -> begin
+      copyto!(Y, 1, v, 1, nrow)
+      return Y[1:ncol]
+    end
+  elseif Ylen > nrow
+    @closure v -> begin
+      copyto!(Y, 1, v, 1, nrow)
+      Y[nrow+1:Ylen] .= zero(T)
+      return Y
+    end
+  else
+    @closure v -> copyto!(Y, 1, v, 1, nrow)
+  end
+  F1 = typeof(prod)
+  F2 = typeof(tprod)
+  return LinearOperator{T,F1,F2,F2}(nrow, ncol, false, false, prod, tprod, tprod)
+end
+
+"""
+    opEye!(X, nrow, ncol)
+
+Pre-allocated identity operator using `X` as storage space.
+`length(X) ≥ max{nrow, ncol}`.
+"""
+opEye!(X :: Vector, nrow :: Int, ncol :: Int) = opEye!(X, X, nrow, ncol)
+
+"""
+    opEye!(T, nrow, ncol)
+    opEye!(nrow, ncol)
+
+Pre-allocated rectangular identity operator of size `nrow`x`ncol` and of data type `T`
+(defaults to `Float64`).
+"""
+function opEye!(T :: DataType, nrow :: Int, ncol :: Int)
+  if nrow == ncol
+    return opEye!(T, nrow)
+  end
+
+  X = zeros(T, max(nrow, ncol))
+  return opEye!(X, nrow, ncol)
+end
+
+opEye!(nrow :: Int, ncol :: Int) = opEye!(Float64, nrow, ncol)
 
 """
     opOnes(T, nrow, ncol)

@@ -147,6 +147,20 @@ function test_linop()
       w[1] = -1.0
       @test v[1] != w[1]
 
+      opI = opEye!(Complex{Float64}, nrow);
+      v = rand(nrow) + rand(nrow) * im;
+      @test(abs(norm(opI * v - v)) <= ϵ * norm(v));
+      @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v));
+      @test(abs(norm(opI' * v - v)) <= ϵ * norm(v));
+      @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)));
+
+      w = opI * v
+      w[1] = -1.0
+      @test v[1] != w[1]
+
+      al = @allocated opI * v
+      @test al == 0
+
       opI = opEye(nrow, ncol)
       v = rand(ncol) + rand(ncol) * im
       v0 = [v ; zeros(nrow - ncol)]
@@ -161,6 +175,47 @@ function test_linop()
       @test(abs(norm(transpose(opI) * v - v0)) <= ϵ * norm(v))
       @test(abs(norm(opI' * v - v0)) <= ϵ * norm(v))
       @test(norm(Matrix(opI) - Matrix(1.0I, ncol, nrow)) <= ϵ * norm(Matrix(1.0I, ncol, nrow)))
+
+      opI = opEye!(Complex{Float64}, nrow, ncol)
+      v = rand(ncol) + rand(ncol) * im
+      v0 = [v ; zeros(nrow - ncol)]
+      vu = [v ; rand(nrow - ncol)]
+      @test(abs(norm(opI * v - v0)) <= ϵ * norm(v))
+      @test(abs(norm(transpose(opI) * vu - v)) <= ϵ * norm(v))
+      @test(abs(norm(opI' * vu - v)) <= ϵ * norm(v))
+      @test(norm(Matrix(opI) - Matrix(1.0I, nrow, ncol)) <= ϵ * norm(Matrix(1.0I, nrow, ncol)))
+
+      opI * v
+      al = @allocated opI * v
+      # @test al == 0
+      al = @allocated opI' * vu
+      # @test al == 80
+
+      opI = opEye!(Complex{Float64}, ncol, nrow)
+      @test(abs(norm(opI * vu - v)) <= ϵ * norm(v))
+      @test(abs(norm(transpose(opI) * v - v0)) <= ϵ * norm(v))
+      @test(abs(norm(opI' * v - v0)) <= ϵ * norm(v))
+      @test(norm(Matrix(opI) - Matrix(1.0I, ncol, nrow)) <= ϵ * norm(Matrix(1.0I, ncol, nrow)))
+
+      al = @allocated opI * vu
+      # @test al == 0
+      al = @allocated opI' * v
+      # @test al == 80
+
+      opI = opEye!(nrow)
+      v = rand(nrow)
+      opI * v
+      al = @allocated opI * v
+      @test al == 0
+
+      opI = opEye!(nrow, ncol)
+      v, w = rand(ncol), rand(nrow)
+      opI * v
+      opI' * w
+      al = @allocated opI * v
+      # @test al == 0
+      al = @allocated opI' * w
+      # @test al == 80
     end
 
     @testset "Ones" begin
