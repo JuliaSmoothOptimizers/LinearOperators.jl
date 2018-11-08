@@ -193,7 +193,7 @@ function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g 
     for i = 1 : data.mem
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
-        data.a[:, k] = data.s[:, k]   # B₀ = I.
+        data.a[:, k] = data.s[:, k] / data.scaling_factor  # B₀ = I / γ.
 
         for j = 1 : i - 1
           l = mod(insert + j - 1, data.mem) + 1
