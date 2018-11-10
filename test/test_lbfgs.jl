@@ -89,8 +89,8 @@ function test_lbfgs()
     end
 
     # test damped L-BFGS
-    B = LBFGSOperator(n, mem, damped=true, scaling=false)
-    H = InverseLBFGSOperator(n, mem, damped=true, scaling=false)
+    B = LBFGSOperator(n, mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
+    H = InverseLBFGSOperator(n, mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
 
     insert_B = insert_H = 0
     for i = 1 : mem+2
@@ -101,7 +101,7 @@ function test_lbfgs()
       d = -H * g
       α = rand()
       s = α * d
-      if ys > B.data.damp_factor * dot(s, B * s) && ys > B.data.damp_factor * dot(y, H * y)
+      if ys > 0.2 * dot(s, B * s)
         insert_B += 1
         insert_H += 1
         push!(B, s, y)
