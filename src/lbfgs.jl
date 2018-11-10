@@ -6,7 +6,8 @@ mutable struct LBFGSData{T}
   scaling :: Bool
   scaling_factor :: T
   damped :: Bool
-  damp_factor :: T
+  σ₂ :: T
+  σ₃ :: T
   s   :: Matrix{T}
   y   :: Matrix{T}
   ys  :: Vector{T}
@@ -17,12 +18,14 @@ mutable struct LBFGSData{T}
 end
 
 function LBFGSData(T :: DataType, n :: Int, mem :: Int;
-                   scaling :: Bool=true, damped :: Bool=false, inverse :: Bool=true)
+                   scaling :: Bool=true, damped :: Bool=false, inverse :: Bool=true,
+                   σ₂ :: Float64 = 0.99, σ₃ :: Float64 = 10.0)
   LBFGSData{T}(max(mem, 1),
                scaling,
                convert(T, 1),
                damped,
-               convert(T, 0.2),
+               convert(T, σ₂),
+               convert(T, σ₃),
                zeros(T, n, mem),
                zeros(T, n, mem),
                zeros(T, mem),
@@ -150,8 +153,8 @@ In forward updating with damping, it is not necessary to supply α and g.
 function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g :: Vector=zero(y))
 
   ys = dot(y, s)
-  σ₂ = 0.99
-  σ₃ = 10.0
+  σ₂ = op.data.σ₂
+  σ₃ = op.data.σ₃
 
   if op.data.damped
     # Powell's damped update strategy
