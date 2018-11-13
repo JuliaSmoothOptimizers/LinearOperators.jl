@@ -7,34 +7,35 @@ function test_linop()
   A1 = rand(nrow, ncol) + rand(nrow, ncol) * im;
 
   @testset "Basic operations" begin
-    op = LinearOperator(A1);
-    show(op);
+    for op = (LinearOperator(A1), PreallocatedLinearOperator(A1))
+      show(op);
 
-    @testset "Data type" begin
-      @test eltype(op) == eltype(A1)
-      @test !isreal(op)
-    end
+      @testset "Data type" begin
+        @test eltype(op) == eltype(A1)
+        @test !isreal(op)
+      end
 
-    @testset "Size" begin
-      @test(size(op) == (nrow, ncol));
-      @test(shape(op) == (nrow, ncol));
-      @test(size(op, 1) == nrow);
-      @test(size(op, 2) == ncol);
-      @test_throws LinearOperatorException size(op, 3)
-      @test_throws LinearOperatorException op * rand(ncol + 1)
-    end
+      @testset "Size" begin
+        @test(size(op) == (nrow, ncol));
+        @test(shape(op) == (nrow, ncol));
+        @test(size(op, 1) == nrow);
+        @test(size(op, 2) == ncol);
+        @test_throws LinearOperatorException size(op, 3)
+        @test_throws LinearOperatorException op * rand(ncol + 1)
+      end
 
-    @testset "Boolean operators" begin
-      @test(symmetric(op) == false);
-      @test(hermitian(op) == false);
-    end
+      @testset "Boolean operators" begin
+        @test(symmetric(op) == false);
+        @test(hermitian(op) == false);
+      end
 
-    @testset "Full" begin
-      @test(norm(A1 - Matrix(op)) <= ϵ * norm(A1));
-    end
+      @testset "Full" begin
+        @test(norm(A1 - Matrix(op)) <= ϵ * norm(A1));
+      end
 
-    @testset "Unary +." begin
-      @test(norm(A1 - Matrix(+op)) <= ϵ * norm(A1));
+      @testset "Unary +." begin
+        @test(norm(A1 - Matrix(+op)) <= ϵ * norm(A1));
+      end
     end
 
     @testset "LinearOperator(Matrix)" begin
@@ -54,6 +55,54 @@ function test_linop()
         u = rand(nrow) + rand(nrow) * im;
         @test(norm(transpose(A) * u - transpose(op) * u) <= rtol * norm(u));
         @test(norm(A'  * u - op'  * u) <= rtol * norm(u));
+      end
+    end
+
+    @testset "Preallocated LinearOperator(Matrix)" begin
+      A2 = rand(nrow, ncol)
+      for A in (A1, A2)
+        T = eltype(A)
+        Mv = zeros(T, nrow)
+        Mtu = zeros(T, ncol)
+        Maw = zeros(T, ncol)
+        op = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
+        v = T <: Real ? rand(ncol) : rand(ncol) + rand(ncol) * im;
+        u = T <: Real ? rand(nrow) : rand(nrow) + rand(nrow) * im;
+        @test norm(op * v - A * v) <= rtol * norm(A)
+        @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
+        @test norm(op' * u - A' * u) <= rtol * norm(A)
+
+        al = @allocated op * v
+        @test al == 0
+        al = @allocated adjoint(op) * u
+        @test al == 10 * Int.size
+        al = @allocated op' * u
+        @test al == 10 * Int.size
+
+        op = PreallocatedLinearOperator(A)
+        v = T <: Real ? rand(ncol) : rand(ncol) + rand(ncol) * im;
+        u = T <: Real ? rand(nrow) : rand(nrow) + rand(nrow) * im;
+        @test norm(op * v - A * v) <= rtol * norm(A)
+        @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
+        @test norm(op' * u - A' * u) <= rtol * norm(A)
+      end
+
+      for B in (rand(nrow, nrow), rand(nrow, nrow) + rand(nrow, nrow) * im)
+        for A in (SymTridiagonal(Symmetric(B)), Symmetric(B), Hermitian(B))
+          T = eltype(A)
+          v = T <: Real ? rand(nrow) : rand(nrow) + rand(nrow) * im;
+
+          Mv = zeros(T, nrow)
+          op = PreallocatedLinearOperator(Mv, A)
+          @test norm(op * v - A * v) <= rtol * norm(A)
+          @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+          @test norm(op' * v - A' * v) <= rtol * norm(A)
+
+          op = PreallocatedLinearOperator(A)
+          @test norm(op * v - A * v) <= rtol * norm(A)
+          @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+          @test norm(op' * v - A' * v) <= rtol * norm(A)
+        end
       end
     end
 
