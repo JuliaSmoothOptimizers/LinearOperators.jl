@@ -36,6 +36,7 @@ isreal(A :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3} = T <: Real
 
 const FuncOrNothing = Union{Function, Nothing}
 
+include("PreallocatedLinearOperators.jl")
 
 """
 Base type to represent a linear operator.
@@ -131,11 +132,9 @@ is symmetric and/or hermitian.
 """
 function LinearOperator(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T
   nrow, ncol = size(M)
-    Mv = Vector{T}(undef, nrow)
-  prod = @closure v -> mul!(Mv, M, v)
-  Mtu = Vector{T}(undef, ncol)
-  tprod = @closure u -> mul!(Mtu, transpose(M), u)
-  ctprod = @closure w -> mul!(Mtu, adjoint(M), w)
+  prod = @closure v -> M * v
+  tprod = @closure u -> transpose(M) * u
+  ctprod = @closure w -> adjoint(M) * w
   F1 = typeof(prod)
   F2 = typeof(tprod)
   F3 = typeof(ctprod)
@@ -160,7 +159,7 @@ its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
 LinearOperator(M :: Symmetric{T}) where T =
-    LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
+  LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
 
 """
     LinearOperator(M)
@@ -169,7 +168,7 @@ Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
 """
 LinearOperator(M :: Hermitian{T}) where T =
-    LinearOperator(M; symmetric=eltype(M) <: Real, hermitian=true)
+  LinearOperator(M; symmetric=eltype(M) <: Real, hermitian=true)
 
 # the only advantage of this constructor is optional args
 # use LinearOperator{Float64} if you mean real instead of complex
