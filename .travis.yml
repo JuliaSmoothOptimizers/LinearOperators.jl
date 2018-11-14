@@ -16,6 +16,7 @@ matrix:
 branches:
   only:
     - master
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
