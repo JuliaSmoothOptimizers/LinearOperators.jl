@@ -62,7 +62,7 @@ Function           | Description
 
 ## Other Operations on Operators
 
-Operators can be transposed (`A.'`), conjugated (`conj(A)`) and conjugate-transposed (`A'`).
+Operators can be transposed (`transpose(A)`), conjugated (`conj(A)`) and conjugate-transposed (`A'`).
 Operators can be sliced (`A[:,3]`, `A[2:4,1:5]`, `A[1,1]`), but unlike matrices, slices always return
 operators (see differences below).
 
