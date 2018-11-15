@@ -11,7 +11,7 @@ Pages = ["tutorial.md"]
 Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.
 
 ```@example ex1
-using LinearOperators
+using LinearOperators, SparseArrays
 A1 = rand(5,7)
 A2 = sprand(7,3,.3)
 op1 = LinearOperator(A1)
@@ -26,6 +26,7 @@ y = op * x
 Operators may be defined to represent (approximate) inverses.
 
 ```@example ex1
+using LinearAlgebra
 A = rand(5,5)
 A = A' * A
 op = opCholesky(A)  # Use, e.g., as a preconditioner
@@ -41,6 +42,7 @@ isn't defined, but it may be inferred from the conjugate transposed. Missing
 operations are represented as `nothing`.
 
 ```@example ex1
+using FFTW
 dft = LinearOperator(10, 10, false, false,
                      v -> fft(v),
                      nothing,       # will be inferred
@@ -50,41 +52,77 @@ y = dft * x
 norm(dft' * y - x)  # DFT is an orthogonal operator
 ```
 ```@example ex1
-dft.' * y
+transpose(dft) * y
 ```
 
 By default a linear operator defined by functions and that is neither symmetric
 nor hermitian will have element type `Complex128`.
 This behavior may be overridden by specifying the type explicitly, e.g.,
 ```@example ex1
-dft = LinearOperator{Float64}(10, 10, false, false,
-                              v -> fft(v),
-                              nothing,
-                              w -> ifft(w))
+op = LinearOperator(Float64, 10, 10, false, false,
+                    v -> [v[1] + v[2]; v[2]],
+                    nothing,
+                    w -> [w[1]; w[1] + w[2]])
+```
+Notice, however, that type is not enforced, which can cause unintended consequences
+```@example ex1
+dft = LinearOperator(Float64, 10, 10, false, false,
+                     v -> fft(v),
+                     nothing,
+                     w -> ifft(w))
+v = rand(10)
+println("eltype(dft)     = $(eltype(dft))")
+println("eltype(v)       = $(eltype(v))")
+println("eltype(dft * v) = $(eltype(dft * v))")
+```
+or even errors
+```jldoctest
+using LinearOperators
+A = [im 1.0; 0.0 1.0]
+op = LinearOperator(Float64, 2, 2, false, false,
+                     v -> A * v, u -> transpose(A) * u, w -> A' * w)
+Matrix(op) # Tries to create Float64 matrix with contents of A
+
+# output
+
+ERROR: InexactError: Float64(Float64, 0.0 + 1.0im)
+[...]
 ```
 
 ### Preallocation
 
-It is also possible to use inplace functions by preallocating the required elements. For
-instance:
+**Preallocation is being updated. Watch the repo for updates.**
+
+Currently, operators created from matrices allocate internal memory for storage of
+matrix vector products.
 ```@example ex1
 A = rand(5, 3)
-Ap = Vector{Float64}(5)
-Atq = Vector{Float64}(3)
-op = LinearOperator(5, 3, false, false,
-                    p -> A * p,
-                    q -> A' * q)
-v = op * ones(3)
-norm(Ap - v)
+op = LinearOperator(A)
+v = rand(3)
+Av = op * v
+w = rand(3)
+al = @allocated op * w
+println("al = $al")
+Aw = op * w
+Aw === Av
 ```
-
-The same can be done with functions:
-```julia ex1
-op = LinearOperator(5, 3, false, false,
-                    p -> Aprod!(Ap, p)
-                    q -> Atprod!(Atq, q))
+it is possible to recreate this functionality by preallocating the required elements and
+using appropriate inplace functions.  For instance:
+```@example ex1
+function Aprod!(Av, v)
+  n = length(v)
+  Av[1] = 4v[1] - v[2]
+  for i = 2:n-1
+    Av[i] = -v[i-1] + 4*v[i] - v[i+1]
+  end
+  Av[n] = -v[n-1] + 4*v[n]
+  return Av
+end
+Av = Array{Float64}(undef, 100)
+op = LinearOperator(100, 100, true, true, v -> Aprod!(Av, v))
+w = op * ones(100)
+Av === w
 ```
-where `Aprod!` and `Atprod!` return `Ap` and `Atq`, respectively.
 
 ## Limited memory BFGS and SR1
 
@@ -95,6 +133,7 @@ B = LBFGSOperator(20)
 H = InverseLBFGSOperator(20)
 r = 0.0
 for i = 1:100
+  global r
   s = rand(20)
   y = rand(20)
   push!(B, s, y)
@@ -117,7 +156,7 @@ R * v
 Notice that it corresponds to a matrix with rows of the identity given by the
 indices.
 ```@example ex1
-full(R)
+Matrix(R)
 ```
 
 The extension operator is the transpose of the restriction. It extends a vector

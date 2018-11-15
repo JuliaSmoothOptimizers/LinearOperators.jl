@@ -26,7 +26,7 @@ check_ctranspose
 check_hermitian
 check_positive_definite
 diag
-full
+Matrix
 hermitian
 push!
 reset!
@@ -34,4 +34,11 @@ shape
 show
 size
 symmetric
+```
+
+## Internal
+
+```@docs
+LinearOperators.LBFGSData
+LinearOperators.LSR1Data
 ```

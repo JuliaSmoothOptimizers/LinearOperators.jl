@@ -44,7 +44,7 @@ Function           | Description
 `check_hermitian`  | Cheap check that `A = A'`
 `check_positive_definite` | Cheap check that an operator is positive (semi-)definite
 `diag`             | Extract the diagonal of an operator
-`full`             | Convert an abstract operator to a dense array
+`Matrix`           | Convert an abstract operator to a dense array
 `hermitian`        | Determine whether the operator is Hermitian
 `push!`            | For L-BFGS or L-SR1 operators, push a new pair {s,y}
 `reset!`           | For L-BFGS or L-SR1 operators, reset the data
@@ -86,9 +86,9 @@ Similarly, `opA[1,1]` is an operator of size (1,1):"
 (opA[1,1] * [3])[1] - A[1,1] * 3
 ```
 
-In the same spirit, the operator `full` always returns a matrix.
+In the same spirit, the operator `Matrix` always returns a matrix.
 ```@example exdiff
-full(opA[:,1])
+Matrix(opA[:,1])
 ```
 
 ## Other Operators
