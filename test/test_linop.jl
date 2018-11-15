@@ -387,6 +387,33 @@ function test_linop()
     @test_throws LinearOperatorException opCholesky(-A'*A, check=true)  # Not positive definite
   end
 
+  @testset "Type specific operator" begin
+    prod = v -> [v[1] + v[2]; v[2]]
+    ctprod = v -> [v[1]; v[1] + v[2]]
+    op = LinearOperator(2, 2, false, false, prod, nothing, ctprod)
+    @test eltype(op) == Complex{Float64}
+    for T in (Complex{Float64}, Complex{Float32}, Float64, Float32, Int32)
+      op = LinearOperator(T, 2, 2, false, false, prod, nothing, ctprod)
+      @test eltype(op) == T
+    end
+
+    A = [im 1.0; 0.0 1.0]
+    prod = v -> A * v
+    tprod = u -> transpose(A) * u
+    ctprod = w -> A' * w
+    opC = LinearOperator(2, 2, false, false, prod, tprod, ctprod)
+    v = rand(2) + rand(2) * im
+    @test norm(A * v - opC * v) <= rtol * norm(v)
+    @test norm(transpose(A) * v - transpose(opC) * v) <= rtol * norm(v)
+    @test norm(A' * v - opC' * v) <= rtol * norm(v)
+    @test A == Matrix(opC)
+    opF = LinearOperator(Float64, 2, 2, false, false, prod, tprod, ctprod) # The type is a lie
+    @test eltype(opF) == Float64
+    @test norm(A * v - opF * v) <= rtol * norm(v)
+    @test norm(transpose(A) * v - transpose(opF) * v) <= rtol * norm(v)
+    @test norm(A' * v - opF' * v) <= rtol * norm(v)
+    @test_throws InexactError Matrix(opF)
+  end
 end
 
 test_linop()

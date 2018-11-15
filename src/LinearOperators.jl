@@ -197,7 +197,14 @@ end
                     [tprod=nothing,
                     ctprod=nothing])
 
-Construct a linear operator from functions where the type is specified as the first argument. 
+Construct a linear operator from functions where the type is specified as the first argument.
+Notice that the linear operator does not enforce the type, so unexpected behavior can
+happen. For instance,
+```
+A = [im 1.0; 0.0 1.0] # Complex matrix
+op = LinearOperator(Float64, 2, 2, false, false, v->A*v, u->transpose(A)*u, w->A'*w)
+Matrix(A) # raises InexactError because tries to store operator on Float64 matrix
+```
 """
 function LinearOperator(::Type{T}, nrow :: Int, ncol :: Int,
                         symmetric :: Bool, hermitian :: Bool,
