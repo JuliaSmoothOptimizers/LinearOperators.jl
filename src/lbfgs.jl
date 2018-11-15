@@ -1,4 +1,4 @@
-export LBFGSOperator, InverseLBFGSOperator, reset!
+export LBFGSOperator, InverseLBFGSOperator, reset!, diag
 
 "A data type to hold information relative to LBFGS operators."
 mutable struct LBFGSData{T}
