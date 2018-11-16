@@ -403,15 +403,9 @@ function test_linop()
     ctprod = w -> A' * w
     opC = LinearOperator(2, 2, false, false, prod, tprod, ctprod)
     v = rand(2) + rand(2) * im
-    @test norm(A * v - opC * v) <= rtol * norm(v)
-    @test norm(transpose(A) * v - transpose(opC) * v) <= rtol * norm(v)
-    @test norm(A' * v - opC' * v) <= rtol * norm(v)
     @test A == Matrix(opC)
     opF = LinearOperator(Float64, 2, 2, false, false, prod, tprod, ctprod) # The type is a lie
     @test eltype(opF) == Float64
-    @test norm(A * v - opF * v) <= rtol * norm(v)
-    @test norm(transpose(A) * v - transpose(opF) * v) <= rtol * norm(v)
-    @test norm(A' * v - opF' * v) <= rtol * norm(v)
     @test_throws InexactError Matrix(opF)
   end
 end
