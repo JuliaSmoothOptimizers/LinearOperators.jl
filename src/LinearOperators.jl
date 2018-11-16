@@ -198,13 +198,15 @@ end
                     ctprod=nothing])
 
 Construct a linear operator from functions where the type is specified as the first argument.
-Notice that the linear operator does not enforce the type, so unexpected behavior can
-happen. For instance,
+Notice that the linear operator does not enforce the type, so using a wrong type can
+result in errors. For instance,
 ```
 A = [im 1.0; 0.0 1.0] # Complex matrix
 op = LinearOperator(Float64, 2, 2, false, false, v->A*v, u->transpose(A)*u, w->A'*w)
-Matrix(A) # raises InexactError because tries to store operator on Float64 matrix
+Matrix(op) # InexactError
 ```
+The error is caused because `Matrix(op)` tries to create a Float64 matrix with the
+contents of the complex matrix `A`.
 """
 function LinearOperator(::Type{T}, nrow :: Int, ncol :: Int,
                         symmetric :: Bool, hermitian :: Bool,
