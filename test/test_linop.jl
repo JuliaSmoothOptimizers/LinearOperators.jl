@@ -87,12 +87,11 @@ function test_linop()
         @test norm(op' * u - A' * u) <= rtol * norm(A)
       end
 
-      for B in (rand(nrow, nrow), rand(nrow, nrow) + rand(nrow, nrow) * im)
-        for A in (SymTridiagonal(Symmetric(B)), Symmetric(B), Hermitian(B))
-          T = eltype(A)
-          v = T <: Real ? rand(nrow) : rand(nrow) + rand(nrow) * im;
+      for B in (rand(nrow, nrow), sprand(nrow, nrow, 0.5))
+        for A in (SymTridiagonal(Symmetric(B)), Symmetric(B))
+          v = rand(nrow)
 
-          Mv = zeros(T, nrow)
+          Mv = zeros(nrow)
           op = PreallocatedLinearOperator(Mv, A)
           @test norm(op * v - A * v) <= rtol * norm(A)
           @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
