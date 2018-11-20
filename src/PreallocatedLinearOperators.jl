@@ -1,6 +1,6 @@
 export PreallocatedLinearOperator
 
-abstract type PreallocatedAbstractLinearOperator{T,F1,F2,F3} <: AbstractLinearOperator{T,F1,F2,F3} end
+abstract type AbstractPreallocatedLinearOperator{T,F1,F2,F3} <: AbstractLinearOperator{T,F1,F2,F3} end
 
 """
 Type to represent a linear operator with preallocation. Implicit modifications may
@@ -9,15 +9,15 @@ happen if used without care:
 op = PreallocatedLinearOperator(rand(5, 5))
 v  = rand(5)
 x = op * v        # Uses internal storage and passes pointer to x
-y = op * ones(5)  # Stores on the same memory as x.
+y = op * ones(5)  # Overwrites the same memory as x.
 y === x           # true. op * v is lost
 
 x = op * v        # Uses internal storage and passes pointer to x
-y = op * x        # Breaks! Equivalent to mul!(x, A, x)
+y = op * x        # Silently overwrite x to zeros! Equivalent to mul!(x, A, x).
 y == zeros(5)     # true. op * v and op * x are lost
 ```
 """
-mutable struct PreallocatedLinearOperator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: PreallocatedAbstractLinearOperator{T,F1,F2,F3}
+mutable struct PreallocatedLinearOperator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: AbstractPreallocatedLinearOperator{T,F1,F2,F3}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
@@ -32,7 +32,7 @@ end
 
 Display basic information about a linear operator.
 """
-function show(io :: IO, op :: PreallocatedAbstractLinearOperator)
+function show(io :: IO, op :: AbstractPreallocatedLinearOperator)
   s  = "Preallocated linear operator\n"
   s *= @sprintf("  nrow: %s\n", op.nrow)
   s *= @sprintf("  ncol: %d\n", op.ncol)
@@ -69,22 +69,13 @@ function PreallocatedLinearOperator(Mv :: Vector{T}, Mtu :: Vector{T}, Maw :: Ve
 end
 
 """
-    PreallocatedLinearOperator(Mv, M; symmetric=false, hermitian=false)
+    PreallocatedLinearOperator(Mv, M :: Symmetric{<:Real})
 
-Construct a linear operator of a square matrix `M` with preallocation using `Mv` as
-storage space for all matrix-vector products. Notice that implicit modifications can
-happen between any matrix-vector product now.
-```
-op = PreallocatedLinearOperator(rand(5, 5))
-v  = rand(5)
-x = op * v        # Uses internal storage and passes pointer to x
-y = op' * ones(5) # Stores on the same memory as x, even though op is transposed
-y === x           # true. op * v is lost
-```
+Construct a linear operator from a symmetric real square matrix `M` with preallocation
+using `Mv` as storage space.
 """
-PreallocatedLinearOperator(Mv :: Vector{T}, M :: AbstractMatrix{T};
-                           symmetric=false, hermitian=false) where T =
-  PreallocatedLinearOperator(Mv, Mv, Mv, M, symmetric=symmetric, hermitian=hermitian)
+PreallocatedLinearOperator(Mv :: Vector{T}, M :: Union{SymTridiagonal{T},Symmetric{T}}) where T <: Real =
+  PreallocatedLinearOperator(Mv, Mv, Mv, M, symmetric=true, hermitian=true)
 
 function PreallocatedLinearOperator(M :: AbstractMatrix{T};
                                     symmetric=false, hermitian=false) where T
