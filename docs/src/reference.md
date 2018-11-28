@@ -2,6 +2,7 @@
 
 ```@docs
 LinearOperator
+PreallocatedLinearOperator
 opEye
 opOnes
 opZeros

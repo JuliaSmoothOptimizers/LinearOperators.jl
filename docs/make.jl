@@ -6,7 +6,7 @@ makedocs(
   doctest = true,
   strict = true,
   assets = ["assets/style.css"],
-  format = :html,
+  format = Documenter.HTML(),
   sitename = "LinearOperators.jl",
   pages = Any["Home" => "index.md",
               "Tutorial" => "tutorial.md",
