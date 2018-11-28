@@ -82,48 +82,10 @@ A = [im 1.0; 0.0 1.0]
 op = LinearOperator(Float64, 2, 2, false, false,
                      v -> A * v, u -> transpose(A) * u, w -> A' * w)
 Matrix(op) # Tries to create Float64 matrix with contents of A
-
 # output
-
-ERROR: InexactError: Float64(Float64, 0.0 + 1.0im)
+ERROR: InexactError: Float64(0.0 + 1.0im)
 [...]
 ```
-
-### Preallocation
-
-**Preallocation is being updated. Watch the repo for updates.**
-
-Currently, operators created from matrices allocate internal memory for storage of
-matrix vector products.
-```@example ex1
-A = rand(5, 3)
-op = LinearOperator(A)
-v = rand(3)
-Av = op * v
-w = rand(3)
-al = @allocated op * w
-println("al = $al")
-Aw = op * w
-Aw === Av
-```
-it is possible to recreate this functionality by preallocating the required elements and
-using appropriate inplace functions.  For instance:
-```@example ex1
-function Aprod!(Av, v)
-  n = length(v)
-  Av[1] = 4v[1] - v[2]
-  for i = 2:n-1
-    Av[i] = -v[i-1] + 4*v[i] - v[i+1]
-  end
-  Av[n] = -v[n-1] + 4*v[n]
-  return Av
-end
-Av = Array{Float64}(undef, 100)
-op = LinearOperator(100, 100, true, true, v -> Aprod!(Av, v))
-w = op * ones(100)
-Av === w
-```
-
 ## Limited memory BFGS and SR1
 
 Two other useful operators are the Limited-Memory BFGS in forward and inverse form.
@@ -190,4 +152,48 @@ opA[:,1] * ones(1)
 ```
 ```@example ex1
 opA[1,1] * ones(1)
+```
+
+## Preallocated Operators
+
+Operators created from matrices are very practical, however, it is often useful to reuse
+the memory used by the operator. For that use, we can use
+`PreallocatedLinearOperator(A)` to create an operator that reuses the memory.
+
+```@example ex2
+using LinearOperators # hide
+m, n = 50, 30
+A = rand(m, n) + im * rand(m, n)
+op1 = PreallocatedLinearOperator(A)
+op2 = LinearOperator(A)
+v = rand(n)
+al = @allocated op1 * v
+println("Allocation of PreallocatedLinearOperator product = $al")
+v = rand(n)
+al = @allocated op2 * v
+println("Allocation of LinearOperator product = $al")
+```
+Notice the memory overwrite:
+```@example ex2
+Av = op1 * v
+w = rand(n)
+Aw = op1 * w
+Aw === Av
+```
+which doesn't happen on `LinearOperator`.
+```@example ex2
+Av = op2 * v
+w = rand(n)
+Aw = op2 * w
+Aw === Av
+```
+
+You can also provide the memory to be used.
+```@example ex2
+Mv  = Array{ComplexF64}(undef, m)
+Mtu = Array{ComplexF64}(undef, n)
+Maw = Array{ComplexF64}(undef, n)
+op  = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
+v, u, w = rand(n), rand(m), rand(m)
+(Mv === op * v, Mtu === transpose(op) * u, Maw === adjoint(op) * w)
 ```

@@ -17,24 +17,25 @@ Pkg.add("LinearOperators")
 
 ## Operators Available
 
-Operator               | Description
------------------------|------------
-`LinearOperator`       | Base class. Useful to define operators from functions
-`opEye`                | Identity operator
-`opOnes`               | All ones operator
-`opZeros`              | All zeros operator
-`opDiagonal`           | Square (equivalent to `diagm()`) or rectangular diagonal operator
-`opInverse`            | Equivalent to `\`
-`opCholesky`           | More efficient than `opInverse` for symmetric positive definite matrices
-`opLDL`                | Similar to `opCholesky`, for general sparse symmetric matrices
-`opHouseholder`        | Apply a Householder transformation `I-2hh'`
-`opHermitian`          | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
-`opRestriction`        | Represent a selection of "rows" when composed on the left with an existing operator
-`opExtension`          | Represent a selection of "columns" when composed on the right with an existing operator
-`LBFGSOperator`        | Limited-memory BFGS approximation in operator form (damped or not)
-`InverseLBFGSOperator` | Inverse of a limited-memory BFGS approximation in operator form (damped or not)
-`LSR1Operator`         | Limited-memory SR1 approximation in operator form
-`kron`                 | Kronecker tensor product in linear operator form
+Operator                     | Description
+-----------------------------|------------
+`LinearOperator`             | Base class. Useful to define operators from functions
+`PreallocatedLinearOperator` | Define operators with preallocation for efficient use of memory
+`opEye`                      | Identity operator
+`opOnes`                     | All ones operator
+`opZeros`                    | All zeros operator
+`opDiagonal`                 | Square (equivalent to `diagm()`) or rectangular diagonal operator
+`opInverse`                  | Equivalent to `\`
+`opCholesky`                 | More efficient than `opInverse` for symmetric positive definite matrices
+`opLDL`                      | Similar to `opCholesky`, for general sparse symmetric matrices
+`opHouseholder`              | Apply a Householder transformation `I-2hh'`
+`opHermitian`                | Represent a symmetric/hermitian operator based on the diagonal and strict lower triangle
+`opRestriction`              | Represent a selection of "rows" when composed on the left with an existing operator
+`opExtension`                | Represent a selection of "columns" when composed on the right with an existing operator
+`LBFGSOperator`              | Limited-memory BFGS approximation in operator form (damped or not)
+`InverseLBFGSOperator`       | Inverse of a limited-memory BFGS approximation in operator form (damped or not)
+`LSR1Operator`               | Limited-memory SR1 approximation in operator form
+`kron`                       | Kronecker tensor product in linear operator form
 
 ## Utility Functions
 

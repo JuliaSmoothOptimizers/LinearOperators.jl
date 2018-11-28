@@ -28,7 +28,7 @@ branches:
 jobs:
   include:
     - stage: Documentation
-      julia: 1.0
+      julia: 1.1
       os: linux
       script:
          - julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd()))'
