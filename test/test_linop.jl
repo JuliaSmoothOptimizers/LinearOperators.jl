@@ -408,6 +408,16 @@ function test_linop()
     @test eltype(opF) == Float64
     @test_throws InexactError Matrix(opF)
   end
+
+  # Issue #80
+  @testset "Test mul!" begin
+    A = [1.0 1.0; 1.0 0.0]
+    op = LinearOperator(A)
+    y = zeros(2)
+    x = ones(2)
+    mul!(y, op, x)
+    @test y == [2.0; 1.0]
+  end
 end
 
 test_linop()

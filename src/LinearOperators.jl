@@ -320,7 +320,7 @@ function conj(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
 end
 
 function mul!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
-  @. y = op * x
+  y .= op * x
   return y
 end
 
