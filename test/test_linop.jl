@@ -74,10 +74,6 @@ function test_linop()
 
         al = @allocated op * v
         @test al == 0
-        al = @allocated adjoint(op) * u
-        @test al == 10 * Int.size
-        al = @allocated op' * u
-        @test al == 10 * Int.size
 
         op = PreallocatedLinearOperator(A)
         v = T <: Real ? rand(ncol) : rand(ncol) + rand(ncol) * im;
