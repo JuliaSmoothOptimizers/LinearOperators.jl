@@ -1,0 +1,24 @@
+{
+  "description": "A Julia Linear Operators Package",
+  "title": "LinearOperators.jl",
+  "upload_type": "software",
+  "publication_date": "2019-02-07",
+  "creators": [
+    {
+      "affiliation": "\u00c9cole Polytechnique/GERAD - Montr\u00e9al",
+      "name": "Dominique Orban"
+    },
+    {
+      "affiliation": "Federal University of Paran\u00e1 - UFPR",
+      "name": "Abel Soares Siqueira"
+    }
+  ],
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "scheme": "url",
+      "identifier": "https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/releases/latest",
+      "relation": "isSupplementTo"
+    }
+  ]
+}
