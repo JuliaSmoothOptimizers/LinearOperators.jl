@@ -5,11 +5,11 @@
   "publication_date": "2019-02-07",
   "creators": [
     {
-      "affiliation": "\u00c9cole Polytechnique/GERAD - Montr\u00e9al",
+      "affiliation": "École Polytechnique/GERAD - Montréal",
       "name": "Dominique Orban"
     },
     {
-      "affiliation": "Federal University of Paran\u00e1 - UFPR",
+      "affiliation": "Federal University of Paraná - UFPR",
       "name": "Abel Soares Siqueira"
     }
   ],
@@ -20,5 +20,32 @@
       "identifier": "https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/releases/latest",
       "relation": "isSupplementTo"
     }
-  ]
+  ],
+  "contributors": [
+    {
+      "name": "Austin Benson",
+      "type": "Other"
+    },
+    {
+      "name": "Elliot Saba",
+      "type": "Other"
+    },
+    {
+      "name": "Guillaume Mestdagh",
+      "type": "Researcher"
+    },
+    {
+      "name": "Lars Ruthotto",
+      "type": "Other"
+    },
+    {
+      "name": "Stefanos Carlström",
+      "type": "Other"
+    },
+    {
+      "name": "Tobias Knopp",
+      "type": "Other"
+    }
+  ],
+  "license": "MPL-2.0"
 }
