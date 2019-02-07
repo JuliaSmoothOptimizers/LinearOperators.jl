@@ -1,10 +1,16 @@
 # A [Julia](http://julialang.org) Linear Operator Package
 
+[![DOI](https://zenodo.org/badge/20136006.svg)](https://zenodo.org/badge/latestdoi/20136006)
 [![Build Status](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/kp1o6ejuu6kgskvp/branch/master?svg=true)](https://ci.appveyor.com/project/dpo/linearoperators-jl/branch/master)
 [![Coveralls](https://coveralls.io/repos/JuliaSmoothOptimizers/LinearOperators.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
 [![codecov.io](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
 [![docs](https://img.shields.io/badge/docs-latest-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/latest)
+
+Cite as
+
+    Dominique Orban, & Abel Soares Siqueira. (2019, February 7). LinearOperators.jl.
+    Zenodo. http://doi.org/10.5281/zenodo.2559295
 
 Operators behave like matrices (with some exceptions - see below) but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
 
@@ -106,6 +112,3 @@ full(opA[:,1]) # nx1 matrix
 
 ````JULIA
 julia> Pkg.test("LinearOperators")
-````
-
-[![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)](http://www.gnu.org/licenses/gpl.html "GPLv3")
