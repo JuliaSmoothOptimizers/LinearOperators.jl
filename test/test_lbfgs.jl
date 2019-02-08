@@ -139,6 +139,24 @@ function test_lbfgs()
       @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
     end
   end
+
+  @testset "Different precision" begin
+    n = 10
+    mem = 5
+    for T in (Float16, Float32, Float64, BigFloat)
+      B = LBFGSOperator(T, n, mem)
+      H = InverseLBFGSOperator(T, n, mem)
+      s = ones(T, n)
+      y = ones(T, n)
+      push!(B, s, y)
+      push!(H, s, y)
+      @test eltype(B) == T
+      @test eltype(H) == T
+      v = [-(-one(T))^i for i = 1:n]
+      @test eltype(B * v) == T
+      @test eltype(H * v) == T
+    end
+  end
 end
 
 test_lbfgs()
