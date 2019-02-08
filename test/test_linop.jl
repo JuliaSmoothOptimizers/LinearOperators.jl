@@ -436,9 +436,12 @@ function test_linop()
     ctprod = v -> [v[1]; v[1] + v[2]]
     op = LinearOperator(2, 2, false, false, prod, nothing, ctprod)
     @test eltype(op) == Complex{Float64}
-    for T in (Complex{Float64}, Complex{Float32}, Float64, Float32, Int32)
+    for T in (Complex{Float64}, Complex{Float32}, BigFloat, Float64, Float32, Float16, Int32)
       op = LinearOperator(T, 2, 2, false, false, prod, nothing, ctprod)
+      w = ones(T, 2)
       @test eltype(op) == T
+      @test op * w == T[2; 1]
+      @test eltype(op * w) == T
     end
 
     A = [im 1.0; 0.0 1.0]
