@@ -14,21 +14,21 @@ function test_lsr1()
       @test norm(Matrix(B) - Matrix(1.0I, n, n)) <= ϵ
 
       # Test that only valid updates are accepted.
-      s = rand(n)
+      s = simple_vector(Float64, n)
       y = B * s
       push!(B, s, y); @test B.data.insert == 1
 
       # Insert a few {s,y} pairs.
       for i = 1 : mem+2
-        s = rand(n)
-        y = rand(n)
+        s = ones(n) * i
+        y = [i; ones(n-1)]
         push!(B, s, y)
       end
 
       @test check_hermitian(B)
       @test norm(diag(B) - diag(Matrix(B))) <= rtol
 
-      v = rand(n)
+      v = simple_vector(Float64, n)
       @test norm(B * v - v) > rtol
       reset!(B)
       @test norm(B * v - v) < rtol
@@ -53,8 +53,8 @@ function test_lsr1()
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
     for k = 1 : mem
-      s = rand(n)
-      y = rand(n)
+      s = simple_vector(Float64, n)
+      y = simple_vector(Float64, n)
       B = sr1!(B, s, y)
       LB = push!(LB, s, y)
       @test norm(Matrix(LB) - B) < rtol * norm(B)

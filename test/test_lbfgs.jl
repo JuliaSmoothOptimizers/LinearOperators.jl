@@ -18,7 +18,7 @@ function test_lbfgs()
       @test norm(Matrix(H) - Matrix(1.0I, n, n)) <= ϵ
 
       # Test that nonpositive curvature can't be added.
-      s = rand(n)
+      s = simple_vector(Float64, n)
       z = zeros(n)
       push!(B, s, -s); @test B.data.insert == 1
       push!(B, s,  z); @test B.data.insert == 1
@@ -28,8 +28,8 @@ function test_lbfgs()
       # Insert a few {s,y} pairs.
       insert = 0
       for i = 1 : mem+2
-        s = rand(n)
-        y = rand(n)
+        s = ones(n) * i
+        y = [i; ones(n-1)]
         if dot(s, y) > 1.0e-20
           insert += 1
           push!(B, s, y)
@@ -51,7 +51,7 @@ function test_lbfgs()
       @test norm(Matrix(H * B) - Matrix(1.0I, n, n)) <= rtol
 
       # Testing reset! function
-      v = rand(n)
+      v = simple_vector(Float64, n)
       @test norm(B * v - v) > rtol
       @test norm(H * v - v) > rtol
       reset!(B)
@@ -80,8 +80,8 @@ function test_lbfgs()
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
     for k = 1 : mem
-      s = rand(n)
-      y = rand(n)
+      s = simple_vector(Float64, n)
+      y = simple_vector(Float64, n)
       B = bfgs!(B, s, y)
       LB = push!(LB, s, y)
       @test norm(Matrix(LB) - B) < rtol * norm(B)
@@ -94,12 +94,12 @@ function test_lbfgs()
 
     insert_B = insert_H = 0
     for i = 1 : mem+2
-      s = rand(n)
-      y = rand(n)
+      s = simple_vector(Float64, n)
+      y = simple_vector(Float64, n)
       ys = dot(y, s)
-      g = rand(n)
+      g = simple_vector(Float64, n)
       d = -H * g
-      α = rand()
+      α = i / mem
       s = α * d
       if ys > 0.2 * dot(s, B * s)
         insert_B += 1
@@ -131,8 +131,8 @@ function test_lbfgs()
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
     for k = 1 : mem
-      s = rand(n)
-      y = rand(n)
+      s = simple_vector(Float64, n)
+      y = simple_vector(Float64, n)
       B = bfgs!(B, s, y, true)
       LB = push!(LB, s, y)
       @test norm(Matrix(LB) - B) < rtol * norm(B)
