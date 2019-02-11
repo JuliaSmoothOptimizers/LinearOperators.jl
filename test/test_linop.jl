@@ -1,10 +1,8 @@
-using LinearAlgebra, SparseArrays
-
 function test_linop()
   (nrow, ncol) = (10, 6);
   ϵ = eps(Float64);
   rtol = sqrt(ϵ);
-  A1 = rand(nrow, ncol) + rand(nrow, ncol) * im;
+  A1 = simple_matrix(ComplexF64, nrow, ncol)
 
   @testset "Basic operations" begin
     for op = (LinearOperator(A1), PreallocatedLinearOperator(A1))
@@ -21,7 +19,7 @@ function test_linop()
         @test(size(op, 1) == nrow);
         @test(size(op, 2) == ncol);
         @test_throws LinearOperatorException size(op, 3)
-        @test_throws LinearOperatorException op * rand(ncol + 1)
+        @test_throws LinearOperatorException op * ones(ncol + 1)
       end
 
       @testset "Boolean operators" begin
@@ -39,7 +37,7 @@ function test_linop()
     end
 
     @testset "LinearOperator(Matrix)" begin
-      A2 = sprand(nrow, ncol, 0.5) + sprand(nrow, ncol, 0.5) * im;
+      A2 = simple_sparse_matrix(ComplexF64, nrow, ncol)
       for A in (A1, A2)
         op = LinearOperator(A);
         @test(op.nrow == nrow);
@@ -49,25 +47,25 @@ function test_linop()
         @test(norm(transpose(A) - Matrix(transpose(op))) <= rtol * norm(A));
         @test(norm(A'  - Matrix(op'))  <= rtol * norm(A));
 
-        v = rand(ncol) + rand(ncol) * im;
+        v = simple_vector(ComplexF64, ncol)
         @test(norm(A * v - op * v) <= rtol * norm(v));
 
-        u = rand(nrow) + rand(nrow) * im;
+        u = simple_vector(ComplexF64, nrow)
         @test(norm(transpose(A) * u - transpose(op) * u) <= rtol * norm(u));
         @test(norm(A'  * u - op'  * u) <= rtol * norm(u));
       end
     end
 
     @testset "Preallocated LinearOperator(Matrix)" begin
-      A2 = rand(nrow, ncol)
+      A2 = simple_matrix(Float64, nrow, ncol)
       for A in (A1, A2)
         T = eltype(A)
         Mv = zeros(T, nrow)
         Mtu = zeros(T, ncol)
         Maw = zeros(T, ncol)
         op = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
-        v = T <: Real ? rand(ncol) : rand(ncol) + rand(ncol) * im;
-        u = T <: Real ? rand(nrow) : rand(nrow) + rand(nrow) * im;
+        v = simple_vector(T, ncol)
+        u = simple_vector(T, nrow)
         @test norm(op * v - A * v) <= rtol * norm(A)
         @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
         @test norm(op' * u - A' * u) <= rtol * norm(A)
@@ -76,16 +74,17 @@ function test_linop()
         @test al == 0
 
         op = PreallocatedLinearOperator(A)
-        v = T <: Real ? rand(ncol) : rand(ncol) + rand(ncol) * im;
-        u = T <: Real ? rand(nrow) : rand(nrow) + rand(nrow) * im;
+        v = simple_vector(T, ncol)
+        u = simple_vector(T, nrow)
         @test norm(op * v - A * v) <= rtol * norm(A)
         @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
         @test norm(op' * u - A' * u) <= rtol * norm(A)
       end
 
-      for B in (rand(nrow, nrow), sprand(nrow, nrow, 0.5))
+      for B in (simple_matrix(Float64, nrow, nrow),
+                simple_sparse_matrix(Float64, nrow, nrow))
         for A in (SymTridiagonal(Symmetric(B)), Symmetric(B))
-          v = rand(nrow)
+          v = simple_vector(Float64, nrow)
 
           Mv = zeros(nrow)
           op = PreallocatedLinearOperator(Mv, A)
@@ -102,34 +101,30 @@ function test_linop()
     end
 
     @testset "Basic arithmetic operations" begin
-      B1 = rand(nrow, ncol) + rand(nrow, ncol) * im;
+      B1 = simple_matrix(ComplexF64, nrow, ncol)
 
       for q in (+, -)
         C = q(A1, B1);
         opC = q(LinearOperator(A1), LinearOperator(B1));
-        v = rand(ncol) + rand(ncol) * im;
+        v = simple_vector(ComplexF64, ncol)
         @test(norm(opC * v - C * v) <= rtol * norm(v));
-        u = rand(nrow) + rand(nrow) * im;
+        u = simple_vector(ComplexF64, nrow)
         @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
         @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
 
         opC = q(A1, LinearOperator(B1));
-        v = rand(ncol) + rand(ncol) * im;
         @test(norm(opC * v - C * v) <= rtol * norm(v));
-        u = rand(nrow) + rand(nrow) * im;
         @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
         @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
 
         opC = q(LinearOperator(A1), B1);
-        v = rand(ncol) + rand(ncol) * im;
         @test(norm(opC * v - C * v) <= rtol * norm(v));
-        u = rand(nrow) + rand(nrow) * im;
         @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
         @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
       end
     end
 
-    B2 = rand(ncol, ncol+1) + rand(ncol, ncol+1) * im;
+    B2 = simple_matrix(ComplexF64, ncol, ncol+1)
     @testset "Operator ± scalar" begin
       opC = LinearOperator(A1) + 2.12345;
       @test(norm(A1 .+ 2.12345 - Matrix(opC)) <= rtol * norm(A1 .+ 2.12345));
@@ -145,9 +140,9 @@ function test_linop()
 
       C = A1 * B2;
       opC = LinearOperator(A1) * LinearOperator(B2);
-      v = rand(ncol+1) + rand(ncol+1) * im;
+      v = simple_vector(ComplexF64, ncol+1)
       @test(norm(opC * v - C * v) <= rtol * norm(v));
-      u = rand(nrow) + rand(nrow) * im;
+      u = simple_vector(ComplexF64, nrow)
       @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
       @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
 
@@ -181,7 +176,7 @@ function test_linop()
   @testset "Basic operators" begin
     @testset "Identity" begin
       opI = opEye(nrow);
-      v = rand(nrow) + rand(nrow) * im;
+      v = simple_vector(ComplexF64, nrow)
       @test(abs(norm(opI * v - v)) <= ϵ * norm(v));
       @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v));
       @test(abs(norm(opI' * v - v)) <= ϵ * norm(v));
@@ -192,9 +187,9 @@ function test_linop()
       @test v[1] != w[1]
 
       opI = opEye(nrow, ncol)
-      v = rand(ncol) + rand(ncol) * im
+      v = simple_vector(ComplexF64, ncol)
       v0 = [v ; zeros(nrow - ncol)]
-      vu = [v ; rand(nrow - ncol)]
+      vu = [v ; ones(nrow - ncol)]
       @test(abs(norm(opI * v - v0)) <= ϵ * norm(v))
       @test(abs(norm(transpose(opI) * vu - v)) <= ϵ * norm(v))
       @test(abs(norm(opI' * vu - v)) <= ϵ * norm(v))
@@ -210,7 +205,7 @@ function test_linop()
     @testset "Identity (non-convertible to matrix)" begin
       op = opEye()
 
-      v = rand(5)
+      v = simple_vector(Float64, 5)
       w = op * v
       @test w === v
       w = v * op
@@ -234,8 +229,8 @@ function test_linop()
 
     @testset "Ones" begin
       E = opOnes(nrow, ncol);
-      v = rand(nrow) + rand(nrow) * im;
-      u = rand(ncol) + rand(ncol) * im;
+      v = simple_vector(ComplexF64, nrow)
+      u = simple_vector(ComplexF64, ncol)
       @test(norm(E * u - sum(u) * ones(nrow)) <= rtol * norm(u));
       @test(norm(transpose(E) * v - sum(v) * ones(ncol)) <= rtol * norm(v));
       @test(norm(E' * v - sum(v) * ones(ncol)) <= rtol * norm(v));
@@ -243,17 +238,17 @@ function test_linop()
 
     @testset "Zeros" begin
       O = opZeros(nrow, ncol);
-      v = rand(nrow) + rand(nrow) * im;
-      u = rand(ncol) + rand(ncol) * im;
+      v = simple_vector(ComplexF64, nrow)
+      u = simple_vector(ComplexF64, ncol)
       @test(norm(O * u) <= ϵ);
       @test(norm(transpose(O) * v) <= ϵ);
       @test(norm(O' * v) <= ϵ);
     end
 
     @testset "Diagonal" begin
-      v = rand(nrow) + rand(nrow) * im;
+      v = simple_vector(ComplexF64, nrow)
       D = opDiagonal(v);
-      u = rand(nrow) + rand(nrow) * im;
+      u = simple_vector(ComplexF64, nrow)
       @test(norm(D * u - v .* u) <= ϵ * norm(u));
       @test(norm(transpose(D) * u - v .* u) <= ϵ * norm(u));
       @test(norm(D' * u - conj(v) .* u) <= ϵ * norm(u));
@@ -262,14 +257,14 @@ function test_linop()
     @testset "Rectangular diagonal" begin
       nmin = min(nrow, ncol); nmax = max(nrow, ncol);
       A = zeros(ComplexF64, nmax, nmin);
-      v = rand(nmin) + rand(nmin) * im;
+      v = simple_vector(ComplexF64, nmin)
       for i = 1 : nmin
         A[i,i] = v[i];
       end
       D = opDiagonal(nmax, nmin, v);
-      u = rand(nmin) + rand(nmin) * im;
+      u = simple_vector(ComplexF64, nmin)
       @test(norm(A * u - D * u) <= ϵ * norm(u));
-      w = rand(nmax) + rand(nmax) * im;
+      w = simple_vector(ComplexF64, nmax)
       @test(norm(transpose(A) * w - transpose(D) * w) <= ϵ * norm(w));
       @test(norm(A' * w - D' * w) <= ϵ * norm(w));
 
@@ -284,11 +279,11 @@ function test_linop()
     end
 
     @testset "Hermitian" begin
-      A = rand(nrow, nrow) + rand(nrow, nrow) * im;
+      A = simple_matrix(ComplexF64, nrow, nrow)
       d = real.(diag(A)); A = tril(A, -1);
       C = A + A' + diagm(0 => d)
       H = opHermitian(d, A);
-      v = rand(nrow) + rand(nrow) * im;
+      v = simple_vector(ComplexF64, nrow)
       @test(norm(H * v - C * v) <= rtol * norm(v));
       @test(norm(transpose(H) * v - transpose(C) * v) <= rtol * norm(v));
       @test(norm(H' * v - C * v) <= rtol * norm(v));
@@ -296,18 +291,17 @@ function test_linop()
       @test(! check_hermitian(LinearOperator(A - A')));
       @test(! check_positive_definite(LinearOperator(-A'*A)));
 
-      A = rand(nrow, nrow) + rand(nrow, nrow) * im;
-      C = A + A'
+      C = simple_matrix(ComplexF64, nrow, nrow, symmetric=true)
       H = opHermitian(C);
-      v = rand(nrow) + rand(nrow) * im;
+      v = simple_vector(ComplexF64, nrow)
       @test(norm(H * v - C * v) <= rtol * norm(v));
       @test(norm(transpose(H) * v - transpose(C) * v) <= rtol * norm(v));
       @test(norm(H' * v - C * v) <= rtol * norm(v));
     end
 
     @testset "Transpose and adjoint" begin
-      A = rand(nrow, nrow) + rand(nrow, nrow) * im;
-      v = rand(nrow) + rand(nrow) * im;
+      A = simple_matrix(ComplexF64, nrow, nrow)
+      v = simple_vector(ComplexF64, nrow)
 
       op = LinearOperator(nrow, nrow, false, false, v->A*v, v->transpose(A)*v, nothing)
       @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
@@ -327,7 +321,7 @@ function test_linop()
     end
 
     @testset "Integer" begin
-        A = convert(Array{Int,2}, round.(10 * rand(nrow, nrow) .- 5))
+        A = round.(Int, simple_matrix(Float64, nrow, nrow))
         op = LinearOperator(A)
         @test check_ctranspose(op)
         @test check_hermitian(op + op')
@@ -340,7 +334,7 @@ function test_linop()
       r = 3:6
       s = 1:2:7
       k = 4
-      v = rand(n)
+      v = simple_vector(Float64, nrow)
 
       for idx in (J, r, s, Colon(), k)
         P = opRestriction(idx, n)
@@ -362,11 +356,8 @@ function test_linop()
   end
 
   @testset "Linear system operators" begin
-    (U, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
-    (V, _) = qr(rand(nrow, nrow) + rand(nrow, nrow) * im);
-    Σ = diagm(0 => rand(nrow) .+ 0.1);
-    A = U * Σ * V';
-    v = rand(nrow) + rand(nrow) * im;
+    A = simple_matrix(ComplexF64, nrow, nrow)
+    v = simple_vector(Float64, nrow)
 
     @testset "Inverse" begin
       Ainv = opInverse(A);
@@ -382,14 +373,14 @@ function test_linop()
       @test(norm(transpose(B) \ v - transpose(Binv) * v) <= rtol * norm(v));
       @test(norm(B' \ v - Binv' * v) <= rtol * norm(v));
 
-      @test_throws LinearOperatorException opCholesky(rand(3,5));
-      @test_throws LinearOperatorException opCholesky(rand(5,5), check=true);
+      @test_throws LinearOperatorException opCholesky(simple_matrix(Float64,3,5));
+      @test_throws LinearOperatorException opCholesky(simple_matrix(Float64,5,5), check=true);
 
       # Test Cholesky operator on SQD matrix.
-      A = rand(3,3); A = A'*A;
-      B = rand(2,3);
-      C = rand(2,2); C = C'*C;
-      K = [A B' ; B -C];
+      A = simple_matrix(Float64, 3, 3, symmetric=true)
+      B = simple_matrix(Float64, 2, 3)
+      C = simple_matrix(Float64, 2, 2, symmetric=true)
+      K = Symmetric([A B' ; B -C])
 
       # Dense Cholesky should throw an exception.
       @test_throws LinearAlgebra.PosDefException opCholesky(K);
@@ -401,9 +392,9 @@ function test_linop()
     end
 
     @testset "Householder" begin
-      v = rand(nrow) + rand(nrow) * im;
+      v = simple_vector(ComplexF64, nrow)
       H = opHouseholder(v);
-      u = rand(nrow) + rand(nrow) * im;
+      u = simple_vector(ComplexF64, nrow)
       @test(norm(H * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u));
       @test(norm(transpose(H) * u - (u - 2 * dot(conj(v), u) * conj(v))) <= rtol * norm(u));
       @test(norm(H' * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u));
@@ -420,13 +411,13 @@ function test_linop()
     op2 = conj(op);
     @test(norm(Matrix(op2) - conj(Matrix(op))) <= ϵ * norm(Matrix(op)));
 
-    A = rand(5,3) + im * rand(5,3);
+    A = simple_matrix(ComplexF64, 5, 3)
     op = LinearOperator(A);
     @test(check_ctranspose(A));
     @test(check_ctranspose(op));
     @test_throws LinearOperatorException opCholesky(A)  # Shape mismatch
 
-    A = rand(5,5) + im * rand(5,5);
+    A = simple_matrix(ComplexF64, 5, 5)
     @test_throws LinearOperatorException opCholesky(A, check=true)  # Not Hermitian / positive definite
     @test_throws LinearOperatorException opCholesky(-A'*A, check=true)  # Not positive definite
   end
@@ -449,7 +440,7 @@ function test_linop()
     tprod = u -> transpose(A) * u
     ctprod = w -> A' * w
     opC = LinearOperator(2, 2, false, false, prod, tprod, ctprod)
-    v = rand(2) + rand(2) * im
+    v = simple_vector(ComplexF64, 2)
     @test A == Matrix(opC)
     opF = LinearOperator(Float64, 2, 2, false, false, prod, tprod, ctprod) # The type is a lie
     @test eltype(opF) == Float64

@@ -1,11 +1,10 @@
 function test_kron()
   @testset "Kron" begin
-    for A in Any[rand(2, 3), #rand(-3:3, 2, 3),
-                 #rand(2, 3) + im * rand(2, 3),
-                 sprand(10, 10, 0.1)]
-      for B in Any[rand(2, 3), #rand(-3:3, 2, 3),
-                   rand(2, 3) + im * rand(2, 3),
-                   sprand(10, 10, 0.1)]
+    for A in Any[simple_matrix(Float64, 2, 3),
+                 simple_sparse_matrix(Float64, 10, 10)]
+      for B in Any[simple_matrix(Float64, 2, 3),
+                   simple_matrix(ComplexF64, 2, 3),
+                   simple_sparse_matrix(Float64, 10, 10)]
         K = kron(A, B)
         normK = norm(K, 1)
         T1 = kron(LinearOperator(A), B)
@@ -18,12 +17,12 @@ function test_kron()
           m, n = size(K)
           err = 0.0
           for t = 1:100
-            x = rand(n)
+            x = simple_vector(Float64, n)
             Kx = K * x
             Tx = T * x
             err += norm(Kx - Tx)
 
-            x = rand(m)
+            x = simple_vector(Float64, m)
             Kx = K' * x
             Tx = T' * x
             err += norm(Kx - Tx)
