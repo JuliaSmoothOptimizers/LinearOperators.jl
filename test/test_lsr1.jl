@@ -8,15 +8,15 @@ function test_lsr1()
     B = LSR1Operator(n, mem, scaling=false)
 
     for t = 1:2
-      @assert norm(diag(B) - diag(Matrix(B))) <= rtol
+      @test norm(diag(B) - diag(Matrix(B))) <= rtol
 
-      @assert B.data.insert == 1
+      @test B.data.insert == 1
       @test norm(Matrix(B) - Matrix(1.0I, n, n)) <= ϵ
 
       # Test that only valid updates are accepted.
       s = rand(n)
       y = B * s
-      push!(B, s, y); @assert B.data.insert == 1
+      push!(B, s, y); @test B.data.insert == 1
 
       # Insert a few {s,y} pairs.
       for i = 1 : mem+2
@@ -26,12 +26,12 @@ function test_lsr1()
       end
 
       @test check_hermitian(B)
-      @assert norm(diag(B) - diag(Matrix(B))) <= rtol
+      @test norm(diag(B) - diag(Matrix(B))) <= rtol
 
       v = rand(n)
-      @assert norm(B * v - v) > rtol
+      @test norm(B * v - v) > rtol
       reset!(B)
-      @assert norm(B * v - v) < rtol
+      @test norm(B * v - v) < rtol
     end
 
     # test against full SR1 without scaling
@@ -49,16 +49,16 @@ function test_lsr1()
       return B
     end
 
-    @assert norm(Matrix(LB) - B) < rtol * norm(B)
-    @assert norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
+    @test norm(Matrix(LB) - B) < rtol * norm(B)
+    @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
     for k = 1 : mem
       s = rand(n)
       y = rand(n)
       B = sr1!(B, s, y)
       LB = push!(LB, s, y)
-      @assert norm(Matrix(LB) - B) < rtol * norm(B)
-      @assert norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
+      @test norm(Matrix(LB) - B) < rtol * norm(B)
+      @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
     end
   end
 end
