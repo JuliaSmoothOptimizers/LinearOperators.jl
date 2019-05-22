@@ -20,18 +20,18 @@ function test_kron()
             x = simple_vector(Float64, n)
             Kx = K * x
             Tx = T * x
-            err += norm(Kx - Tx)
+            err += norm(Kx - Tx, 1)
 
             x = simple_vector(Float64, m)
             Kx = K' * x
             Tx = T' * x
-            err += norm(Kx - Tx)
+            err += norm(Kx - Tx, 1)
 
             Kx = transpose(K) * x
             Tx = transpose(T) * x
-            err += norm(Kx - Tx)
+            err += norm(Kx - Tx, 1)
           end
-          @test err < 1e-12
+          @test err < 1e-12 * normK
         end
       end
     end
