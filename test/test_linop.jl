@@ -456,6 +456,16 @@ function test_linop()
     mul!(y, op, x)
     @test y == [2.0; 1.0]
   end
+
+  # Issue #92
+  @testset "Transpose and adjoint of real preallocated operator" begin
+    A = [1.0 1.0; 1.0 0.0]
+    op = PreallocatedLinearOperator(A)
+    transpose_op = transpose(op)
+    @test typeof(transpose_op) <: PreallocatedLinearOperator
+    adjoint_op = adjoint(op)
+    @test typeof(adjoint_op) <: PreallocatedLinearOperator
+  end
 end
 
 test_linop()

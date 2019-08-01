@@ -263,6 +263,13 @@ function transpose(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
   if op.symmetric
     return op
   end
+  if isreal(op)
+    if typeof(op) <: PreallocatedLinearOperator
+      return PreallocatedLinearOperator{T,F2,F1,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, op.tprod, op.prod, op.prod)
+    else
+      return LinearOperator{T,F2,F1,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, op.tprod, op.prod, op.prod)
+    end
+  end
   if op.tprod !== nothing
     ctprod = @closure v -> conj.(op.prod(conj.(v)))
     F4 = typeof(ctprod)
@@ -289,6 +296,13 @@ end
 function adjoint(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
   if op.hermitian
     return op
+  end
+  if isreal(op)
+    if typeof(op) <: PreallocatedLinearOperator
+      return PreallocatedLinearOperator{T,F2,F1,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, op.tprod, op.prod, op.prod)
+    else
+      return LinearOperator{T,F2,F1,F1}(op.ncol, op.nrow, op.symmetric, op.hermitian, op.tprod, op.prod, op.prod)
+    end
   end
   if op.ctprod !== nothing
     tprod = @closure u -> conj.(op.prod(conj.(u)))
