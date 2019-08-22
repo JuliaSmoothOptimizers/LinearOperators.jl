@@ -34,6 +34,7 @@ Operator                     | Description
 `opExtension`                | Represent a selection of "columns" when composed on the right with an existing operator
 `LBFGSOperator`              | Limited-memory BFGS approximation in operator form (damped or not)
 `InverseLBFGSOperator`       | Inverse of a limited-memory BFGS approximation in operator form (damped or not)
+`CompactLBFGSOperator`       | Limited-memory BFGS approximation in compact form
 `LSR1Operator`               | Limited-memory SR1 approximation in operator form
 `kron`                       | Kronecker tensor product in linear operator form
 

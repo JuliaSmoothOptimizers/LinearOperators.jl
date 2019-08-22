@@ -105,7 +105,7 @@ end
 r
 ```
 
-There is also a LSR1 operator that behaves similarly to these two.
+There is also a LSR1 operator that behaves similarly to these two and a compact L-BFGS operator (forward mode only).
 
 ## Restriction, extension and slices
 

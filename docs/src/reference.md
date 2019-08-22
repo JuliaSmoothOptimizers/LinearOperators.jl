@@ -16,6 +16,7 @@ opRestriction
 opExtension
 LBFGSOperator
 InverseLBFGSOperator
+CompactLBFGSOperator
 LSR1Operator
 kron
 ```
