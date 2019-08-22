@@ -5,3 +5,4 @@ import LinearAlgebra.diag
 
 include("lbfgs.jl")
 include("lsr1.jl")
+include("compactlbfgs.jl")
