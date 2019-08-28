@@ -7,33 +7,33 @@ op2 = LinearOperator(A2)
 op = op1 * op2  # Does not form A1 * A2
 x = rand(3)
 y = op * x</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.158338822702328
- 0.17229156499058343
- 0.04993997216991073
- 0.06082100806366914
- 0.16419504811273372</code></pre></div><h2><a class="nav-anchor" id="Inverse-1" href="#Inverse-1">Inverse</a></h2><p>Operators may be defined to represent (approximate) inverses.</p><div><pre><code class="language-julia">using LinearAlgebra
+ 0.1927511173867822
+ 0.3914141511586109
+ 1.0587534222638146
+ 0.54490053132078
+ 1.314757093455966</code></pre></div><h2><a class="nav-anchor" id="Inverse-1" href="#Inverse-1">Inverse</a></h2><p>Operators may be defined to represent (approximate) inverses.</p><div><pre><code class="language-julia">using LinearAlgebra
 A = rand(5,5)
 A = A&#39; * A
 op = opCholesky(A)  # Use, e.g., as a preconditioner
 v = rand(5)
-norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">5.63309153603609e-13</code></pre></div><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2><a class="nav-anchor" id="Using-functions-1" href="#Using-functions-1">Using functions</a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><div><pre><code class="language-julia">using FFTW
+norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">1.2251136279383154e-14</code></pre></div><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2><a class="nav-anchor" id="Using-functions-1" href="#Using-functions-1">Using functions</a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><div><pre><code class="language-julia">using FFTW
 dft = LinearOperator(10, 10, false, false,
                      v -&gt; fft(v),
                      nothing,       # will be inferred
                      w -&gt; ifft(w))
 x = rand(10)
 y = dft * x
-norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">1.1857187100668868e-16</code></pre></div><div><pre><code class="language-julia">transpose(dft) * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
-  0.0409132707270623 - 0.0im
-  0.3322535714247674 - 0.0im
-   0.410867843439348 - 0.0im
-  0.5719534031177277 - 0.0im
- 0.42467252130453614 - 0.0im
-  0.4902394802624712 - 0.0im
-  0.4674060469318728 - 0.0im
- 0.10573284053826178 - 0.0im
-  0.6647286631500746 + 0.0im
- 0.38561671589452984 - 0.0im</code></pre></div><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><div><pre><code class="language-julia">op = LinearOperator(Float64, 10, 10, false, false,
+norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">4.3709524189038457e-16</code></pre></div><div><pre><code class="language-julia">transpose(dft) * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
+ 0.07024012109541222 - 0.0im
+  0.6981125705361163 - 0.0im
+ 0.19320724876988088 - 0.0im
+  0.9608275466881575 - 0.0im
+  0.5881120307175371 - 0.0im
+ 0.42947655819198527 - 0.0im
+  0.8283865239723393 - 0.0im
+  0.9066122579507825 - 0.0im
+ 0.13938343871258102 + 0.0im
+  0.6375138756487041 - 0.0im</code></pre></div><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><div><pre><code class="language-julia">op = LinearOperator(Float64, 10, 10, false, false,
                     v -&gt; [v[1] + v[2]; v[2]],
                     nothing,
                     w -&gt; [w[1]; w[1] + w[2]])</code></pre><pre><code class="language-none">Linear operator
@@ -68,7 +68,7 @@ for i = 1:100
   push!(H, s, y)
   r += norm(B * H * s - s)
 end
-r</code></pre><pre><code class="language-none">3.900934555194913e-13</code></pre></div><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2><a class="nav-anchor" id="Restriction,-extension-and-slices-1" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></h2><p>The restriction operator restricts a vector to a set of indices.</p><div><pre><code class="language-julia">v = collect(1:5)
+r</code></pre><pre><code class="language-none">3.741601468415555e-13</code></pre></div><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2><a class="nav-anchor" id="Restriction,-extension-and-slices-1" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></h2><p>The restriction operator restricts a vector to a set of indices.</p><div><pre><code class="language-julia">v = collect(1:5)
 R = opRestriction([2;5], 5)
 R * v</code></pre><pre><code class="language-none">2-element Array{Int64,1}:
  2
@@ -86,19 +86,19 @@ opA = LinearOperator(A)
 I = [1;3;5]
 J = 2:4
 A[I,J] * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 0.7967033997596322
- 2.001008270754243
- 1.9012350038031731</code></pre></div><div><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 0.7967033997596322
- 2.001008270754243
- 1.9012350038031731</code></pre></div><p>A main <a href="../#differences-1">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><div><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 1.3750376676988898</code></pre></div><div><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.2895467043547453
- 0.08103439933903833
- 0.3495971204338124
- 0.8798104578645056
- 0.18342796916995452</code></pre></div><div><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 0.2895467043547453</code></pre></div><h2><a class="nav-anchor" id="Preallocated-Operators-1" href="#Preallocated-Operators-1">Preallocated Operators</a></h2><p>Operators created from matrices are very practical, however, it is often useful to reuse the memory used by the operator. For that use, we can use <code>PreallocatedLinearOperator(A)</code> to create an operator that reuses the memory.</p><div><pre><code class="language-julia">m, n = 50, 30
+ 1.511671029308626
+ 1.0633573012217945
+ 1.8695149050711184</code></pre></div><div><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
+ 1.511671029308626
+ 1.0633573012217945
+ 1.8695149050711184</code></pre></div><p>A main <a href="../#differences-1">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><div><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 2.0923406775461073</code></pre></div><div><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
+ 0.2810164038763667
+ 0.6174122162770956
+ 0.5815193630953264
+ 0.756474701465091
+ 0.24731846841454863</code></pre></div><div><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 0.2810164038763667</code></pre></div><h2><a class="nav-anchor" id="Preallocated-Operators-1" href="#Preallocated-Operators-1">Preallocated Operators</a></h2><p>Operators created from matrices are very practical, however, it is often useful to reuse the memory used by the operator. For that use, we can use <code>PreallocatedLinearOperator(A)</code> to create an operator that reuses the memory.</p><div><pre><code class="language-julia">m, n = 50, 30
 A = rand(m, n) + im * rand(m, n)
 op1 = PreallocatedLinearOperator(A)
 op2 = LinearOperator(A)
@@ -107,8 +107,8 @@ al = @allocated op1 * v
 println(&quot;Allocation of PreallocatedLinearOperator product = $al&quot;)
 v = rand(n)
 al = @allocated op2 * v
-println(&quot;Allocation of LinearOperator product = $al&quot;)</code></pre><pre><code class="language-none">Allocation of PreallocatedLinearOperator product = 35262053
-Allocation of LinearOperator product = 14749749</code></pre></div><p>Notice the memory overwrite:</p><div><pre><code class="language-julia">Av = op1 * v
+println(&quot;Allocation of LinearOperator product = $al&quot;)</code></pre><pre><code class="language-none">Allocation of PreallocatedLinearOperator product = 35261797
+Allocation of LinearOperator product = 14752453</code></pre></div><p>Notice the memory overwrite:</p><div><pre><code class="language-julia">Av = op1 * v
 w = rand(n)
 Aw = op1 * w
 Aw === Av</code></pre><pre><code class="language-none">true</code></pre></div><p>which doesn&#39;t happen on <code>LinearOperator</code>.</p><div><pre><code class="language-julia">Av = op2 * v
