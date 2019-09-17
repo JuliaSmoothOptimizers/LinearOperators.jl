@@ -348,7 +348,6 @@ end
 -(op :: AbstractLinearOperator, x :: Number) = op + (-x)
 -(x :: Number, op :: AbstractLinearOperator) = x + (-op)
 
-
 # Utility functions.
 
 """
@@ -598,16 +597,18 @@ function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
 end
 
 function hcat(ops :: OperatorOrMatrix...)
-  op = ops[1]
   nops = length(ops)
-  nrow = size(op, 1)
+  nrow = size(ops[1], 1)
   for i = 2:nops
     size(ops[i], 1) == nrow || throw(LinearOperatorException("hcat: inconsistent row sizes"))
   end
   ncol = sum(size(ops[i], 2) for i = 1:nops)
-  S = promote_type([eltype(op) for op in ops]...)
+  S = eltype(ops[1])
+  for i = 2:nops
+    S = promote_type(S, eltype(ops[i]))
+  end
 
-  function prod(v)
+  prod = @closure v -> begin
     Av = zeros(S, nrow)
     k = 0
     for i = 1:nops
@@ -685,7 +686,7 @@ function vcat(ops :: OperatorOrMatrix...)
     end
     return Av
   end
-  function tprod(v)
+  tprod = @closure v -> begin
     Atv = zeros(S, ncol)
     k = 0
     for i = 1:nops
@@ -695,7 +696,7 @@ function vcat(ops :: OperatorOrMatrix...)
     end
     return Atv
   end
-  function ctprod(v)
+  ctprod = @closure v -> begin
     Atv = zeros(S, ncol)
     k = 0
     for i = 1:nops
