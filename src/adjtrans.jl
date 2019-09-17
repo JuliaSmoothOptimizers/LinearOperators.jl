@@ -1,16 +1,16 @@
 export AdjointLinearOperator, TransposeLinearOperator, adjoint, transpose
 
 # From julialang:stdlib/LinearAlgebra/src/adjtrans.jl
-struct AdjointLinearOperator{T,F1,F2,F3} <: AbstractLinearOperator{T,F1,F2,F3}
-  parent :: AbstractLinearOperator{T,F1,F2,F3}
+struct AdjointLinearOperator{T} <: AbstractLinearOperator{T}
+  parent :: AbstractLinearOperator{T}
 end
 
-struct TransposeLinearOperator{T,F1,F2,F3} <: AbstractLinearOperator{T,F1,F2,F3}
-  parent :: AbstractLinearOperator{T,F1,F2,F3}
+struct TransposeLinearOperator{T} <: AbstractLinearOperator{T}
+  parent :: AbstractLinearOperator{T}
 end
 
-struct ConjugateLinearOperator{T,F1,F2,F3} <: AbstractLinearOperator{T,F1,F2,F3}
-  parent :: AbstractLinearOperator{T,F1,F2,F3}
+struct ConjugateLinearOperator{T} <: AbstractLinearOperator{T}
+  parent :: AbstractLinearOperator{T}
 end
 
 adjoint(A :: AbstractLinearOperator) = AdjointLinearOperator(A)

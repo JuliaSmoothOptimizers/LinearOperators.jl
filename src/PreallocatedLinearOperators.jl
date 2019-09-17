@@ -1,6 +1,6 @@
 export PreallocatedLinearOperator
 
-abstract type AbstractPreallocatedLinearOperator{T,F1,F2,F3} <: AbstractLinearOperator{T,F1,F2,F3} end
+abstract type AbstractPreallocatedLinearOperator{T} <: AbstractLinearOperator{T} end
 
 """
 Type to represent a linear operator with preallocation. Implicit modifications may
@@ -17,14 +17,14 @@ y = op * x        # Silently overwrite x to zeros! Equivalent to mul!(x, A, x).
 y == zeros(5)     # true. op * v and op * x are lost
 ```
 """
-mutable struct PreallocatedLinearOperator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: AbstractPreallocatedLinearOperator{T,F1,F2,F3}
+mutable struct PreallocatedLinearOperator{T} <: AbstractPreallocatedLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: F1 # apply the operator to a vector
-  tprod  :: F2 # apply the transpose operator to a vector
-  ctprod :: F3 # apply the transpose conjugate operator to a vector
+  prod    # apply the operator to a vector
+  tprod   # apply the transpose operator to a vector
+  ctprod  # apply the transpose conjugate operator to a vector
 end
 
 """
@@ -62,10 +62,7 @@ function PreallocatedLinearOperator(Mv :: Vector{T}, Mtu :: Vector{T}, Maw :: Ve
   prod = @closure v -> mul!(Mv, M, v)
   tprod = @closure u -> mul!(Mtu, transpose(M), u)
   ctprod = @closure w -> mul!(Maw, adjoint(M), w)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  PreallocatedLinearOperator{T,F1,F2,F3}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
 """

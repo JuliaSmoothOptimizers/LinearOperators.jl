@@ -25,10 +25,7 @@ function kron(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   end
   symm = issymmetric(A) && issymmetric(B)
   herm = ishermitian(A) && ishermitian(B)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  return LinearOperator{T,F1,F2,F3}(m * p, n * q, symm, herm, prod, tprod, ctprod)
+  return LinearOperator{T}(m * p, n * q, symm, herm, prod, tprod, ctprod)
 end
 
 kron(A :: AbstractMatrix, B :: AbstractLinearOperator) =
