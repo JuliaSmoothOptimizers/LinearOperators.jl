@@ -28,15 +28,13 @@ import LinearAlgebra.issymmetric, LinearAlgebra.ishermitian, LinearAlgebra.mul!
 import Base.conj
 import Base.hcat, Base.vcat, Base.hvcat
 
-abstract type AbstractLinearOperator{T,F1,F2,F3} end
+abstract type AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
 include("adjtrans.jl")
 
-eltype(A :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3} = T
-isreal(A :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3} = T <: Real
-
-const FuncOrNothing = Union{Function, Nothing}
+eltype(A :: AbstractLinearOperator{T}) where {T} = T
+isreal(A :: AbstractLinearOperator{T}) where {T} = T <: Real
 
 include("PreallocatedLinearOperators.jl")
 
@@ -47,14 +45,14 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-mutable struct LinearOperator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: AbstractLinearOperator{T,F1,F2,F3}
+mutable struct LinearOperator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: F1 # apply the operator to a vector
-  tprod  :: F2 # apply the transpose operator to a vector
-  ctprod :: F3 # apply the transpose conjugate operator to a vector
+  prod    # apply the operator to a vector
+  tprod   # apply the transpose operator to a vector
+  ctprod  # apply the transpose conjugate operator to a vector
 end
 
 """
@@ -137,10 +135,7 @@ function LinearOperator(M :: AbstractMatrix{T}; symmetric=false, hermitian=false
   prod = @closure v -> M * v
   tprod = @closure u -> transpose(M) * u
   ctprod = @closure w -> adjoint(M) * w
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  LinearOperator{T,F1,F2,F3}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
 """
@@ -183,14 +178,12 @@ Construct a linear operator from functions.
 """
 function LinearOperator(nrow :: Int, ncol :: Int,
                         symmetric :: Bool, hermitian :: Bool,
-                        prod :: F1,
-                        tprod :: F2=nothing,
-                        ctprod :: F3=nothing) where {F1 <: FuncOrNothing,
-                                                     F2 <: FuncOrNothing,
-                                                     F3 <: FuncOrNothing}
+                        prod,
+                        tprod=nothing,
+                        ctprod=nothing)
 
   T = hermitian ? (symmetric ? Float64 : ComplexF64) : ComplexF64
-  LinearOperator{T,F1,F2,F3}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
 """
@@ -211,14 +204,11 @@ contents of the complex matrix `A`.
 """
 function LinearOperator(::Type{T}, nrow :: Int, ncol :: Int,
                         symmetric :: Bool, hermitian :: Bool,
-                        prod :: F1,
-                        tprod :: F2=nothing,
-                        ctprod :: F3=nothing) where {T,
-                                                     F1 <: FuncOrNothing,
-                                                     F2 <: FuncOrNothing,
-                                                     F3 <: FuncOrNothing}
+                        prod,
+                        tprod=nothing,
+                        ctprod=nothing) where T
 
-  LinearOperator{T,F1,F2,F3}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
 
 
@@ -250,14 +240,11 @@ end
 # Unary operations.
 +(op :: AbstractLinearOperator) = op
 
-function -(op :: AbstractLinearOperator{T,F1,F2,F3}) where {T,F1,F2,F3}
+function -(op :: AbstractLinearOperator{T}) where T
   prod = @closure v -> -op.prod(v)
   tprod = @closure u -> -op.tprod(u)
   ctprod = @closure w -> -op.ctprod(w)
-  F4 = typeof(prod)
-  F5 = typeof(tprod)
-  F6 = typeof(ctprod)
-  LinearOperator{T,F4,F5,F6}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod, tprod, ctprod)
+  LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod, tprod, ctprod)
 end
 
 function mul!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
@@ -278,10 +265,7 @@ function *(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
   prod = @closure v -> op1 * (op2 * v)
   tprod = @closure u -> transpose(op2) * (transpose(op1) * u)
   ctprod = @closure w -> op2' * (op1' * w)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  LinearOperator{S,F1,F2,F3}(m1, n2, false, false, prod, tprod, ctprod)
+  LinearOperator{S}(m1, n2, false, false, prod, tprod, ctprod)
 end
 
 ## Matrix times operator.
@@ -294,10 +278,7 @@ function *(op :: AbstractLinearOperator, x :: Number)
   prod = @closure v -> (op * v) * x
   tprod = @closure u -> x * (transpose(op) * u)
   ctprod = @closure w -> x' * (op' * w)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  LinearOperator{S,F1,F2,F3}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod, tprod, ctprod)
+  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod, tprod, ctprod)
 end
 
 function *(x :: Number, op :: AbstractLinearOperator)
@@ -305,10 +286,7 @@ function *(x :: Number, op :: AbstractLinearOperator)
   prod = @closure v -> x * (op * v)
   tprod = @closure u -> (transpose(op) * u) * x
   ctprod = @closure w -> (op' * w) * x'
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  LinearOperator{S,F1,F2,F3}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod, tprod, ctprod)
+  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod, tprod, ctprod)
 end
 
 # Operator + operator.
@@ -322,11 +300,8 @@ function +(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
   prod = @closure v -> (op1   * v) + (op2   * v)
   tprod = @closure u -> (transpose(op1) * u) + (transpose(op2) * u)
   ctprod = @closure w -> (op1'  * w) + (op2'  * w)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  return LinearOperator{S,F1,F2,F3}(m1, n1, symmetric(op1) && symmetric(op2), hermitian(op1) && hermitian(op2),
-                                    prod, tprod, ctprod)
+  return LinearOperator{S}(m1, n1, symmetric(op1) && symmetric(op2), hermitian(op1) && hermitian(op2),
+                           prod, tprod, ctprod)
 end
 
 # Operator + matrix.
@@ -356,7 +331,7 @@ end
 
 Cheap check that the operator and its conjugate transposed are related.
 """
-function check_ctranspose(op :: AbstractLinearOperator{T}) where {T <: Union{AbstractFloat,Complex}}
+function check_ctranspose(op :: AbstractLinearOperator{T}) where T <: Union{AbstractFloat,Complex}
   (m, n) = size(op)
   x = rand(n)
   y = rand(m)
@@ -382,7 +357,7 @@ check_ctranspose(M :: AbstractMatrix) = check_ctranspose(LinearOperator(M))
 
 Cheap check that the operator is Hermitian.
 """
-function check_hermitian(op :: AbstractLinearOperator{T}) where {T <: Union{AbstractFloat,Complex}}
+function check_hermitian(op :: AbstractLinearOperator{T}) where T <: Union{AbstractFloat,Complex}
   m, n = size(op)
   m == n || throw(LinearOperatorException("shape mismatch"))
   v = rand(n)
@@ -412,7 +387,7 @@ check_hermitian(M :: AbstractMatrix) = check_hermitian(LinearOperator(M))
 
 Cheap check that the operator is positive (semi-)definite.
 """
-function check_positive_definite(op :: AbstractLinearOperator{T}; semi=false) where {T <: Union{AbstractFloat,Complex}}
+function check_positive_definite(op :: AbstractLinearOperator{T}; semi=false) where T <: Union{AbstractFloat,Complex}
   m, n = size(op)
   m == n || throw(LinearOperatorException("shape mismatch"))
   v = rand(n)
@@ -448,7 +423,7 @@ v = rand(5)
 @assert opI * v === v
 ```
 """
-struct opEye <: AbstractLinearOperator{Any,Nothing,Nothing,Nothing} end
+struct opEye <: AbstractLinearOperator{Any} end
 
 *(::opEye, x :: AbstractArray{T,1} where T) = x
 *(x :: AbstractArray{T,1} where T, ::opEye) = x
@@ -470,8 +445,7 @@ Identity operator of order `n` and of data type `T` (defaults to `Float64`).
 """
 function opEye(T :: DataType, n :: Int)
   prod = @closure v -> copy(v)
-  F = typeof(prod)
-  LinearOperator{T,F,F,F}(n, n, true, true, prod, prod, prod)
+  LinearOperator{T}(n, n, true, true, prod, prod, prod)
 end
 
 opEye(n :: Int) = opEye(Float64, n)
@@ -495,9 +469,7 @@ function opEye(T :: DataType, nrow :: Int, ncol :: Int)
     prod = @closure v -> v[1:nrow]
     tprod = @closure v -> [v ; zeros(T, ncol - nrow)]
   end
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  return LinearOperator{T,F1,F2,F2}(nrow, ncol, false, false, prod, tprod, tprod)
+  return LinearOperator{T}(nrow, ncol, false, false, prod, tprod, tprod)
 end
 
 opEye(nrow :: Int, ncol :: Int) = opEye(Float64, nrow, ncol)
@@ -512,9 +484,7 @@ Operator of all ones of size `nrow`-by-`ncol` and of data type `T` (defaults to
 function opOnes(T :: DataType, nrow :: Int, ncol :: Int)
   prod = @closure v -> sum(v) * ones(T, nrow)
   tprod = @closure u -> sum(u) * ones(T, ncol)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  LinearOperator{T,F1,F2,F2}(nrow, ncol, nrow == ncol, nrow == ncol, prod, tprod, tprod)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod, tprod, tprod)
 end
 
 opOnes(nrow :: Int, ncol :: Int) = opOnes(Float64, nrow, ncol)
@@ -529,9 +499,7 @@ Zero operator of size `nrow`-by-`ncol` and of data type `T` (defaults to
 function opZeros(T :: DataType, nrow :: Int, ncol :: Int)
   prod = @closure v -> zeros(T, nrow)
   tprod = @closure u -> zeros(T, ncol)
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  LinearOperator{T,F1,F2,F2}(nrow, ncol, nrow == ncol, nrow == ncol, prod, tprod, tprod)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod, tprod, tprod)
 end
 
 opZeros(nrow :: Int, ncol :: Int) = opZeros(Float64, nrow, ncol)
@@ -544,12 +512,10 @@ Diagonal operator with the vector `d` on its main diagonal.
 function opDiagonal(d :: AbstractVector{T}) where T
   prod = @closure v -> v .* d
   ctprod = @closure w -> w .* conj(d)
-  F1 = typeof(prod)
-  F2 = typeof(ctprod)
-  LinearOperator{T,F1,F1,F2}(length(d), length(d), true, isreal(d),
-                             prod,
-                             prod,
-                             ctprod)
+  LinearOperator{T}(length(d), length(d), true, isreal(d),
+                    prod,
+                    prod,
+                    ctprod)
 end
 
 #TODO: not type stable
@@ -570,10 +536,7 @@ function opDiagonal(nrow :: Int, ncol :: Int, d :: AbstractVector{T}) where T
     tprod = @closure u -> [u .* d ; zeros(ncol-nrow)]
     ctprod = @closure w -> [w .* conj(d) ; zeros(ncol-nrow)]
   end
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  LinearOperator{T,F1,F2,F3}(nrow, ncol, false, false, prod, tprod, ctprod)
+  LinearOperator{T}(nrow, ncol, false, false, prod, tprod, ctprod)
 end
 
 
@@ -592,10 +555,7 @@ function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   prod = @closure v -> A * v[1:Ancol] + B * v[Ancol+1:length(v)]
   tprod  = @closure v -> [transpose(A) * v; transpose(B) * v;]
   ctprod = @closure v -> [A' * v; B' * v;]
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  LinearOperator{S,F1,F2,F3}(nrow, ncol, false, false, prod, tprod, ctprod)
+  LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
 end
 
 function hcat(ops :: OperatorOrMatrix...)
@@ -622,10 +582,7 @@ function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   prod = @closure v -> [A * v; B * v;]
   tprod = @closure v -> transpose(A) * v +  transpose(B) * v
   ctprod = @closure v -> A' * v[1:Anrow] + B' * v[Anrow+1:length(v)]
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  return LinearOperator{S,F1,F2,F3}(nrow, ncol, false, false, prod, tprod, ctprod)
+  return LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
 end
 
 function vcat(ops :: OperatorOrMatrix...)
@@ -659,10 +616,7 @@ function opInverse(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) whe
   prod = @closure v -> M \ v
   tprod = @closure u -> transpose(M) \ u
   ctprod = @closure w -> M' \ w
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
-  LinearOperator{T,F1,F2,F3}(size(M,2), size(M,1), symmetric, hermitian, prod, tprod, ctprod)
+  LinearOperator{T}(size(M,2), size(M,1), symmetric, hermitian, prod, tprod, ctprod)
 end
 
 """
@@ -684,11 +638,8 @@ function opCholesky(M :: AbstractMatrix; check :: Bool=false)
   prod = @closure v -> LL \ v
   tprod = @closure u -> conj(LL \ conj(u))  # M.' = conj(M)
   ctprod = @closure w -> LL \ w
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
   S = eltype(LL)
-  LinearOperator{S,F1,F2,F3}(m, m, isreal(M), true, prod, tprod, ctprod)
+  LinearOperator{S}(m, m, isreal(M), true, prod, tprod, ctprod)
   #TODO: use iterative refinement.
 end
 
@@ -709,11 +660,8 @@ function opLDL(M :: AbstractMatrix; check :: Bool=false)
   prod = @closure v -> LDL \ v
   tprod = @closure u -> conj(LDL \ conj(u))  # M.' = conj(M)
   ctprod = @closure w -> LDL \ w
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  F3 = typeof(ctprod)
   S = eltype(LDL)
-  return LinearOperator{S,F1,F2,F3}(m, m, isreal(M), true, prod, tprod, ctprod)
+  return LinearOperator{S}(m, m, isreal(M), true, prod, tprod, ctprod)
   #TODO: use iterative refinement.
 end
 
@@ -726,8 +674,7 @@ The result is `x -> (I - 2 h h') x`.
 function opHouseholder(h :: AbstractVector{T}) where T
   n = length(h)
   prod = @closure v -> (v - 2 * dot(h, v) * h)  # tprod will be inferred
-  F1 = typeof(prod)
-  LinearOperator{T,F1,Nothing,F1}(n, n, isreal(h), true, prod, nothing, prod)
+  LinearOperator{T}(n, n, isreal(h), true, prod, nothing, prod)
 end
 
 """
@@ -741,8 +688,7 @@ function opHermitian(d :: AbstractVector{S}, A :: AbstractMatrix{T}) where {S, T
   L = tril(A, -1)
   U = promote_type(S, T)
   prod = @closure v -> (d .* v + L * v + (v' * L)')[:]
-  F = typeof(prod)
-  LinearOperator{U,F,Nothing,Nothing}(m, m, isreal(A), true, prod, nothing, nothing)
+  LinearOperator{U}(m, m, isreal(A), true, prod, nothing, nothing)
 end
 
 
@@ -779,9 +725,7 @@ function opRestriction(I :: LinearOperatorIndexType, ncol :: Int)
     z[I] = x
     return z
   end
-  F1 = typeof(prod)
-  F2 = typeof(tprod)
-  return LinearOperator{Int,F1,F2,F2}(nrow, ncol, false, false, prod, tprod, tprod)
+  return LinearOperator{Int}(nrow, ncol, false, false, prod, tprod, tprod)
 end
 
 opRestriction(::Colon, ncol :: Int) = opEye(Int, ncol)

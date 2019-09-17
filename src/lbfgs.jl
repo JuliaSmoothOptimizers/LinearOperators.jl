@@ -38,14 +38,14 @@ end
 LBFGSData(n :: Int, mem :: Int; kwargs...) = LBFGSData(Float64, n, mem; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-mutable struct LBFGSOperator{T,F1<:FuncOrNothing,F2<:FuncOrNothing,F3<:FuncOrNothing} <: AbstractLinearOperator{T,F1,F2,F3}
+mutable struct LBFGSOperator{T} <: AbstractLinearOperator{T}
   nrow   :: Int
   ncol   :: Int
   symmetric :: Bool
   hermitian :: Bool
-  prod   :: F1  # apply the operator to a vector
-  tprod  :: F2  # apply the transpose operator to a vector
-  ctprod :: F3  # apply the transpose conjugate operator to a vector
+  prod     # apply the operator to a vector
+  tprod    # apply the transpose operator to a vector
+  ctprod   # apply the transpose conjugate operator to a vector
   inverse :: Bool
   data :: LBFGSData{T}
 end
@@ -93,9 +93,8 @@ function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
   end
 
   prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
-  F = typeof(prod)
-  return LBFGSOperator{T,F,F,F}(n, n, true, true,
-                                prod, prod, prod, true, lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true,
+                          prod, prod, prod, true, lbfgs_data)
 end
 
 InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(Float64, n, mem; kwargs...)
@@ -134,9 +133,8 @@ function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
   end
 
   prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
-  F = typeof(prod)
-  return LBFGSOperator{T,F,F,F}(n, n, true, true,
-                                prod, prod, prod, false, lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true,
+                          prod, prod, prod, false, lbfgs_data)
 end
 
 LBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = LBFGSOperator(Float64, n, mem; kwargs...)
