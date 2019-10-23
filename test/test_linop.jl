@@ -405,8 +405,9 @@ function test_linop()
     op = LinearOperator(5, 3, false, false,
                         p -> ones(5) + im * ones(5));
     @test eltype(op) == ComplexF64
-    @test_throws LinearOperatorException transpose(op)  # cannot be inferred
-    @test_throws LinearOperatorException op'            # cannot be inferred
+    v = rand(5)
+    @test_throws LinearOperatorException transpose(op) * v  # cannot be inferred
+    @test_throws LinearOperatorException op' * v            # cannot be inferred
 
     op2 = conj(op);
     @test(norm(Matrix(op2) - conj(Matrix(op))) <= ϵ * norm(Matrix(op)));
