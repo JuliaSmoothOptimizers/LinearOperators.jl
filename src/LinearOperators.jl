@@ -493,7 +493,7 @@ function check_positive_definite(op :: AbstractLinearOperator{T}; semi=false) wh
   return semi ? (vw ≥ 0) : (vw > 0)
 end
 
-check_positive_definite(M :: AbstractMatrix) = check_positive_definite(LinearOperator(M))
+check_positive_definite(M :: AbstractMatrix; kwargs...) = check_positive_definite(LinearOperator(M); kwargs...)
 
 # Special linear operators.
 
