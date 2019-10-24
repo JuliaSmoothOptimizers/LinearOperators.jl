@@ -278,6 +278,20 @@ function test_linop()
       @test(norm(A' * u - D' * u) <= ϵ * norm(u));
     end
 
+    @testset "posdef" begin
+      v = simple_vector(ComplexF64, nrow)
+      H = opHouseholder(v)
+      Λ = collect(eltype(v), 1:nrow)
+      op = H * opDiagonal(Λ) * H'
+      @test check_positive_definite(op)
+      @test check_positive_definite(op, semi=true)
+      Λ = collect(eltype(v), 0:nrow-1)
+      op = H * opDiagonal(Λ) * H'
+      @test check_positive_definite(op, semi=true)
+      A = Matrix(op)
+      @test check_positive_definite(A, semi=true)
+    end
+
     @testset "Hermitian" begin
       A = simple_matrix(ComplexF64, nrow, nrow)
       d = real.(diag(A)); A = tril(A, -1);
