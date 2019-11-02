@@ -56,6 +56,7 @@ function show(io :: IO, op :: ConjugateLinearOperator)
 end
 
 function *(op :: AdjointLinearOperator, v :: AbstractVector)
+  length(v) == size(op.parent, 1) || throw(LinearOperatorException("shape mismatch"))
   p = op.parent
   ishermitian(p) && return p * v
   p.ctprod !== nothing && return p.ctprod(v)
@@ -71,6 +72,7 @@ function *(op :: AdjointLinearOperator, v :: AbstractVector)
 end
 
 function *(op :: TransposeLinearOperator, v :: AbstractVector)
+  length(v) == size(op.parent, 1) || throw(LinearOperatorException("shape mismatch"))
   p = op.parent
   issymmetric(p) && return p * v
   p.tprod !== nothing && return p.tprod(v)
@@ -89,3 +91,12 @@ function *(op :: ConjugateLinearOperator, v :: AbstractVector)
   p = op.parent
   return conj.(p * v)
 end
+
+-(op :: AdjointLinearOperator) = adjoint(-op.parent)
+-(op :: TransposeLinearOperator) = transpose(-op.parent)
+
+*(op :: AdjointLinearOperator, x :: Number) = adjoint(op.parent * x)
+*(op :: TransposeLinearOperator, x :: Number) = transpose(op.parent * x)
+
+*(x :: Number, op :: AdjointLinearOperator) = adjoint(x * op.parent)
+*(x :: Number, op :: TransposeLinearOperator) = transpose(x * op.parent)

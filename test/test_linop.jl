@@ -5,7 +5,9 @@ function test_linop()
   A1 = simple_matrix(ComplexF64, nrow, ncol)
 
   @testset "Basic operations" begin
-    for op = (LinearOperator(A1), PreallocatedLinearOperator(A1))
+    for op = (LinearOperator(A1), LinearOperator(A1')',
+              transpose(LinearOperator(transpose(A1))),
+              PreallocatedLinearOperator(A1))
       show(op);
 
       @testset "Data type" begin
@@ -470,6 +472,15 @@ function test_linop()
     x = ones(2)
     mul!(y, op, x)
     @test y == [2.0; 1.0]
+  end
+
+  # Issue #107
+  @testset "Unary and scalar operations on Adjoint and Transpose operators" begin
+    op = LinearOperator(rand(5, 3))
+    for adjtrans in [adjoint, transpose]
+      @test Matrix(adjtrans(-op)) == Matrix(-adjtrans(op))
+      @test Matrix(adjtrans(2 * op)) == Matrix(2 * adjtrans(op))
+    end
   end
 end
 
