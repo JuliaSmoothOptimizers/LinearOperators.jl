@@ -482,6 +482,34 @@ function test_linop()
       @test Matrix(adjtrans(2 * op)) == Matrix(2 * adjtrans(op))
     end
   end
+
+  # Issue #109
+  @testset "Sum with Adjoint and Transpose" begin
+    A = rand(3,3) + im * rand(3,3)
+    opA = LinearOperator(A)
+    for adjtrans in [adjoint, transpose]
+      @test Matrix(adjtrans(opA) + opA) == Matrix(opA + adjtrans(opA)) == A + adjtrans(A)
+      @test Matrix(adjtrans(opA) + A)   == Matrix(A + adjtrans(opA))   == A + adjtrans(A)
+    end
+  end
+
+  # Issue #109
+  @testset "Cat with Adjoint and Transpose" begin
+    A = rand(3,3) + im * rand(3,3)
+    opA = LinearOperator(A)
+    for adjtrans in [adjoint, transpose]
+      @test Matrix([adjtrans(opA)  opA]) == Matrix([adjtrans(A)  A])
+      @test Matrix([adjtrans(opA); opA]) == Matrix([adjtrans(A); A])
+      @test Matrix([adjtrans(opA); adjtrans(opA)]) == Matrix([adjtrans(A); adjtrans(A)])
+      @test Matrix([opA  adjtrans(opA)]) == Matrix([A  adjtrans(A)])
+      @test Matrix([opA; adjtrans(opA)]) == Matrix([A; adjtrans(A)])
+      @test Matrix([adjtrans(opA)  A]) == Matrix([adjtrans(A)  A])
+      @test Matrix([adjtrans(opA); A]) == Matrix([adjtrans(A); A])
+      @test Matrix([A  adjtrans(opA)]) == Matrix([A  adjtrans(A)])
+      @test Matrix([A; adjtrans(opA)]) == Matrix([A; adjtrans(A)])
+      @test Matrix([adjtrans(opA)  opA; opA adjtrans(opA)]) == Matrix([adjtrans(A)  A; A adjtrans(A)])
+    end
+  end
 end
 
 test_linop()

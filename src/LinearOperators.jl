@@ -325,7 +325,7 @@ function +(op1 :: AbstractLinearOperator, op2 :: AbstractLinearOperator)
   F1 = typeof(prod)
   F2 = typeof(tprod)
   F3 = typeof(ctprod)
-  return LinearOperator{S,F1,F2,F3}(m1, n1, op1.symmetric && op2.symmetric, op1.hermitian && op2.hermitian,
+  return LinearOperator{S,F1,F2,F3}(m1, n1, symmetric(op1) && symmetric(op2), hermitian(op1) && hermitian(op2),
                                     prod, tprod, ctprod)
 end
 
@@ -582,13 +582,14 @@ hcat(A :: AbstractLinearOperator, B :: AbstractMatrix) = hcat(A, LinearOperator(
 hcat(A :: AbstractMatrix, B :: AbstractLinearOperator) = hcat(LinearOperator(A), B)
 
 function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
-  A.nrow == B.nrow || throw(LinearOperatorException("hcat: inconsistent row sizes"))
+  size(A, 1) == size(B, 1) || throw(LinearOperatorException("hcat: inconsistent row sizes"))
 
-  nrow  = A.nrow
-  ncol  = A.ncol + B.ncol
+  nrow  = size(A, 1)
+  Ancol, Bncol = size(A, 2), size(B, 2)
+  ncol  = Ancol + Bncol
   S = promote_type(eltype(A), eltype(B))
 
-  prod = @closure v -> A * v[1:A.ncol] + B * v[A.ncol+1:length(v)]
+  prod = @closure v -> A * v[1:Ancol] + B * v[Ancol+1:length(v)]
   tprod  = @closure v -> [transpose(A) * v; transpose(B) * v;]
   ctprod = @closure v -> [A' * v; B' * v;]
   F1 = typeof(prod)
@@ -611,15 +612,16 @@ vcat(A :: AbstractLinearOperator, B :: AbstractMatrix) = vcat(A, LinearOperator(
 vcat(A :: AbstractMatrix, B :: AbstractLinearOperator) = vcat(LinearOperator(A), B)
 
 function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
-  A.ncol == B.ncol || throw(LinearOperatorException("vcat: inconsistent column sizes"))
+  size(A, 2) == size(B, 2) || throw(LinearOperatorException("vcat: inconsistent column sizes"))
 
-  nrow  = A.nrow + B.nrow
-  ncol  = A.ncol
+  Anrow, Bnrow = size(A, 1), size(B, 1)
+  nrow  = Anrow + Bnrow
+  ncol  = size(A, 2)
   S = promote_type(eltype(A), eltype(B))
 
   prod = @closure v -> [A * v; B * v;]
   tprod = @closure v -> transpose(A) * v +  transpose(B) * v
-  ctprod = @closure v -> A' * v[1:A.nrow] + B' * v[A.nrow+1:length(v)]
+  ctprod = @closure v -> A' * v[1:Anrow] + B' * v[Anrow+1:length(v)]
   F1 = typeof(prod)
   F2 = typeof(tprod)
   F3 = typeof(ctprod)
