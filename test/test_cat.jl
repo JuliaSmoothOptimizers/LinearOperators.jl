@@ -34,7 +34,7 @@ function test_cat()
     @test(norm(Do2 * rhs - D * rhs) <= rtol * norm(D * rhs))
 
     @test_throws LinearOperatorException [LinearOperator(ones(5,5)) ; opEye(3)]
-    K = [Matrix(1.0I, 2, 2) opZeros(2,3) ; opZeros(3,2) opEye(3)]
+    K = [opEye(2) opZeros(2,3) ; opZeros(3,2) opEye(3)]
     v = simple_vector(Float64, 5)
     @test all(v .== K * v)
 

@@ -558,7 +558,7 @@ function hcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
 end
 
-function hcat(ops :: OperatorOrMatrix...)
+function hcat(ops :: AbstractLinearOperator...)
   op = ops[1]
   for i = 2:length(ops)
     op = [op ops[i]]
@@ -585,7 +585,7 @@ function vcat(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   return LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod)
 end
 
-function vcat(ops :: OperatorOrMatrix...)
+function vcat(ops :: AbstractLinearOperator...)
   op = ops[1]
   for i = 2:length(ops)
     op = [op; ops[i]]
@@ -594,9 +594,9 @@ function vcat(ops :: OperatorOrMatrix...)
 end
 
 # Removed by https://github.com/JuliaLang/julia/pull/24017
-function hvcat(rows :: Tuple{Vararg{Int}}, ops :: OperatorOrMatrix...)
+function hvcat(rows :: Tuple{Vararg{Int}}, ops :: AbstractLinearOperator...)
   nbr = length(rows)
-  rs = Array{OperatorOrMatrix,1}(undef, nbr)
+  rs = Array{AbstractLinearOperator,1}(undef, nbr)
   a = 1
   for i = 1:nbr
     rs[i] = hcat(ops[a:a-1+rows[i]]...)
