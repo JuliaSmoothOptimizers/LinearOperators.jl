@@ -2,7 +2,7 @@ function test_lsr1()
   ϵ = eps(Float64)
   rtol = sqrt(ϵ)
 
-  @testset "LSR1" begin
+  @testset ExtendedTestSet "LSR1" begin
     n = 10
     mem = 5
     B = LSR1Operator(n, mem, scaling=false)
@@ -62,7 +62,7 @@ function test_lsr1()
     end
   end
 
-  @testset "Different precision" begin
+  @testset ExtendedTestSet "Different precision" begin
     n = 10
     mem = 5
     for T in (Float16, Float32, Float64, BigFloat)

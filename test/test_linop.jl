@@ -4,7 +4,7 @@ function test_linop()
   rtol = sqrt(ϵ);
   A1 = simple_matrix(ComplexF64, nrow, ncol)
 
-  @testset "Basic operations" begin
+  @testset ExtendedTestSet "Basic operations" begin
     for op = (LinearOperator(A1), LinearOperator(A1')',
               transpose(LinearOperator(transpose(A1))),
               PreallocatedLinearOperator(A1))
@@ -175,7 +175,7 @@ function test_linop()
     end
   end
 
-  @testset "Basic operators" begin
+  @testset ExtendedTestSet "Basic operators" begin
     @testset "Identity" begin
       opI = opEye(nrow);
       v = simple_vector(ComplexF64, nrow)
@@ -371,7 +371,7 @@ function test_linop()
     end
   end
 
-  @testset "Linear system operators" begin
+  @testset ExtendedTestSet "Linear system operators" begin
     A = simple_matrix(ComplexF64, nrow, nrow)
     v = simple_vector(Float64, nrow)
 
@@ -417,7 +417,7 @@ function test_linop()
     end
   end
 
-  @testset "Inference" begin
+  @testset ExtendedTestSet "Inference" begin
     op = LinearOperator(5, 3, false, false,
                         p -> ones(5) + im * ones(5));
     @test eltype(op) == ComplexF64
@@ -439,7 +439,7 @@ function test_linop()
     @test_throws LinearOperatorException opCholesky(-A'*A, check=true)  # Not positive definite
   end
 
-  @testset "Type specific operator" begin
+  @testset ExtendedTestSet "Type specific operator" begin
     prod = v -> [v[1] + v[2]; v[2]]
     ctprod = v -> [v[1]; v[1] + v[2]]
     op = LinearOperator(2, 2, false, false, prod, nothing, ctprod)
@@ -465,7 +465,7 @@ function test_linop()
   end
 
   # Issue #80
-  @testset "Test mul!" begin
+  @testset ExtendedTestSet "Test mul!" begin
     A = [1.0 1.0; 1.0 0.0]
     op = LinearOperator(A)
     y = zeros(2)
@@ -475,7 +475,7 @@ function test_linop()
   end
 
   # Issue #107
-  @testset "Unary and scalar operations on Adjoint and Transpose operators" begin
+  @testset ExtendedTestSet "Unary and scalar operations on Adjoint and Transpose operators" begin
     op = LinearOperator(rand(5, 3))
     for adjtrans in [adjoint, transpose]
       @test Matrix(adjtrans(-op)) == Matrix(-adjtrans(op))
@@ -484,7 +484,7 @@ function test_linop()
   end
 
   # Issue #109
-  @testset "Sum with Adjoint and Transpose" begin
+  @testset ExtendedTestSet "Sum with Adjoint and Transpose" begin
     A = rand(3,3) + im * rand(3,3)
     opA = LinearOperator(A)
     for adjtrans in [adjoint, transpose]
@@ -494,7 +494,7 @@ function test_linop()
   end
 
   # Issue #109
-  @testset "Cat with Adjoint and Transpose" begin
+  @testset ExtendedTestSet "Cat with Adjoint and Transpose" begin
     A = rand(3,3) + im * rand(3,3)
     opA = LinearOperator(A)
     for adjtrans in [adjoint, transpose]

@@ -6,7 +6,7 @@ function (::Flip)(x)
 end
 
 function test_callable()
-  @testset "Test callable" begin
+  @testset ExtendedTestSet "Test callable" begin
     op = LinearOperator(2, 2, true, true, Flip())
     @test op * ones(2) == -ones(2)
     @test op' * ones(2) == -ones(2)

@@ -1,5 +1,5 @@
 function test_kron()
-  @testset "Kron" begin
+  @testset ExtendedTestSet "Kron" begin
     for A in Any[simple_matrix(Float64, 2, 3),
                  simple_sparse_matrix(Float64, 10, 10)]
       for B in Any[simple_matrix(Float64, 2, 3),

@@ -1,4 +1,4 @@
-using Test, LinearOperators
+using Test, TestSetExtensions, LinearOperators
 
 include("test_aux.jl")
 
