@@ -3,7 +3,7 @@ function test_lbfgs()
   rtol = sqrt(ϵ)
 
   # test limited-memory BFGS
-  @testset "LBFGS" begin
+  @testset ExtendedTestSet "LBFGS" begin
     n = 10
     mem = 5
     B = LBFGSOperator(n, mem, scaling=false)
@@ -140,7 +140,7 @@ function test_lbfgs()
     end
   end
 
-  @testset "Different precision" begin
+  @testset ExtendedTestSet "Different precision" begin
     n = 10
     mem = 5
     for T in (Float16, Float32, Float64, BigFloat)

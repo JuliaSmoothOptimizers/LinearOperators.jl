@@ -1,7 +1,7 @@
 function test_cat()
   ϵ = eps(Float64)
   rtol = sqrt(ϵ)
-  @testset "Concatenation" begin
+  @testset ExtendedTestSet "Concatenation" begin
     A   = simple_sparse_matrix(Float64, 100, 100)
     B   = simple_matrix(Float64, 100, 10)
     C   = simple_matrix(Float64, 100, 90)
