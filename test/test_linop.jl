@@ -7,6 +7,7 @@ function test_linop()
   @testset ExtendedTestSet "Basic operations" begin
     for op = (LinearOperator(A1), LinearOperator(A1')',
               transpose(LinearOperator(transpose(A1))),
+              conj(LinearOperator(conj(A1))),
               PreallocatedLinearOperator(A1))
       show(op);
 
@@ -470,6 +471,13 @@ function test_linop()
     A = simple_matrix(ComplexF64, 5, 5)
     @test_throws LinearOperatorException opCholesky(A, check=true)  # Not Hermitian / positive definite
     @test_throws LinearOperatorException opCholesky(-A'*A, check=true)  # Not positive definite
+
+    # Adjoint of a symmetric non-hermitian
+    A = simple_matrix(ComplexF64, 3, 3)
+    A = A + transpose(A)
+    op = LinearOperator(3, 3, true, false, v -> A * v)
+    v = rand(3)
+    @test op' * v ≈ A' * v
   end
 
   @testset ExtendedTestSet "Type specific operator" begin

@@ -1,4 +1,5 @@
-export AdjointLinearOperator, TransposeLinearOperator, adjoint, transpose
+export AdjointLinearOperator, TransposeLinearOperator, ConjugateLinearOperator,
+       adjoint, transpose, conj
 
 # From julialang:stdlib/LinearAlgebra/src/adjtrans.jl
 struct AdjointLinearOperator{T} <: AbstractLinearOperator{T}
@@ -37,6 +38,7 @@ size(A :: ConjugateLinearOperator, d :: Int) = size(A.parent, d)
 for f in [:hermitian, :ishermitian, :symmetric, :issymmetric]
   @eval begin
     $f(A :: AdjTrans) = $f(A.parent)
+    $f(A :: ConjugateLinearOperator) = $f(A.parent)
   end
 end
 
@@ -89,14 +91,17 @@ end
 
 function *(op :: ConjugateLinearOperator, v :: AbstractVector)
   p = op.parent
-  return conj.(p * v)
+  return conj.(p * conj.(v))
 end
 
--(op :: AdjointLinearOperator) = adjoint(-op.parent)
+-(op :: AdjointLinearOperator)   = adjoint(-op.parent)
 -(op :: TransposeLinearOperator) = transpose(-op.parent)
+-(op :: ConjugateLinearOperator) = conj(-op.parent)
 
-*(op :: AdjointLinearOperator, x :: Number) = adjoint(op.parent * x)
+*(op :: AdjointLinearOperator, x :: Number)   = adjoint(op.parent * conj(x))
 *(op :: TransposeLinearOperator, x :: Number) = transpose(op.parent * x)
+*(op :: ConjugateLinearOperator, x :: Number) = conj(op.parent * conj(x))
 
-*(x :: Number, op :: AdjointLinearOperator) = adjoint(x * op.parent)
+*(x :: Number, op :: AdjointLinearOperator)   = adjoint(conj(x) * op.parent)
 *(x :: Number, op :: TransposeLinearOperator) = transpose(x * op.parent)
+*(x :: Number, op :: ConjugateLinearOperator) = conj(conj(x) * op.parent)
