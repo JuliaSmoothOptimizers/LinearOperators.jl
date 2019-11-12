@@ -91,7 +91,7 @@ function PreallocatedLinearOperator(M :: AbstractMatrix{T};
     elseif symmetric
       Mtu = Mv = Vector{T}(undef, nrow)
       Maw = Vector{T}(undef, ncol)
-    elseif symmetric
+    elseif hermitian
       Mv = Vector{T}(undef, nrow)
       Maw = Mtu = Vector{T}(undef, ncol)
     else
