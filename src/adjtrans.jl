@@ -28,6 +28,20 @@ conj(A :: TransposeLinearOperator) = adjoint(A.parent)
 transpose(A :: AdjointLinearOperator) = conj(A.parent)
 transpose(A :: ConjugateLinearOperator) = adjoint(A.parent)
 
+nprod(A::AdjointLinearOperator) = nctprod(A.parent)
+ntprod(A::AdjointLinearOperator) = nprod(A.parent)   # transpose(A') = conj(A)
+nctprod(A::AdjointLinearOperator) = nprod(A.parent)  # (A')' == A
+
+nprod(A::TransposeLinearOperator) = ntprod(A.parent)
+ntprod(A::TransposeLinearOperator) = nprod(A.parent)
+nctprod(A::TransposeLinearOperator) = nprod(A.parent)  # (transpose(A))' = conj(A)
+
+for f in [:nprod, :ntprod, :nctprod]
+  @eval begin
+    $f(A::ConjugateLinearOperator) = $f(A.parent)
+  end
+end
+
 const AdjTrans = Union{AdjointLinearOperator,TransposeLinearOperator}
 
 size(A :: AdjTrans) = size(A.parent)[[2;1]]
@@ -61,14 +75,24 @@ function *(op :: AdjointLinearOperator, v :: AbstractVector)
   length(v) == size(op.parent, 1) || throw(LinearOperatorException("shape mismatch"))
   p = op.parent
   ishermitian(p) && return p * v
-  p.ctprod !== nothing && return p.ctprod(v)
+  if p.ctprod !== nothing
+    increase_nctprod(p)
+    return p.ctprod(v)
+  end
   tprod = p.tprod
+  increment_tprod = true
   if p.tprod === nothing
     if issymmetric(p)
+      increment_tprod = false
       tprod = p.prod
     else
       throw(LinearOperatorException("unable to infer conjugate transpose operator"))
     end
+  end
+  if increment_tprod
+    increase_ntprod(p)
+  else
+    increase_nprod(p)
   end
   return conj.(tprod(conj.(v)))
 end
@@ -77,14 +101,24 @@ function *(op :: TransposeLinearOperator, v :: AbstractVector)
   length(v) == size(op.parent, 1) || throw(LinearOperatorException("shape mismatch"))
   p = op.parent
   issymmetric(p) && return p * v
-  p.tprod !== nothing && return p.tprod(v)
+  if p.tprod !== nothing
+    increase_ntprod(p)
+    return p.tprod(v)
+  end
+  increment_ctprod = true
   ctprod = p.ctprod
   if p.ctprod === nothing
     if ishermitian(p)
+      increment_ctprod = false
       ctprod = p.prod
     else
       throw(LinearOperatorException("unable to infer transpose operator"))
     end
+  end
+  if increment_ctprod
+    increase_nctprod(p)
+  else
+    increase_nprod(p)
   end
   return conj.(ctprod(conj.(v)))
 end

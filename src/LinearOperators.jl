@@ -9,6 +9,7 @@ export AbstractLinearOperator, LinearOperator,
        opInverse, opCholesky, opLDL, opHouseholder, opHermitian,
        check_ctranspose, check_hermitian, check_positive_definite,
        shape, hermitian, ishermitian, symmetric, issymmetric,
+       nprod, ntprod, nctprod,
        opRestriction, opExtension
 
 
@@ -53,6 +54,32 @@ mutable struct LinearOperator{T} <: AbstractLinearOperator{T}
   prod    # apply the operator to a vector
   tprod   # apply the transpose operator to a vector
   ctprod  # apply the transpose conjugate operator to a vector
+  nprod :: Int
+  ntprod :: Int
+  nctprod :: Int
+end
+
+LinearOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod) where T =
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0)
+
+nprod(op::AbstractLinearOperator) = op.nprod
+ntprod(op::AbstractLinearOperator) = op.ntprod
+nctprod(op::AbstractLinearOperator) = op.nctprod
+
+increase_nprod(op::AbstractLinearOperator) = (op.nprod += 1)
+increase_ntprod(op::AbstractLinearOperator) = (op.ntprod += 1)
+increase_nctprod(op::AbstractLinearOperator) = (op.nctprod += 1)
+
+"""
+  reset!(op)
+
+Reset the product counters of a linear operator.
+"""
+function reset!(op::AbstractLinearOperator)
+  op.nprod = 0
+  op.ntprod = 0
+  op.nctprod = 0
+  return op
 end
 
 """
@@ -115,9 +142,9 @@ function show(io :: IO, op :: AbstractLinearOperator)
   s *= @sprintf("  eltype: %s\n", eltype(op))
   s *= @sprintf("  symmetric: %s\n", op.symmetric)
   s *= @sprintf("  hermitian: %s\n", op.hermitian)
-  #s *= @sprintf("  prod:   %s\n", string(op.prod))
-  #s *= @sprintf("  tprod:  %s\n", string(op.tprod))
-  #s *= @sprintf("  ctprod: %s", string(op.ctprod))
+  s *= @sprintf("  nprod:   %d\n", nprod(op))
+  s *= @sprintf("  ntprod:  %d\n", ntprod(op))
+  s *= @sprintf("  nctprod: %d\n", nctprod(op))
   s *= "\n"
   print(io, s)
 end
@@ -216,6 +243,7 @@ end
 # Apply an operator to a vector.
 function *(op :: AbstractLinearOperator, v :: AbstractVector)
   size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
+  increase_nprod(op)
   op.prod(v)
 end
 

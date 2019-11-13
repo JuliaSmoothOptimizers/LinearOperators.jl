@@ -48,8 +48,13 @@ mutable struct LBFGSOperator{T} <: AbstractLinearOperator{T}
   ctprod   # apply the transpose conjugate operator to a vector
   inverse :: Bool
   data :: LBFGSData{T}
+  nprod :: Int
+  ntprod :: Int
+  nctprod :: Int
 end
 
+LBFGSOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod, inverse::Bool, data::LBFGSData{T}) where T =
+  LBFGSOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, inverse, data, 0, 0, 0)
 
 """
     InverseLBFGSOperator(T, n, [mem=5; scaling=true])
@@ -259,5 +264,8 @@ Resets the LBFGS data of the given operator.
 """
 function reset!(op :: LBFGSOperator)
   reset!(op.data)
+  op.nprod = 0
+  op.ntprod = 0
+  op.nctprod = 0
   return op
 end
