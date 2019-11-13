@@ -355,6 +355,7 @@ include("PreallocatedLinearOperators.jl")
 include("qn.jl")  # quasi-Newton operators
 include("kron.jl")
 include("TimedOperators.jl")
+include("BlockDiagonalOperator.jl")
 
 
 # Utility functions.

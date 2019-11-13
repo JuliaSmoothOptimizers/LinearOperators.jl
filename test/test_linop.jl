@@ -631,6 +631,21 @@ function test_linop()
     v = rand(ncol) + im * rand(ncol)
     @test all(top * v .== transpose(top3) * v)
   end
+
+  @testset ExtendedTestSet "BlockDiagonal" begin
+    A = rand(3,4) + im * rand(3,4)
+    B = rand(3,3) + im * rand(3,3)
+    C = rand(4,2) + im * rand(4,2)
+    D = [A          zeros(3,3) zeros(3,2) ;
+         zeros(3,4) B          zeros(3,2) ;
+         zeros(4,4) zeros(4,3) C ]
+    M = BlockDiagonalOperator(LinearOperator.((A, B, C))...)
+    @test size(M, 1) == size(A, 1) + size(B, 1) + size(C, 1)
+    @test size(M, 2) == size(A, 2) + size(B, 2) + size(C, 2)
+    @test norm(Matrix(M) - D) ≤ sqrt(eps()) * norm(D)
+    @test norm(Matrix(transpose(M)) - transpose(D)) ≤ sqrt(eps()) * norm(D)
+    @test norm(Matrix(M') - D') ≤ sqrt(eps()) * norm(D)
+  end
 end
 
 test_linop()
