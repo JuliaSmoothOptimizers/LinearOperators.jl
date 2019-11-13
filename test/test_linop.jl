@@ -592,6 +592,45 @@ function test_linop()
     @test ntprod(op) == 0
     @test nctprod(op) == 0
   end
+
+  @testset ExtendedTestSet "Timers" begin
+    op = LinearOperator(rand(3,4) + im * rand(3,4))
+    top = TimedLinearOperator(op)
+    nprods = 5
+    ntprods = 4
+    nctprods = 7
+    for _ = 1 : nprods
+      op * rand(4)
+    end
+    for _ = 1 : ntprods
+      transpose(op) * rand(3)
+    end
+    for _ = 1 : nctprods
+      op' * rand(3)
+    end
+    for fn ∈ (:size, :shape, :symmetric, :issymmetric, :hermitian, :ishermitian, :nprod, :ntprod, :nctprod)
+      @eval begin
+        @test $fn($top) == $fn($top.op)
+      end
+    end
+
+    reset!(op)
+    reset!(top)
+
+    top2 = TimedLinearOperator(op')  # the same as top'
+    nrow, ncol = size(op)
+    u = rand(nrow) + im * rand(nrow)
+    @test all(top' * u .== top2 * u)
+    v = rand(ncol) + im * rand(ncol)
+    @test all(top * v .== top2' * v)
+
+    top3 = TimedLinearOperator(transpose(op))  # the same as transpose(top)
+    nrow, ncol = size(op)
+    u = rand(nrow) + im * rand(nrow)
+    @test all(transpose(top) * u .== top3 * u)
+    v = rand(ncol) + im * rand(ncol)
+    @test all(top * v .== transpose(top3) * v)
+  end
 end
 
 test_linop()
