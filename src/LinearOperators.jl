@@ -354,6 +354,7 @@ include("adjtrans.jl")
 include("PreallocatedLinearOperators.jl")
 include("qn.jl")  # quasi-Newton operators
 include("kron.jl")
+include("TimedOperators.jl")
 
 
 # Utility functions.

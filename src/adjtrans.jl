@@ -36,7 +36,7 @@ nprod(A::TransposeLinearOperator) = ntprod(A.parent)
 ntprod(A::TransposeLinearOperator) = nprod(A.parent)
 nctprod(A::TransposeLinearOperator) = nprod(A.parent)  # (transpose(A))' = conj(A)
 
-for f in [:nprod, :ntprod, :nctprod]
+for f in [:nprod, :ntprod, :nctprod, :increase_nprod, :increase_ntprod, :increase_nctprod]
   @eval begin
     $f(A::ConjugateLinearOperator) = $f(A.parent)
   end
