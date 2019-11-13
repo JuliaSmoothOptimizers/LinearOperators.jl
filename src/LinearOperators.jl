@@ -32,12 +32,8 @@ import Base.hcat, Base.vcat, Base.hvcat
 abstract type AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
-include("adjtrans.jl")
-
 eltype(A :: AbstractLinearOperator{T}) where {T} = T
 isreal(A :: AbstractLinearOperator{T}) where {T} = T <: Real
-
-include("PreallocatedLinearOperators.jl")
 
 """
 Base type to represent a linear operator.
@@ -350,6 +346,12 @@ end
 # Operator - scalar.
 -(op :: AbstractLinearOperator, x :: Number) = op + (-x)
 -(x :: Number, op :: AbstractLinearOperator) = x + (-op)
+
+
+include("adjtrans.jl")
+include("PreallocatedLinearOperators.jl")
+include("qn.jl")  # quasi-Newton operators
+include("kron.jl")
 
 
 # Utility functions.
@@ -729,9 +731,6 @@ function opHermitian(T :: AbstractMatrix)
   d = diag(T)
   opHermitian(d, T)
 end
-
-include("qn.jl")  # quasi-Newton operators
-include("kron.jl")
 
 """
     Z = opRestriction(I, ncol)
