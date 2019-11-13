@@ -25,7 +25,13 @@ mutable struct PreallocatedLinearOperator{T} <: AbstractPreallocatedLinearOperat
   prod    # apply the operator to a vector
   tprod   # apply the transpose operator to a vector
   ctprod  # apply the transpose conjugate operator to a vector
+  nprod :: Int
+  ntprod :: Int
+  nctprod :: Int
 end
+
+PreallocatedLinearOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod) where T =
+  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0)
 
 """
     show(io, op)
@@ -39,6 +45,9 @@ function show(io :: IO, op :: AbstractPreallocatedLinearOperator)
   s *= @sprintf("  eltype: %s\n", eltype(op))
   s *= @sprintf("  symmetric: %s\n", op.symmetric)
   s *= @sprintf("  hermitian: %s\n", op.hermitian)
+  s *= @sprintf("  nprod:   %d\n", nprod(op))
+  s *= @sprintf("  ntprod:  %d\n", ntprod(op))
+  s *= @sprintf("  nctprod: %d\n", nctprod(op))
   s *= "\n"
   print(io, s)
 end

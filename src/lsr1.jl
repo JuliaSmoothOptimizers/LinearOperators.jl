@@ -38,7 +38,13 @@ mutable struct LSR1Operator{T} <: AbstractLinearOperator{T}
   ctprod   # apply the transpose conjugate operator to a vector
   inverse :: Bool
   data :: LSR1Data{T}
+  nprod :: Int
+  ntprod :: Int
+  nctprod :: Int
 end
+
+LSR1Operator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod, inverse::Bool, data::LSR1Data{T}) where T =
+  LSR1Operator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, inverse, data, 0, 0, 0)
 
 """
     LSR1Operator(T, n, [mem=5; scaling=false)
@@ -183,5 +189,8 @@ Resets the LSR1 data of the given operator.
 """
 function reset!(op :: LSR1Operator)
   reset!(op.data)
+  op.nprod = 0
+  op.ntprod = 0
+  op.nctprod = 0
   return op
 end

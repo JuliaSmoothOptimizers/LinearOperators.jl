@@ -551,6 +551,47 @@ function test_linop()
       @test Matrix([adjtrans(opA)  opA; opA adjtrans(opA)]) == Matrix([adjtrans(A)  A; A adjtrans(A)])
     end
   end
+
+  @testset ExtendedTestSet "Counters" begin
+    op = LinearOperator(rand(3,4) + im * rand(3,4))
+    @test nprod(op) == 0
+    @test ntprod(op) == 0
+    @test nctprod(op) == 0
+    nprods = 5
+    ntprods = 4
+    nctprods = 7
+    for _ = 1 : nprods
+      op * rand(4)
+    end
+    for _ = 1 : ntprods
+      transpose(op) * rand(3)
+    end
+    for _ = 1 : nctprods
+      op' * rand(3)
+    end
+    @test nprod(op) == nprods
+    @test ntprod(op) == ntprods
+    @test nctprod(op) == nctprods
+    for _ = 1 : nprods
+      conj(op) * rand(4)
+    end
+    @test nprod(op) == 2 * nprods
+
+    opᵀ = transpose(op)
+    @test nprod(opᵀ) == ntprod(op)
+    @test ntprod(opᵀ) == nprod(op)
+    @test nctprod(opᵀ) == nprod(op)
+
+    opᴴ = op'
+    @test nprod(opᴴ) == nctprod(op)
+    @test ntprod(opᴴ) == nprod(op)
+    @test nctprod(opᴴ) == nprod(op)
+
+    reset!(op)
+    @test nprod(op) == 0
+    @test ntprod(op) == 0
+    @test nctprod(op) == 0
+  end
 end
 
 test_linop()
