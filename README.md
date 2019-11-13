@@ -16,12 +16,13 @@ Operators behave like matrices (with some exceptions - see below) but are define
 
 ## Compatibility
 
-Julia 0.6 and up.
+Julia 1.0 and up.
 
 ## How to Install
 
 ````JULIA
-Pkg.add("LinearOperators")
+pkg> add LinearOperators
+pkg> test LinearOperators
 ````
 
 ## How to use
@@ -34,6 +35,8 @@ Check the
 Operator               | Description
 -----------------------|------------
 `LinearOperator`       | Base class. Useful to define operators from functions
+`PreallocatedLinearOperator` | Linear operator with preallocated storage for products
+`TimedLinearOperator`  | Linear operator instrumented with timers from [`TimerOutputs`](https://github.com/KristofferC/TimerOutputs.jl)
 `opEye`                | Identity operator
 `opOnes`               | All ones operator
 `opZeros`              | All zeros operator
@@ -101,14 +104,10 @@ full(opA[:,1]) # nx1 matrix
 
 ## Other Operators
 
-* [LLDL](https://github.com/optimizers/lldl) features a limited-memory
+* [LimitedLDLFactorizations](https://github.com/JuliaSmoothOptimizers/LimitedLDLFactorizations.jl) features a limited-memory
   LDL<sup>T</sup> factorization operator that may be used as preconditioner
   in iterative methods
 * [MUMPS.jl](https://github.com/JuliaSmoothOptimizers/MUMPS.jl) features a full
   distributed-memory factorization operator that may be used to represent the
   preconditioner in, e.g., constraint-preconditioned Krylov methods.
 
-## Testing
-
-````JULIA
-julia> Pkg.test("LinearOperators")
