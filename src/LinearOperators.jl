@@ -91,11 +91,12 @@ size(op :: AbstractLinearOperator) = (op.nrow, op.ncol)
 Return the size of a linear operator along dimension `d`.
 """
 function size(op :: AbstractLinearOperator, d :: Int)
+  nrow, ncol = size(op)
   if d == 1
-    return op.nrow
+    return nrow
   end
   if d == 2
-    return op.ncol
+    return ncol
   end
   throw(LinearOperatorException("Linear operators only have 2 dimensions for now"))
 end
@@ -133,11 +134,12 @@ Display basic information about a linear operator.
 """
 function show(io :: IO, op :: AbstractLinearOperator)
   s  = "Linear operator\n"
-  s *= @sprintf("  nrow: %s\n", op.nrow)
-  s *= @sprintf("  ncol: %d\n", op.ncol)
+  nrow, ncol = size(op)
+  s *= @sprintf("  nrow: %s\n", nrow)
+  s *= @sprintf("  ncol: %d\n", ncol)
   s *= @sprintf("  eltype: %s\n", eltype(op))
-  s *= @sprintf("  symmetric: %s\n", op.symmetric)
-  s *= @sprintf("  hermitian: %s\n", op.hermitian)
+  s *= @sprintf("  symmetric: %s\n", symmetric(op))
+  s *= @sprintf("  hermitian: %s\n", hermitian(op))
   s *= @sprintf("  nprod:   %d\n", nprod(op))
   s *= @sprintf("  ntprod:  %d\n", ntprod(op))
   s *= @sprintf("  nctprod: %d\n", nctprod(op))
