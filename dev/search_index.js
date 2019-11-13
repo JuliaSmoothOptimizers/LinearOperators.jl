@@ -357,7 +357,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Reference",
     "title": "LinearOperators.reset!",
     "category": "function",
-    "text": "reset!(data)\n\nResets the given LBFGS data.\n\n\n\n\n\nreset!(op)\n\nResets the LBFGS data of the given operator.\n\n\n\n\n\nreset!(data)\n\nReset the given LSR1 data.\n\n\n\n\n\nreset!(op)\n\nResets the LSR1 data of the given operator.\n\n\n\n\n\n"
+    "text": "reset!(op)\n\nReset the product counters of a linear operator.\n\n\n\n\n\nreset!(data)\n\nResets the given LBFGS data.\n\n\n\n\n\nreset!(op)\n\nResets the LBFGS data of the given operator.\n\n\n\n\n\nreset!(data)\n\nReset the given LSR1 data.\n\n\n\n\n\nreset!(op)\n\nResets the LSR1 data of the given operator.\n\n\n\n\n\n"
 },
 
 {
