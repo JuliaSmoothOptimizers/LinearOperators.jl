@@ -36,6 +36,15 @@ function test_kron()
       end
     end
   end
+
+  @testset ExtendedTestSet "issue110" begin
+    A = rand(2, 2)
+    op = LinearOperator(A)
+    K = kron(A, op)
+    x = rand(Complex{Float64}, 4)
+    y = K * x
+    @test eltype(y) == Complex{Float64}
+  end
 end
 
 test_kron()
