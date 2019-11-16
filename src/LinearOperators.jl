@@ -239,10 +239,10 @@ end
 
 
 # Apply an operator to a vector.
-function *(op :: AbstractLinearOperator, v :: AbstractVector)
+function *(op :: AbstractLinearOperator{T}, v :: AbstractVector{S}) where {T,S}
   size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
   increase_nprod(op)
-  op.prod(v)
+  op.prod(v)::Vector{promote_type(T,S)}
 end
 
 
@@ -251,14 +251,14 @@ end
 
 Materialize an operator as a dense array using `op.ncol` products.
 """
-function Base.Matrix(op :: AbstractLinearOperator)
+function Base.Matrix(op :: AbstractLinearOperator{T}) where T
   (m, n) = size(op)
-  A = Array{eltype(op)}(undef, m, n)
-  ei = zeros(eltype(op), n)
+  A = Array{T}(undef, m, n)
+  ei = zeros(T, n)
   for i = 1 : n
-    ei[i] = 1
+    ei[i] = one(T)
     A[:, i] = op * ei
-    ei[i] = 0
+    ei[i] = zero(T)
   end
   return A
 end
@@ -531,8 +531,8 @@ Zero operator of size `nrow`-by-`ncol` and of data type `T` (defaults to
 `Float64`).
 """
 function opZeros(T :: DataType, nrow :: Int, ncol :: Int)
-  prod = @closure v -> zeros(T, nrow)
-  tprod = @closure u -> zeros(T, ncol)
+  prod = @closure v -> zeros(promote_type(T,eltype(v)), nrow)
+  tprod = @closure u -> zeros(promote_type(T,eltype(u)), ncol)
   LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod, tprod, tprod)
 end
 

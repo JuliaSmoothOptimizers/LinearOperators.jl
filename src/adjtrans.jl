@@ -71,13 +71,13 @@ function show(io :: IO, op :: ConjugateLinearOperator)
   show(io, op.parent)
 end
 
-function *(op :: AdjointLinearOperator, v :: AbstractVector)
-  length(v) == size(op.parent, 1) || throw(LinearOperatorException("shape mismatch"))
-  p = op.parent
+function *(op :: AdjointLinearOperator{T}, v :: AbstractVector{S}) where {T,S}
+  p = op.parent::AbstractLinearOperator{T}
+  length(v) == size(p, 1) || throw(LinearOperatorException("shape mismatch"))
   ishermitian(p) && return p * v
   if p.ctprod !== nothing
     increase_nctprod(p)
-    return p.ctprod(v)
+    return p.ctprod(v)::Vector{promote_type(T,S)}
   end
   tprod = p.tprod
   increment_tprod = true
@@ -94,16 +94,16 @@ function *(op :: AdjointLinearOperator, v :: AbstractVector)
   else
     increase_nprod(p)
   end
-  return conj.(tprod(conj.(v)))
+  return conj.(tprod(conj.(v)))::Vector{promote_type(T,S)}
 end
 
-function *(op :: TransposeLinearOperator, v :: AbstractVector)
-  length(v) == size(op.parent, 1) || throw(LinearOperatorException("shape mismatch"))
-  p = op.parent
+function *(op :: TransposeLinearOperator{T}, v :: AbstractVector{S}) where {T,S}
+  p = op.parent::AbstractLinearOperator{T}
+  length(v) == size(p, 1) || throw(LinearOperatorException("shape mismatch"))
   issymmetric(p) && return p * v
   if p.tprod !== nothing
     increase_ntprod(p)
-    return p.tprod(v)
+    return p.tprod(v)::Vector{promote_type(T,S)}
   end
   increment_ctprod = true
   ctprod = p.ctprod
@@ -120,12 +120,12 @@ function *(op :: TransposeLinearOperator, v :: AbstractVector)
   else
     increase_nprod(p)
   end
-  return conj.(ctprod(conj.(v)))
+  return conj.(ctprod(conj.(v)))::Vector{promote_type(T,S)}
 end
 
-function *(op :: ConjugateLinearOperator, v :: AbstractVector)
+function *(op :: ConjugateLinearOperator{T}, v :: AbstractVector{S}) where {T,S}
   p = op.parent
-  return conj.(p * conj.(v))
+  return conj.(p * conj.(v))::Vector{promote_type(T,S)}
 end
 
 -(op :: AdjointLinearOperator)   = adjoint(-op.parent)
