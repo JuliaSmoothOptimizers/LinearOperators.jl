@@ -64,28 +64,21 @@ op = LinearOperator(Float64, 10, 10, false, false,
                     nothing,
                     w -> [w[1]; w[1] + w[2]])
 ```
-Notice, however, that type is not enforced, which can cause unintended consequences
+Make sure that the type passed to `LinearOperator` is correct, otherwise errors may occur.
 ```@example ex1
+using LinearOperators, FFTW # hide
 dft = LinearOperator(Float64, 10, 10, false, false,
                      v -> fft(v),
                      nothing,
                      w -> ifft(w))
 v = rand(10)
-println("eltype(dft)     = $(eltype(dft))")
-println("eltype(v)       = $(eltype(v))")
-println("eltype(dft * v) = $(eltype(dft * v))")
-```
-or even errors
-```jldoctest
-using LinearOperators
-A = [im 1.0; 0.0 1.0]
-op = LinearOperator(Float64, 2, 2, false, false,
-                     v -> A * v, u -> transpose(A) * u, w -> A' * w)
-Matrix(op) # Tries to create Float64 matrix with contents of A
-# output
-ERROR: InexactError: Float64(0.0 + 1.0im)
-[...]
-```
+println("eltype(dft)         = $(eltype(dft))")
+println("eltype(v)           = $(eltype(v))")
+println("eltype(dft.prod(v)) = $(eltype(dft.prod(v)))")
+# dft * v     # ERROR: expected Vector{Float64}
+# Matrix(dft) # ERROR: tried to create a Matrix of Float64
+``` 
+
 ## Limited memory BFGS and SR1
 
 Two other useful operators are the Limited-Memory BFGS in forward and inverse form.
