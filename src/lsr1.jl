@@ -1,4 +1,4 @@
-export LSR1Operator, reset!, diag  #, InverseLSR1Operator
+export LSR1Operator, diag  #, InverseLSR1Operator
 
 "A data type to hold information relative to LSR1 operators."
 mutable struct LSR1Data{T}

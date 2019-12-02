@@ -1,3 +1,5 @@
+import Base.transpose, Base.adjoint, Base.conj
+
 export AdjointLinearOperator, TransposeLinearOperator, ConjugateLinearOperator,
        adjoint, transpose, conj
 
