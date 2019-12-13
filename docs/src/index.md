@@ -106,5 +106,3 @@ Matrix(opA[:,1])
 ```julia
 julia> Pkg.test("LinearOperators")
 ```
-
-[![GPLv3](http://www.gnu.org/graphics/gplv3-88x31.png)](http://www.gnu.org/licenses/gpl.html "GPLv3")
