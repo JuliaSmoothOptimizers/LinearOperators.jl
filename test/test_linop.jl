@@ -646,6 +646,16 @@ function test_linop()
     @test norm(Matrix(transpose(M)) - transpose(D)) ≤ sqrt(eps()) * norm(D)
     @test norm(Matrix(M') - D') ≤ sqrt(eps()) * norm(D)
   end
+
+  # Issue #139
+  @testset ExtendedTestSet "Matrix-vector products with SparseMatrix and SparseVector" begin
+    A = sprand(10, 10, 0.2)
+    b = sprand(10, 0.2)
+    opA = LinearOperator(A)
+    @test opA * b == A * b
+    @test transpose(opA) * b == transpose(A) * b
+    @test adjoint(opA) * b == adjoint(A) * b
+  end
 end
 
 test_linop()
