@@ -4,7 +4,7 @@ import Base.+, Base.-, Base.*, LinearAlgebra.mul!
 function *(op :: AbstractLinearOperator{T}, v :: AbstractVector{S}) where {T,S}
   size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
   increase_nprod(op)
-  op.prod(v)::Vector{promote_type(T,S)}
+  op.prod(v)::typeof(v).name.wrapper{promote_type(T,S), typeof(v).parameters[2]}
 end
 
 # Unary operations.

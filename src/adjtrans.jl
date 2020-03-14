@@ -92,7 +92,7 @@ function *(op :: AdjointLinearOperator{T,S}, v :: AbstractVector{U}) where {T,S,
   ishermitian(p) && return p * v
   if p.ctprod !== nothing
     increase_nctprod(p)
-    return p.ctprod(v)::Vector{promote_type(T,U)}
+    return p.ctprod(v)::typeof(v).name.wrapper{promote_type(T,U), typeof(v).parameters[2]}
   end
   tprod = p.tprod
   increment_tprod = true
@@ -109,7 +109,7 @@ function *(op :: AdjointLinearOperator{T,S}, v :: AbstractVector{U}) where {T,S,
   else
     increase_nprod(p)
   end
-  return conj.(tprod(conj.(v)))::Vector{promote_type(T,U)}
+  return conj.(tprod(conj.(v)))::typeof(v).name.wrapper{promote_type(T,U), typeof(v).parameters[2]}
 end
 
 function *(op :: TransposeLinearOperator{T,S}, v :: AbstractVector{U}) where {T,S,U}
@@ -118,7 +118,7 @@ function *(op :: TransposeLinearOperator{T,S}, v :: AbstractVector{U}) where {T,
   issymmetric(p) && return p * v
   if p.tprod !== nothing
     increase_ntprod(p)
-    return p.tprod(v)::Vector{promote_type(T,U)}
+    return p.tprod(v)::typeof(v).name.wrapper{promote_type(T,U), typeof(v).parameters[2]}
   end
   increment_ctprod = true
   ctprod = p.ctprod
@@ -135,12 +135,12 @@ function *(op :: TransposeLinearOperator{T,S}, v :: AbstractVector{U}) where {T,
   else
     increase_nprod(p)
   end
-  return conj.(ctprod(conj.(v)))::Vector{promote_type(T,U)}
+  return conj.(ctprod(conj.(v)))::typeof(v).name.wrapper{promote_type(T,U), typeof(v).parameters[2]}
 end
 
 function *(op :: ConjugateLinearOperator{T,S}, v :: AbstractVector{U}) where {T,S,U}
   p = op.parent
-  return conj.(p * conj.(v))::Vector{promote_type(T,U)}
+  return conj.(p * conj.(v))::typeof(v).name.wrapper{promote_type(T,U), typeof(v).parameters[2]}
 end
 
 -(op :: AdjointLinearOperator)   = adjoint(-op.parent)
