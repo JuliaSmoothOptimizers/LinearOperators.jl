@@ -172,12 +172,13 @@ end
 
 Reset the given LSR1 data.
 """
-function reset!(data :: LSR1Data)
+function reset!(data :: LSR1Data{T}) where T
   fill!(data.s, 0)
   fill!(data.y, 0)
   fill!(data.ys, 0)
   fill!(data.a, 0)
   fill!(data.as, 0)
+  data.scaling_factor = T(1)
   data.insert = 1
   return data
 end
