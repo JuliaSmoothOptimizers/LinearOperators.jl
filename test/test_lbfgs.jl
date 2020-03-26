@@ -56,6 +56,8 @@ function test_lbfgs()
       @test norm(H * v - v) > rtol
       reset!(B)
       reset!(H)
+      @test B.data.scaling_factor == 1.0
+      @test H.data.scaling_factor == 1.0
       @test norm(B * v - v) < rtol
       @test norm(H * v - v) < rtol
     end

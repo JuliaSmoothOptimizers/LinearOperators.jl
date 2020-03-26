@@ -31,6 +31,7 @@ function test_lsr1()
       v = simple_vector(Float64, n)
       @test norm(B * v - v) > rtol
       reset!(B)
+      @test B.data.scaling_factor == 1.0
       @test norm(B * v - v) < rtol
     end
 

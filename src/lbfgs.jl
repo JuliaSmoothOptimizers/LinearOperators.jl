@@ -246,13 +246,14 @@ end
 
 Resets the given LBFGS data.
 """
-function reset!(data :: LBFGSData)
+function reset!(data :: LBFGSData{T}) where T
   fill!(data.s, 0)
   fill!(data.y, 0)
   fill!(data.ys, 0)
   fill!(data.α , 0)
   fill!(data.a, 0)
   fill!(data.b, 0)
+  data.scaling_factor = T(1)
   data.insert = 1
   return data
 end
