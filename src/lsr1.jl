@@ -13,7 +13,8 @@ mutable struct LSR1Data{T}
   insert :: Int
 end
 
-function LSR1Data(T :: DataType, n :: Int, mem :: Int; scaling :: Bool=true, inverse :: Bool=true)
+function LSR1Data(T :: DataType, n :: Int; mem :: Int=5, scaling :: Bool=true, inverse :: Bool=false)
+  inverse && @warn "inverse LSR1 operator not yet implemented"
   LSR1Data{T}(max(mem, 1),
               scaling,
               convert(T, 1),
@@ -25,7 +26,7 @@ function LSR1Data(T :: DataType, n :: Int, mem :: Int; scaling :: Bool=true, inv
               1)
 end
 
-LSR1Data(n :: Int, mem :: Int; kwargs...) = LSR1Data(Float64, n, mem; kwargs...)
+LSR1Data(n :: Int; kwargs...) = LSR1Data(Float64, n; kwargs...)
 
 "A type for limited-memory SR1 approximations."
 mutable struct LSR1Operator{T} <: AbstractLinearOperator{T}
@@ -47,27 +48,27 @@ LSR1Operator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tp
   LSR1Operator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, inverse, data, 0, 0, 0)
 
 """
-    LSR1Operator(T, n, [mem=5; scaling=false)
-    LSR1Operator(n, [mem=5; scaling=false)
+    LSR1Operator(T, n; [mem=5, scaling=false)
+    LSR1Operator(n; [mem=5, scaling=false)
 
 Construct a limited-memory SR1 approximation in forward form. If the type `T` is
 omitted, then `Float64` is used.
 """
-function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=true)
-  lsr1_data = LSR1Data(T, n, mem, scaling=scaling, inverse=false)
+function LSR1Operator(T :: DataType, n :: Int; kwargs...)
+  lsr1_data = LSR1Data(T, n; kwargs...)
 
-  function lsr1_multiply(data :: LSR1Data, x :: Array)
+  function lsr1_multiply(data :: LSR1Data, x :: AbstractArray)
     # Multiply operator with a vector.
 
     result_type = promote_type(T, eltype(x))
     q = convert(Array{result_type}, copy(x))
 
-    data.scaling && (q[:] /= data.scaling_factor)
+    data.scaling && (q ./= data.scaling_factor)  # q = B₀ * x
 
     for i = 1 : data.mem
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
-        q[:] += dot(data.a[:, k], x) / data.as[k] * data.a[:, k]
+        @views q .+= dot(data.a[:, k], x) / data.as[k] * data.a[:, k]
       end
     end
     return q
@@ -81,7 +82,7 @@ function LSR1Operator(T :: DataType, n :: Int, mem :: Int=5; scaling :: Bool=tru
                          lsr1_data)
 end
 
-LSR1Operator(n :: Int, mem :: Int=5; kwargs...) = LSR1Operator(Float64, n, mem; kwargs...)
+LSR1Operator(n :: Int; kwargs...) = LSR1Operator(Float64, n; kwargs...)
 
 
 """
@@ -89,7 +90,7 @@ LSR1Operator(n :: Int, mem :: Int=5; kwargs...) = LSR1Operator(Float64, n, mem; 
 
 Push a new {s,y} pair into a L-SR1 operator.
 """
-function push!(op :: LSR1Operator, s :: Vector, y :: Vector)
+function push!(op :: LSR1Operator, s :: AbstractVector, y :: AbstractVector)
 
   # op.counters.updates += 1
   data = op.data
@@ -97,26 +98,26 @@ function push!(op :: LSR1Operator, s :: Vector, y :: Vector)
   ymBs = y - Bs
   ys = dot(y, s)
 
-  well_defined = abs(dot(ymBs, s)) >= 1.0e-8 + 1.0e-8 * norm(s) * norm(ymBs)
+  well_defined = abs(dot(ymBs, s)) ≥ 1.0e-8 + 1.0e-8 * norm(ymBs)^2
 
   sufficient_curvature = true
   scaling_condition = true
-  y_neq_s = true
   if data.scaling
-    sufficient_curvature = abs(ys) >= 1.0e-8
+    sufficient_curvature = abs(ys) ≥ 1.0e-8
     if sufficient_curvature
       scaling_factor = ys / dot(y, y)
       scaling_condition = norm(y - s / scaling_factor) >= 1.0e-8
     end
   end
 
-  if ~(well_defined && sufficient_curvature && scaling_condition && y_neq_s)
+  if !(well_defined && sufficient_curvature && scaling_condition)
+    @debug "LSR1 update rejected" well_defined sufficient_curvature scaling_condition
     # op.counters.rejects += 1
     return op
   end
 
-  data.s[:, data.insert] = s
-  data.y[:, data.insert] = y
+  data.s[:, data.insert] .= s
+  data.y[:, data.insert] .= y
   data.ys[data.insert] = ys
 
   # update scaling factor
@@ -128,15 +129,15 @@ function push!(op :: LSR1Operator, s :: Vector, y :: Vector)
   # update rank-1 terms
   for i = 1 : data.mem
     k = mod(data.insert + i - 2, data.mem) + 1
-    if data.ys[k] != 0.0
-      data.a[:, k] = data.y[:, k] - data.s[:, k] / data.scaling_factor
+    if data.ys[k] != 0
+      data.a[:, k] .= data.y[:, k] - data.s[:, k] / data.scaling_factor  # = y - B₀ * s
       for j = 1 : i-1
         l = mod(data.insert + j - 2, data.mem) + 1
-        if data.ys[l] != 0.0
-          data.a[:, k] -= dot(data.a[:, l], data.s[:, k]) / data.as[l] * data.a[:, l]
+        if data.ys[l] != 0
+          @views data.a[:, k] .-= dot(data.a[:, l], data.s[:, k]) / data.as[l] * data.a[:, l]
         end
       end
-      data.as[k] = dot(data.a[:, k], data.s[:, k])
+      @views data.as[k] = dot(data.a[:, k], data.s[:, k])
     end
   end
 
@@ -154,7 +155,7 @@ function diag(op :: LSR1Operator{T}) where T
   data = op.data
 
   d = ones(T, op.nrow)
-  data.scaling && (d[:] /= data.scaling_factor)
+  data.scaling && (d ./= data.scaling_factor)
 
   for i = 1 : data.mem
     k = mod(data.insert + i - 2, data.mem) + 1
