@@ -17,8 +17,8 @@ mutable struct LBFGSData{T}
   insert :: Int
 end
 
-function LBFGSData(T :: DataType, n :: Int, mem :: Int;
-                   scaling :: Bool=true, damped :: Bool=false, inverse :: Bool=true,
+function LBFGSData(T :: DataType, n :: Int;
+                   mem :: Int = 5, scaling :: Bool=true, damped :: Bool=false, inverse :: Bool=true,
                    σ₂ :: Float64 = 0.99, σ₃ :: Float64 = 10.0)
   LBFGSData{T}(max(mem, 1),
                scaling,
@@ -35,7 +35,7 @@ function LBFGSData(T :: DataType, n :: Int, mem :: Int;
                1)
 end
 
-LBFGSData(n :: Int, mem :: Int; kwargs...) = LBFGSData(Float64, n, mem; kwargs...)
+LBFGSData(n :: Int; kwargs...) = LBFGSData(Float64, n; kwargs...)
 
 "A type for limited-memory BFGS approximations."
 mutable struct LBFGSOperator{T} <: AbstractLinearOperator{T}
@@ -63,11 +63,11 @@ LBFGSOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, t
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
+function InverseLBFGSOperator(T :: DataType, n :: Int; kwargs...)
 
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
-  lbfgs_data = LBFGSData(T, n, mem; inverse=true, kwargs...)
+  lbfgs_data = LBFGSData(T, n; inverse=true, kwargs...)
 
   function lbfgs_multiply(data :: LBFGSData, x :: AbstractArray)
     # Multiply operator with a vector.
@@ -102,21 +102,21 @@ function InverseLBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
                           prod, prod, prod, true, lbfgs_data)
 end
 
-InverseLBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = InverseLBFGSOperator(Float64, n, mem; kwargs...)
+InverseLBFGSOperator(n :: Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
 
 
 """
-    LBFGSOperator(T, n, [mem=5; scaling=true])
-    LBFGSOperator(n, [mem=5; scaling=true])
+    LBFGSOperator(T, n; [mem=5, scaling=true])
+    LBFGSOperator(n; [mem=5, scaling=true])
 
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
+function LBFGSOperator(T :: DataType, n :: Int; kwargs...)
 
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
-  lbfgs_data = LBFGSData(T, n, mem; inverse=false, kwargs...)
+  lbfgs_data = LBFGSData(T, n; inverse=false, kwargs...)
 
   function lbfgs_multiply(data :: LBFGSData, x :: AbstractArray)
     # Multiply operator with a vector.
@@ -142,7 +142,7 @@ function LBFGSOperator(T :: DataType, n :: Int, mem :: Int=5; kwargs...)
                           prod, prod, prod, false, lbfgs_data)
 end
 
-LBFGSOperator(n :: Int, mem :: Int=5; kwargs...) = LBFGSOperator(Float64, n, mem; kwargs...)
+LBFGSOperator(n :: Int; kwargs...) = LBFGSOperator(Float64, n; kwargs...)
 
 """
     push!(op, s, y)
