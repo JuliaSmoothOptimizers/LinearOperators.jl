@@ -5,7 +5,7 @@ function test_lsr1()
   @testset ExtendedTestSet "LSR1" begin
     n = 10
     mem = 5
-    B = LSR1Operator(n, mem, scaling=false)
+    B = LSR1Operator(n, mem=mem, scaling=false)
 
     for t = 1:2
       @test norm(diag(B) - diag(Matrix(B))) <= rtol
@@ -16,7 +16,8 @@ function test_lsr1()
       # Test that only valid updates are accepted.
       s = simple_vector(Float64, n)
       y = B * s
-      push!(B, s, y); @test B.data.insert == 1
+      push!(B, s, y)
+      @test B.data.insert == 1
 
       # Insert a few {s,y} pairs.
       for i = 1 : mem+2
@@ -37,7 +38,7 @@ function test_lsr1()
 
     # test against full SR1 without scaling
     mem = n
-    LB = LSR1Operator(n, mem, scaling=false)
+    LB = LSR1Operator(n, mem=mem, scaling=false)
     B = Matrix(1.0I, n, n)
 
     function sr1!(B, s, y)
@@ -67,7 +68,7 @@ function test_lsr1()
     n = 10
     mem = 5
     for T in (Float16, Float32, Float64, BigFloat)
-      B = LSR1Operator(T, n, mem)
+      B = LSR1Operator(T, n, mem=mem)
       s = ones(T, n)
       y = ones(T, n)
       push!(B, s, y)

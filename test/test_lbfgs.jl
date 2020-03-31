@@ -6,8 +6,8 @@ function test_lbfgs()
   @testset ExtendedTestSet "LBFGS" begin
     n = 10
     mem = 5
-    B = LBFGSOperator(n, mem, scaling=false)
-    H = InverseLBFGSOperator(n, mem, scaling=false)
+    B = LBFGSOperator(n, mem=mem, scaling=false)
+    H = InverseLBFGSOperator(n, mem=mem, scaling=false)
 
     for t = 1:2 # Run again after reset!
       @test norm(diag(B) - diag(Matrix(B))) <= rtol
@@ -64,7 +64,7 @@ function test_lbfgs()
 
     # test against full BFGS without scaling
     mem = n
-    LB = LBFGSOperator(n, mem, scaling=false)
+    LB = LBFGSOperator(n, mem=mem, scaling=false)
     B = Matrix(1.0I, n, n)
 
     function bfgs!(B, s, y, damped=false)
@@ -91,8 +91,8 @@ function test_lbfgs()
     end
 
     # test damped L-BFGS
-    B = LBFGSOperator(n, mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
-    H = InverseLBFGSOperator(n, mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
+    B = LBFGSOperator(n, mem=mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
+    H = InverseLBFGSOperator(n, mem=mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
 
     insert_B = insert_H = 0
     for i = 1 : mem+2
@@ -126,7 +126,7 @@ function test_lbfgs()
 
     # test against full BFGS without scaling
     mem = n
-    LB = LBFGSOperator(n, mem, damped=true, scaling=false)
+    LB = LBFGSOperator(n, mem=mem, damped=true, scaling=false)
     B = Matrix(1.0I, n, n)
 
     @test norm(Matrix(LB) - B) < rtol * norm(B)
@@ -146,8 +146,8 @@ function test_lbfgs()
     n = 10
     mem = 5
     for T in (Float16, Float32, Float64, BigFloat)
-      B = LBFGSOperator(T, n, mem)
-      H = InverseLBFGSOperator(T, n, mem)
+      B = LBFGSOperator(T, n, mem=mem)
+      H = InverseLBFGSOperator(T, n, mem=mem)
       s = ones(T, n)
       y = ones(T, n)
       push!(B, s, y)
