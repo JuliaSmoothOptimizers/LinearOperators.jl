@@ -7,33 +7,33 @@ op2 = LinearOperator(A2)
 op = op1 * op2  # Does not form A1 * A2
 x = rand(3)
 y = op * x</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 1.0628751485123908
- 0.8591749372186046
- 0.796452911960859
- 0.6680825465176545
- 0.791669345714602</code></pre><h2 id="Inverse-1"><a class="docs-heading-anchor" href="#Inverse-1">Inverse</a><a class="docs-heading-anchor-permalink" href="#Inverse-1" title="Permalink"></a></h2><p>Operators may be defined to represent (approximate) inverses.</p><pre><code class="language-julia">using LinearAlgebra
+ 1.3303269983928283
+ 3.157040087017395
+ 2.01015452790147
+ 2.1570663574113307
+ 1.0774090929840179</code></pre><h2 id="Inverse-1"><a class="docs-heading-anchor" href="#Inverse-1">Inverse</a><a class="docs-heading-anchor-permalink" href="#Inverse-1" title="Permalink"></a></h2><p>Operators may be defined to represent (approximate) inverses.</p><pre><code class="language-julia">using LinearAlgebra
 A = rand(5,5)
 A = A&#39; * A
 op = opCholesky(A)  # Use, e.g., as a preconditioner
 v = rand(5)
-norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">1.0811958795534042e-12</code></pre><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2 id="Using-functions-1"><a class="docs-heading-anchor" href="#Using-functions-1">Using functions</a><a class="docs-heading-anchor-permalink" href="#Using-functions-1" title="Permalink"></a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><pre><code class="language-julia">using FFTW
+norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">2.6077568471881075e-14</code></pre><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2 id="Using-functions-1"><a class="docs-heading-anchor" href="#Using-functions-1">Using functions</a><a class="docs-heading-anchor-permalink" href="#Using-functions-1" title="Permalink"></a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><pre><code class="language-julia">using FFTW
 dft = LinearOperator(10, 10, false, false,
                      v -&gt; fft(v),
                      nothing,       # will be inferred
                      w -&gt; ifft(w))
 x = rand(10)
 y = dft * x
-norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">1.7230834604083753e-16</code></pre><pre><code class="language-julia">transpose(dft) * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
- 0.004597645259995442 - 0.0im
-    0.521903345277703 - 0.0im
-   0.2870256744523724 - 0.0im
- 0.054239955452379585 - 0.0im
-  0.19441034087167197 - 0.0im
-  0.34967388449894665 - 0.0im
-    0.741705577613354 - 0.0im
-  0.35210068018912266 - 0.0im
-   0.9782729538806125 + 0.0im
-   0.9901566671248272 - 0.0im</code></pre><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><pre><code class="language-julia">op = LinearOperator(Float64, 10, 10, false, false,
+norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">2.4047046924773687e-16</code></pre><pre><code class="language-julia">transpose(dft) * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
+  0.8104183505297586 - 0.0im
+  0.6804422902539121 - 0.0im
+  0.7662593264414932 - 0.0im
+  0.5403720817262149 - 0.0im
+  0.6336877142541937 - 0.0im
+ 0.06031656803034551 - 0.0im
+  0.5861572216032066 - 0.0im
+  0.3870314840054877 - 0.0im
+  0.3195257639482419 + 0.0im
+ 0.36861126942870676 - 0.0im</code></pre><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><pre><code class="language-julia">op = LinearOperator(Float64, 10, 10, false, false,
                     v -&gt; [v[1] + v[2]; v[2]],
                     nothing,
                     w -&gt; [w[1]; w[1] + w[2]])</code></pre><pre><code class="language-none">Linear operator
@@ -68,7 +68,7 @@ for i = 1:100
   push!(H, s, y)
   r += norm(B * H * s - s)
 end
-r</code></pre><pre><code class="language-none">3.842951984991841e-13</code></pre><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2 id="Restriction,-extension-and-slices-1"><a class="docs-heading-anchor" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a><a class="docs-heading-anchor-permalink" href="#Restriction,-extension-and-slices-1" title="Permalink"></a></h2><p>The restriction operator restricts a vector to a set of indices.</p><pre><code class="language-julia">v = collect(1:5)
+r</code></pre><pre><code class="language-none">3.786841893756893e-13</code></pre><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2 id="Restriction,-extension-and-slices-1"><a class="docs-heading-anchor" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a><a class="docs-heading-anchor-permalink" href="#Restriction,-extension-and-slices-1" title="Permalink"></a></h2><p>The restriction operator restricts a vector to a set of indices.</p><pre><code class="language-julia">v = collect(1:5)
 R = opRestriction([2;5], 5)
 R * v</code></pre><pre><code class="language-none">2-element Array{Int64,1}:
  2
@@ -86,19 +86,19 @@ opA = LinearOperator(A)
 I = [1;3;5]
 J = 2:4
 A[I,J] * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 1.66446838876375
- 2.17520848120136
- 1.7679634961360193</code></pre><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 1.66446838876375
- 2.17520848120136
- 1.7679634961360193</code></pre><p>A main <a href="../#differences-1">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 2.8430191059859435</code></pre><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.5620812330253377
- 0.24489866787986148
- 0.24822945925818862
- 0.8547956258504337
- 0.3156411227731992</code></pre><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 0.5620812330253377</code></pre><h2 id="Preallocated-Operators-1"><a class="docs-heading-anchor" href="#Preallocated-Operators-1">Preallocated Operators</a><a class="docs-heading-anchor-permalink" href="#Preallocated-Operators-1" title="Permalink"></a></h2><p>Operators created from matrices are very practical, however, it is often useful to reuse the memory used by the operator. For that use, we can use <code>PreallocatedLinearOperator(A)</code> to create an operator that reuses the memory.</p><pre><code class="language-julia">m, n = 50, 30
+ 1.6573114728707494
+ 1.690884194313231
+ 1.9936949110261744</code></pre><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
+ 1.6573114728707494
+ 1.690884194313231
+ 1.9936949110261744</code></pre><p>A main <a href="../#differences-1">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 2.4463804355166827</code></pre><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
+ 0.13222271921450846
+ 0.5960744526293742
+ 0.17352122329941433
+ 0.11724276507024345
+ 0.9134583349957603</code></pre><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
+ 0.13222271921450846</code></pre><h2 id="Preallocated-Operators-1"><a class="docs-heading-anchor" href="#Preallocated-Operators-1">Preallocated Operators</a><a class="docs-heading-anchor-permalink" href="#Preallocated-Operators-1" title="Permalink"></a></h2><p>Operators created from matrices are very practical, however, it is often useful to reuse the memory used by the operator. For that use, we can use <code>PreallocatedLinearOperator(A)</code> to create an operator that reuses the memory.</p><pre><code class="language-julia">m, n = 50, 30
 A = rand(m, n) + im * rand(m, n)
 op1 = PreallocatedLinearOperator(A)
 op2 = LinearOperator(A)
@@ -107,8 +107,8 @@ al = @allocated op1 * v
 println(&quot;Allocation of PreallocatedLinearOperator product = $al&quot;)
 v = rand(n)
 al = @allocated op2 * v
-println(&quot;Allocation of LinearOperator product = $al&quot;)</code></pre><pre><code class="language-none">Allocation of PreallocatedLinearOperator product = 37386687
-Allocation of LinearOperator product = 17437881</code></pre><p>Notice the memory overwrite:</p><pre><code class="language-julia">Av = op1 * v
+println(&quot;Allocation of LinearOperator product = $al&quot;)</code></pre><pre><code class="language-none">Allocation of PreallocatedLinearOperator product = 37386447
+Allocation of LinearOperator product = 17438601</code></pre><p>Notice the memory overwrite:</p><pre><code class="language-julia">Av = op1 * v
 w = rand(n)
 Aw = op1 * w
 Aw === Av</code></pre><pre><code class="language-none">true</code></pre><p>which doesn&#39;t happen on <code>LinearOperator</code>.</p><pre><code class="language-julia">Av = op2 * v
@@ -119,4 +119,4 @@ Mtu = Array{ComplexF64}(undef, n)
 Maw = Array{ComplexF64}(undef, n)
 op  = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
 v, u, w = rand(n), rand(m), rand(m)
-(Mv === op * v, Mtu === transpose(op) * u, Maw === adjoint(op) * w)</code></pre><pre><code class="language-none">(true, true, true)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 30 March 2020 05:10">Monday 30 March 2020</span>. Using Julia version 1.4.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+(Mv === op * v, Mtu === transpose(op) * u, Maw === adjoint(op) * w)</code></pre><pre><code class="language-none">(true, true, true)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 2 April 2020 00:10">Thursday 2 April 2020</span>. Using Julia version 1.4.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
