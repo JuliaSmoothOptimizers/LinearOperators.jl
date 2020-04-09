@@ -17,6 +17,14 @@ function -(op :: AbstractLinearOperator{T}) where T
   LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod, tprod, ctprod)
 end
 
+# y ⇽ α * op * x + β * y
+function mul!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector, α :: Number, β :: Number)
+  β == 0 ? fill!(y, 0) : (y .*= β)
+  α ≠ 0 && (y .+= α .* (op * x))
+  return y
+end
+
+# y ⇽ op * x
 function mul!(y :: AbstractVector, op :: AbstractLinearOperator, x :: AbstractVector)
   y .= op * x
   return y

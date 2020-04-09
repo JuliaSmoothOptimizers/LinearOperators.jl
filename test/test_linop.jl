@@ -513,6 +513,22 @@ function test_linop()
     x = ones(2)
     mul!(y, op, x)
     @test y == [2.0; 1.0]
+    α = 5.0
+    β = -1.0
+    mul!(y, op, x, α, β)
+    @test y == [8.0; 4.0]
+    α = 2.0
+    β = 0.0
+    mul!(y, op, x, α, β)
+    @test y == [4.0; 2.0]
+    α = 0.0
+    β = 4.0
+    mul!(y, op, x, α, β)
+    @test y == [16.0; 8.0]
+    α = 0.0
+    β = 0.0
+    mul!(y, op, x, α, β)
+    @test y == [0.0; 0.0]
   end
 
   # Issue #107
