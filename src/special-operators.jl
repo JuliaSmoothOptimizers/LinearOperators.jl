@@ -186,6 +186,16 @@ end
 
 eltypeof(op::AbstractLinearOperator) = eltype(op)  # need this for promote_eltypeof
 
+"""
+    BlockDiagonalOperator(M1, M2, ..., Mn)
+
+Creates a block-diagonal linear operator:
+
+    [ M1           ]
+    [    M2        ]
+    [       ...    ]
+    [           Mn ]
+"""
 function BlockDiagonalOperator(ops...)
   nrow = ncol = 0
   for op ∈ ops
