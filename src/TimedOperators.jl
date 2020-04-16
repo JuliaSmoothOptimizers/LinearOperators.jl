@@ -10,6 +10,11 @@ mutable struct TimedLinearOperator{T} <: AbstractLinearOperator{T}
   ctprod
 end
 
+"""
+    TimedLinearOperator(op)
+
+Creates a linear operator instrumented with timers from TimerOutputs.
+"""
 function TimedLinearOperator(op::AbstractLinearOperator{T}) where T
   timer = TimerOutput()
   prod(x) = @timeit timer "prod" op.prod(x)

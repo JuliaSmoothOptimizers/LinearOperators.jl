@@ -3,6 +3,8 @@
 ```@docs
 LinearOperator
 PreallocatedLinearOperator
+TimedLinearOperator
+BlockDiagonalOperator
 opEye
 opOnes
 opZeros
