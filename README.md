@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/20136006.svg)](https://zenodo.org/badge/latestdoi/20136006)
 [![Build Status](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl.svg?branch=master)](https://travis-ci.org/JuliaSmoothOptimizers/LinearOperators.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/kp1o6ejuu6kgskvp/branch/master?svg=true)](https://ci.appveyor.com/project/dpo/linearoperators-jl/branch/master)
-[![Build Status](https://api.cirrus-ci.com/github/JuliaSmoothOptimizers/Krylov.jl.svg)](https://cirrus-ci.com/github/JuliaSmoothOptimizers/Krylov.jl)
+[![Build Status](https://api.cirrus-ci.com/github/JuliaSmoothOptimizers/LinearOperators.jl.svg)](https://cirrus-ci.com/github/JuliaSmoothOptimizers/LinearOperators.jl)
 [![Coveralls](https://coveralls.io/repos/JuliaSmoothOptimizers/LinearOperators.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
 [![codecov.io](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
 [![docs](https://img.shields.io/badge/docs-latest-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/latest)
