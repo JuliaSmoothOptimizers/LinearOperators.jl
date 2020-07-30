@@ -1,42 +1,42 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · LinearOperators.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/style.css" rel="stylesheet" type="text/css"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="LinearOperators.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">LinearOperators.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Using-matrices-1"><span>Using matrices</span></a></li><li><a class="tocitem" href="#Inverse-1"><span>Inverse</span></a></li><li><a class="tocitem" href="#Using-functions-1"><span>Using functions</span></a></li><li><a class="tocitem" href="#Limited-memory-BFGS-and-SR1-1"><span>Limited memory BFGS and SR1</span></a></li><li><a class="tocitem" href="#Restriction,-extension-and-slices-1"><span>Restriction, extension and slices</span></a></li><li><a class="tocitem" href="#Preallocated-Operators-1"><span>Preallocated Operators</span></a></li></ul></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial-1"><a class="docs-heading-anchor" href="#Tutorial-1">Tutorial</a><a class="docs-heading-anchor-permalink" href="#Tutorial-1" title="Permalink"></a></h1><p>This section of the documentation describes a few uses of LinearOperators.</p><ul><li><a href="#Tutorial-1">Tutorial</a></li><ul><li><a href="#Using-matrices-1">Using matrices</a></li><li><a href="#Inverse-1">Inverse</a></li><li><a href="#Using-functions-1">Using functions</a></li><li><a href="#Limited-memory-BFGS-and-SR1-1">Limited memory BFGS and SR1</a></li><li><a href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a></li><li><a href="#Preallocated-Operators-1">Preallocated Operators</a></li></ul></ul><h2 id="Using-matrices-1"><a class="docs-heading-anchor" href="#Using-matrices-1">Using matrices</a><a class="docs-heading-anchor-permalink" href="#Using-matrices-1" title="Permalink"></a></h2><p>Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.</p><pre><code class="language-julia">using LinearOperators, SparseArrays
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Tutorial · LinearOperators.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/style.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.png" alt="LinearOperators.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">LinearOperators.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li class="is-active"><a class="tocitem" href>Tutorial</a><ul class="internal"><li><a class="tocitem" href="#Using-matrices"><span>Using matrices</span></a></li><li><a class="tocitem" href="#Inverse"><span>Inverse</span></a></li><li><a class="tocitem" href="#Using-functions"><span>Using functions</span></a></li><li><a class="tocitem" href="#Limited-memory-BFGS-and-SR1"><span>Limited memory BFGS and SR1</span></a></li><li><a class="tocitem" href="#Restriction,-extension-and-slices"><span>Restriction, extension and slices</span></a></li><li><a class="tocitem" href="#Preallocated-Operators"><span>Preallocated Operators</span></a></li></ul></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Tutorial</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Tutorial</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/blob/master/docs/src/tutorial.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial"><a class="docs-heading-anchor" href="#Tutorial">Tutorial</a><a id="Tutorial-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial" title="Permalink"></a></h1><p>This section of the documentation describes a few uses of LinearOperators.</p><ul><li><a href="#Tutorial">Tutorial</a></li><ul><li><a href="#Using-matrices">Using matrices</a></li><li><a href="#Inverse">Inverse</a></li><li><a href="#Using-functions">Using functions</a></li><li><a href="#Limited-memory-BFGS-and-SR1">Limited memory BFGS and SR1</a></li><li><a href="#Restriction,-extension-and-slices">Restriction, extension and slices</a></li><li><a href="#Preallocated-Operators">Preallocated Operators</a></li></ul></ul><h2 id="Using-matrices"><a class="docs-heading-anchor" href="#Using-matrices">Using matrices</a><a id="Using-matrices-1"></a><a class="docs-heading-anchor-permalink" href="#Using-matrices" title="Permalink"></a></h2><p>Operators may be defined from matrices and combined using the usual operations, but the result is deferred until the operator is applied.</p><pre><code class="language-julia">using LinearOperators, SparseArrays
 A1 = rand(5,7)
 A2 = sprand(7,3,.3)
 op1 = LinearOperator(A1)
 op2 = LinearOperator(A2)
 op = op1 * op2  # Does not form A1 * A2
 x = rand(3)
-y = op * x</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.3808029406038943
- 0.2223202256199869
- 0.9213990904265063
- 0.482331840634285
- 0.28273825074315767</code></pre><h2 id="Inverse-1"><a class="docs-heading-anchor" href="#Inverse-1">Inverse</a><a class="docs-heading-anchor-permalink" href="#Inverse-1" title="Permalink"></a></h2><p>Operators may be defined to represent (approximate) inverses.</p><pre><code class="language-julia">using LinearAlgebra
+y = op * x</code></pre><pre class="documenter-example-output">5-element Array{Float64,1}:
+ 0.4475529488100407
+ 1.1000224272770478
+ 0.7703993843440097
+ 0.4360855559068462
+ 0.4494127126184968</pre><h2 id="Inverse"><a class="docs-heading-anchor" href="#Inverse">Inverse</a><a id="Inverse-1"></a><a class="docs-heading-anchor-permalink" href="#Inverse" title="Permalink"></a></h2><p>Operators may be defined to represent (approximate) inverses.</p><pre><code class="language-julia">using LinearAlgebra
 A = rand(5,5)
 A = A&#39; * A
 op = opCholesky(A)  # Use, e.g., as a preconditioner
 v = rand(5)
-norm(A \ v - op * v) / norm(v)</code></pre><pre><code class="language-none">4.9244537708690635e-14</code></pre><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2 id="Using-functions-1"><a class="docs-heading-anchor" href="#Using-functions-1">Using functions</a><a class="docs-heading-anchor-permalink" href="#Using-functions-1" title="Permalink"></a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><pre><code class="language-julia">using FFTW
+norm(A \ v - op * v) / norm(v)</code></pre><pre class="documenter-example-output">1.2250119668750913e-14</pre><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2 id="Using-functions"><a class="docs-heading-anchor" href="#Using-functions">Using functions</a><a id="Using-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Using-functions" title="Permalink"></a></h2><p>Operators may be defined from functions. In the example below, the transposed isn&#39;t defined, but it may be inferred from the conjugate transposed. Missing operations are represented as <code>nothing</code>.</p><pre><code class="language-julia">using FFTW
 dft = LinearOperator(10, 10, false, false,
                      v -&gt; fft(v),
                      nothing,       # will be inferred
                      w -&gt; ifft(w))
 x = rand(10)
 y = dft * x
-norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code class="language-none">3.1646225226420963e-16</code></pre><pre><code class="language-julia">transpose(dft) * y</code></pre><pre><code class="language-none">10-element Array{Complex{Float64},1}:
-  0.9872019706360512 - 0.0im
- 0.21756994911142083 - 0.0im
-  0.9596380019899577 - 0.0im
- 0.24729377605751762 - 0.0im
-  0.1319896007981536 - 0.0im
-  0.4938602545230695 - 0.0im
-  0.0636870530719138 - 0.0im
-  0.4557560289485226 - 0.0im
-  0.9958565338755481 + 0.0im
-  0.5931196558070518 - 0.0im</code></pre><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><pre><code class="language-julia">op = LinearOperator(Float64, 10, 10, false, false,
+norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre class="documenter-example-output">3.632164660233972e-16</pre><pre><code class="language-julia">transpose(dft) * y</code></pre><pre class="documenter-example-output">10-element Array{Complex{Float64},1}:
+ 0.048810429735297325 - 0.0im
+    0.661534381357069 - 0.0im
+  0.19844652213093325 - 0.0im
+   0.2699539273940776 - 0.0im
+  0.49544042438206476 - 0.0im
+    0.909553154293802 - 0.0im
+   0.8825146282439974 - 0.0im
+   0.8030104136022834 - 0.0im
+   0.7049939661484061 + 0.0im
+   0.7895354759824328 - 0.0im</pre><p>By default a linear operator defined by functions and that is neither symmetric nor hermitian will have element type <code>Complex128</code>. This behavior may be overridden by specifying the type explicitly, e.g.,</p><pre><code class="language-julia">op = LinearOperator(Float64, 10, 10, false, false,
                     v -&gt; [v[1] + v[2]; v[2]],
                     nothing,
-                    w -&gt; [w[1]; w[1] + w[2]])</code></pre><pre><code class="language-none">Linear operator
+                    w -&gt; [w[1]; w[1] + w[2]])</code></pre><pre class="documenter-example-output">Linear operator
   nrow: 10
   ncol: 10
   eltype: Float64
@@ -46,7 +46,7 @@ norm(dft&#39; * y - x)  # DFT is an orthogonal operator</code></pre><pre><code c
   ntprod:  0
   nctprod: 0
 
-</code></pre><p>Make sure that the type passed to <code>LinearOperator</code> is correct, otherwise errors may occur.</p><pre><code class="language-julia">dft = LinearOperator(Float64, 10, 10, false, false,
+</pre><p>Make sure that the type passed to <code>LinearOperator</code> is correct, otherwise errors may occur.</p><pre><code class="language-julia">dft = LinearOperator(Float64, 10, 10, false, false,
                      v -&gt; fft(v),
                      nothing,
                      w -&gt; ifft(w))
@@ -55,9 +55,9 @@ println(&quot;eltype(dft)         = $(eltype(dft))&quot;)
 println(&quot;eltype(v)           = $(eltype(v))&quot;)
 println(&quot;eltype(dft.prod(v)) = $(eltype(dft.prod(v)))&quot;)
 # dft * v     # ERROR: expected Vector{Float64}
-# Matrix(dft) # ERROR: tried to create a Matrix of Float64</code></pre><pre><code class="language-none">eltype(dft)         = Float64
+# Matrix(dft) # ERROR: tried to create a Matrix of Float64</code></pre><pre class="documenter-example-output">eltype(dft)         = Float64
 eltype(v)           = Float64
-eltype(dft.prod(v)) = Complex{Float64}</code></pre><h2 id="Limited-memory-BFGS-and-SR1-1"><a class="docs-heading-anchor" href="#Limited-memory-BFGS-and-SR1-1">Limited memory BFGS and SR1</a><a class="docs-heading-anchor-permalink" href="#Limited-memory-BFGS-and-SR1-1" title="Permalink"></a></h2><p>Two other useful operators are the Limited-Memory BFGS in forward and inverse form.</p><pre><code class="language-julia">B = LBFGSOperator(20)
+eltype(dft.prod(v)) = Complex{Float64}</pre><h2 id="Limited-memory-BFGS-and-SR1"><a class="docs-heading-anchor" href="#Limited-memory-BFGS-and-SR1">Limited memory BFGS and SR1</a><a id="Limited-memory-BFGS-and-SR1-1"></a><a class="docs-heading-anchor-permalink" href="#Limited-memory-BFGS-and-SR1" title="Permalink"></a></h2><p>Two other useful operators are the Limited-Memory BFGS in forward and inverse form.</p><pre><code class="language-julia">B = LBFGSOperator(20)
 H = InverseLBFGSOperator(20)
 r = 0.0
 for i = 1:100
@@ -68,37 +68,37 @@ for i = 1:100
   push!(H, s, y)
   r += norm(B * H * s - s)
 end
-r</code></pre><pre><code class="language-none">3.877466986842512e-13</code></pre><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2 id="Restriction,-extension-and-slices-1"><a class="docs-heading-anchor" href="#Restriction,-extension-and-slices-1">Restriction, extension and slices</a><a class="docs-heading-anchor-permalink" href="#Restriction,-extension-and-slices-1" title="Permalink"></a></h2><p>The restriction operator restricts a vector to a set of indices.</p><pre><code class="language-julia">v = collect(1:5)
+r</code></pre><pre class="documenter-example-output">3.8916467988511135e-13</pre><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2 id="Restriction,-extension-and-slices"><a class="docs-heading-anchor" href="#Restriction,-extension-and-slices">Restriction, extension and slices</a><a id="Restriction,-extension-and-slices-1"></a><a class="docs-heading-anchor-permalink" href="#Restriction,-extension-and-slices" title="Permalink"></a></h2><p>The restriction operator restricts a vector to a set of indices.</p><pre><code class="language-julia">v = collect(1:5)
 R = opRestriction([2;5], 5)
-R * v</code></pre><pre><code class="language-none">2-element Array{Int64,1}:
+R * v</code></pre><pre class="documenter-example-output">2-element Array{Int64,1}:
  2
- 5</code></pre><p>Notice that it corresponds to a matrix with rows of the identity given by the indices.</p><pre><code class="language-julia">Matrix(R)</code></pre><pre><code class="language-none">2×5 Array{Int64,2}:
+ 5</pre><p>Notice that it corresponds to a matrix with rows of the identity given by the indices.</p><pre><code class="language-julia">Matrix(R)</code></pre><pre class="documenter-example-output">2×5 Array{Int64,2}:
  0  1  0  0  0
- 0  0  0  0  1</code></pre><p>The extension operator is the transpose of the restriction. It extends a vector with zeros.</p><pre><code class="language-julia">v = collect(1:2)
+ 0  0  0  0  1</pre><p>The extension operator is the transpose of the restriction. It extends a vector with zeros.</p><pre><code class="language-julia">v = collect(1:2)
 E = opExtension([2;5], 5)
-E * v</code></pre><pre><code class="language-none">5-element Array{Int64,1}:
+E * v</code></pre><pre class="documenter-example-output">5-element Array{Int64,1}:
  0
  1
  0
  0
- 2</code></pre><p>With these operators, we define the slices of an operator <code>op</code>.</p><pre><code class="language-julia">A = rand(5,5)
+ 2</pre><p>With these operators, we define the slices of an operator <code>op</code>.</p><pre><code class="language-julia">A = rand(5,5)
 opA = LinearOperator(A)
 I = [1;3;5]
 J = 2:4
-A[I,J] * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 2.2026134983289616
- 1.6692879991553626
- 1.8773321054556744</code></pre><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre><code class="language-none">3-element Array{Float64,1}:
- 2.2026134983289616
- 1.6692879991553626
- 1.8773321054556744</code></pre><p>A main <a href="../#differences-1">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 3.422058551410575</code></pre><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre><code class="language-none">5-element Array{Float64,1}:
- 0.2647234298997565
- 0.653336594930408
- 0.9551691989348747
- 0.33017347401660535
- 0.357043850033941</code></pre><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre><code class="language-none">1-element Array{Float64,1}:
- 0.2647234298997565</code></pre><h2 id="Preallocated-Operators-1"><a class="docs-heading-anchor" href="#Preallocated-Operators-1">Preallocated Operators</a><a class="docs-heading-anchor-permalink" href="#Preallocated-Operators-1" title="Permalink"></a></h2><p>Operators created from matrices are very practical, however, it is often useful to reuse the memory used by the operator. For that use, we can use <code>PreallocatedLinearOperator(A)</code> to create an operator that reuses the memory.</p><pre><code class="language-julia">m, n = 50, 30
+A[I,J] * ones(3)</code></pre><pre class="documenter-example-output">3-element Array{Float64,1}:
+ 2.1277399735821936
+ 2.3752254176422816
+ 1.9205378586967263</pre><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre class="documenter-example-output">3-element Array{Float64,1}:
+ 2.1277399735821936
+ 2.3752254176422816
+ 1.9205378586967263</pre><p>A main <a href="../#differences">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre class="documenter-example-output">1-element Array{Float64,1}:
+ 3.0431098582288723</pre><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre class="documenter-example-output">5-element Array{Float64,1}:
+ 0.12119467106265591
+ 0.7564448667638339
+ 0.4325232813910813
+ 0.5010511947441982
+ 0.23839282914408932</pre><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre class="documenter-example-output">1-element Array{Float64,1}:
+ 0.12119467106265591</pre><h2 id="Preallocated-Operators"><a class="docs-heading-anchor" href="#Preallocated-Operators">Preallocated Operators</a><a id="Preallocated-Operators-1"></a><a class="docs-heading-anchor-permalink" href="#Preallocated-Operators" title="Permalink"></a></h2><p>Operators created from matrices are very practical, however, it is often useful to reuse the memory used by the operator. For that use, we can use <code>PreallocatedLinearOperator(A)</code> to create an operator that reuses the memory.</p><pre><code class="language-julia">m, n = 50, 30
 A = rand(m, n) + im * rand(m, n)
 op1 = PreallocatedLinearOperator(A)
 op2 = LinearOperator(A)
@@ -107,16 +107,16 @@ al = @allocated op1 * v
 println(&quot;Allocation of PreallocatedLinearOperator product = $al&quot;)
 v = rand(n)
 al = @allocated op2 * v
-println(&quot;Allocation of LinearOperator product = $al&quot;)</code></pre><pre><code class="language-none">Allocation of PreallocatedLinearOperator product = 37386783
-Allocation of LinearOperator product = 17439465</code></pre><p>Notice the memory overwrite:</p><pre><code class="language-julia">Av = op1 * v
+println(&quot;Allocation of LinearOperator product = $al&quot;)</code></pre><pre class="documenter-example-output">Allocation of PreallocatedLinearOperator product = 37383599
+Allocation of LinearOperator product = 17438105</pre><p>Notice the memory overwrite:</p><pre><code class="language-julia">Av = op1 * v
 w = rand(n)
 Aw = op1 * w
-Aw === Av</code></pre><pre><code class="language-none">true</code></pre><p>which doesn&#39;t happen on <code>LinearOperator</code>.</p><pre><code class="language-julia">Av = op2 * v
+Aw === Av</code></pre><pre class="documenter-example-output">true</pre><p>which doesn&#39;t happen on <code>LinearOperator</code>.</p><pre><code class="language-julia">Av = op2 * v
 w = rand(n)
 Aw = op2 * w
-Aw === Av</code></pre><pre><code class="language-none">false</code></pre><p>You can also provide the memory to be used.</p><pre><code class="language-julia">Mv  = Array{ComplexF64}(undef, m)
+Aw === Av</code></pre><pre class="documenter-example-output">false</pre><p>You can also provide the memory to be used.</p><pre><code class="language-julia">Mv  = Array{ComplexF64}(undef, m)
 Mtu = Array{ComplexF64}(undef, n)
 Maw = Array{ComplexF64}(undef, n)
 op  = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
 v, u, w = rand(n), rand(m), rand(m)
-(Mv === op * v, Mtu === transpose(op) * u, Maw === adjoint(op) * w)</code></pre><pre><code class="language-none">(true, true, true)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 24 April 2020 04:44">Friday 24 April 2020</span>. Using Julia version 1.4.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+(Mv === op * v, Mtu === transpose(op) * u, Maw === adjoint(op) * w)</code></pre><pre class="documenter-example-output">(true, true, true)</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 30 July 2020 13:54">Thursday 30 July 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
