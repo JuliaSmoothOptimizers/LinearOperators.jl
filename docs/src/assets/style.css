@@ -1,3 +1,10 @@
+#documenter .docs-sidebar,
+html.theme--documenter-dark #documenter .docs-sidebar {
+  border-right: 4px solid #640000;
+  background-color: #8c1515;
+  color: #fff; 
+}
+
 .mi, .mo, .mn {
   color: #317293;
 }
