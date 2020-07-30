@@ -1,16 +1,5 @@
 language: julia
 
-os:
-  - osx
-  - linux
-  - windows
-  - freebsd
-
-julia:
-  - 1.0
-  - 1
-  - nightly
-
 notifications:
   email:
     recipients: abel.s.siqueira@gmail.com
@@ -19,7 +8,7 @@ notifications:
 
 branches:
   only:
-    - master
+    - docs-preview
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
 jobs:

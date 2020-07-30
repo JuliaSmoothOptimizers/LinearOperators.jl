@@ -12,4 +12,4 @@ makedocs(
               "Reference" => "reference.md"]
 )
 
-deploydocs(repo = "github.com/JuliaSmoothOptimizers/LinearOperators.jl.git")
+deploydocs(repo = "github.com/JuliaSmoothOptimizers/LinearOperators.jl.git", devbranch="docs-preview")
