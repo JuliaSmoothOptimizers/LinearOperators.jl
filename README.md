@@ -8,10 +8,11 @@
 [![codecov.io](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
 [![docs](https://img.shields.io/badge/docs-latest-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/latest)
 
-Cite as
+## How to Cite
 
-    Dominique Orban, & Abel Soares Siqueira. (2019, February 7). LinearOperators.jl.
-    Zenodo. http://doi.org/10.5281/zenodo.2559295
+If you use LinearOperators.jl in your work, please cite using the format given in [`CITATION.bib`](https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/blob/master/CITATION.bib).
+
+## Philosophy
 
 Operators behave like matrices (with some exceptions - see below) but are defined by their effect when applied to a vector. They can be transposed, conjugated, or combined with other operators cheaply. The costly operation is deferred until multiplied with a vector.
 
