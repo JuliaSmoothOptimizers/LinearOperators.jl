@@ -159,6 +159,29 @@ function test_lbfgs()
       @test eltype(H * v) == T
     end
   end
+
+  @testset "LBFGS allocations" begin
+    n = 100
+    mem = 20
+    B = LBFGSOperator(n, mem=mem)
+    H = InverseLBFGSOperator(n, mem=mem)
+    for _ = 1 :2:n
+      s = rand(n)
+      y = rand(n)
+      push!(B, s, y)
+      push!(H, s, y)
+    end
+    x = rand(n)
+    B * x  # warmup
+    nallocs = @allocated B * x
+    @test nallocs == 0
+    H * x  # warmup
+    nallocs = @allocated H * x
+    @test nallocs == 0
+    nallocs = @allocated diag!(B, x)
+    @test nallocs == 0
+  end
+
 end
 
 test_lbfgs()

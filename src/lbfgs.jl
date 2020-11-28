@@ -1,4 +1,4 @@
-export LBFGSOperator, InverseLBFGSOperator, diag
+export LBFGSOperator, InverseLBFGSOperator, diag, diag!
 
 "A data type to hold information relative to LBFGS operators."
 mutable struct LBFGSData{T}
@@ -8,13 +8,14 @@ mutable struct LBFGSData{T}
   damped :: Bool
   σ₂ :: T
   σ₃ :: T
-  s   :: Matrix{T}
-  y   :: Matrix{T}
+  s   :: Vector{Vector{T}}
+  y   :: Vector{Vector{T}}
   ys  :: Vector{T}
   α   :: Vector{T}
-  a   :: Matrix{T}
-  b   :: Matrix{T}
+  a   :: Vector{Vector{T}}
+  b   :: Vector{Vector{T}}
   insert :: Int
+  Ax :: Vector{T}
 end
 
 function LBFGSData(T :: DataType, n :: Int;
@@ -26,13 +27,14 @@ function LBFGSData(T :: DataType, n :: Int;
                damped,
                convert(T, σ₂),
                convert(T, σ₃),
-               zeros(T, n, mem),
-               zeros(T, n, mem),
+               [zeros(T, n) for _ = 1 : mem],
+               [zeros(T, n) for _ = 1 : mem],
                zeros(T, mem),
                inverse ? zeros(T, mem) : zeros(T, 0),
-               inverse ? zeros(T, 0, 0) : zeros(T, n, mem),
-               inverse ? zeros(T, 0, 0) : zeros(T, n, mem),
-               1)
+               inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1 : mem],
+               inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1 : mem],
+               1,
+               Vector{T}(undef, n))
 end
 
 LBFGSData(n :: Int; kwargs...) = LBFGSData(Float64, n; kwargs...)
@@ -73,24 +75,30 @@ function InverseLBFGSOperator(T :: DataType, n :: Int; kwargs...)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
 
-    result_type = promote_type(T, eltype(x))
-    q = convert(Array{result_type}, copy(x))
+    q = data.Ax
+    q .= x
 
     for i = 1 : data.mem
       k = mod(data.insert - i - 1, data.mem) + 1
       if data.ys[k] != 0
-        data.α[k] = dot(data.s[:,k], q) / data.ys[k]
-        q[:] -= data.α[k] * data.y[:,k]
+        αk = dot(data.s[k], q) / data.ys[k]
+        data.α[k] = αk
+        for j ∈ eachindex(q)
+          q[j] -= αk * data.y[k][j]
+        end
       end
     end
 
-    data.scaling && (q[:] *= data.scaling_factor)
+    data.scaling && (q .*= data.scaling_factor)
 
     for i = 1 : data.mem
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
-        β = dot(data.y[:,k], q) / data.ys[k]
-        q[:] += (data.α[k] - β) * data.s[:,k]
+        αk = data.α[k]
+        β = αk - dot(data.y[k], q) / data.ys[k]
+        for j ∈ eachindex(q)
+          q[j] += β * data.s[k][j]
+        end
       end
     end
 
@@ -122,16 +130,20 @@ function LBFGSOperator(T :: DataType, n :: Int; kwargs...)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
 
-    result_type = promote_type(T, eltype(x))
-    q = convert(Array{result_type}, copy(x))
+    q = data.Ax
+    q .= x
 
-    data.scaling && (q[:] /= data.scaling_factor)
+    data.scaling && (q ./= data.scaling_factor)
 
     # B = B₀ + Σᵢ (bᵢbᵢ' - aᵢaᵢ').
     for i = 1 : data.mem
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
-        q[:] += dot(data.b[:, k], x) * data.b[:, k] - dot(data.a[:, k], x) * data.a[:, k]
+        ax = dot(data.a[k], x)
+        bx = dot(data.b[k], x)
+        for j ∈ eachindex(q)
+          q[j] += bx * data.b[k][j] - ax * data.a[k][j]
+        end
       end
     end
     return q
@@ -176,7 +188,7 @@ function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g 
       ys = θ * ys + (1 - θ) * sBs
     end
   else
-    if ys <= 1.0e-20
+    if ys <= eps(eltype(op))
       # op.counters.rejects +=1
       return op
     end
@@ -186,29 +198,29 @@ function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g 
   data = op.data
   insert = data.insert
 
-  data.s[:, insert] = s
-  data.y[:, insert] = y
+  data.s[insert] .= s
+  data.y[insert] .= y
   data.ys[insert] = ys
 
   op.data.scaling && (op.data.scaling_factor = ys / dot(y, y))
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    data.b[:, insert] = y / sqrt(ys)
+    data.b[insert] .= y / sqrt(ys)
 
     for i = 1 : data.mem
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
-        data.a[:, k] = data.s[:, k] / data.scaling_factor  # B₀ = I / γ.
+        data.a[k] .= data.s[k] / data.scaling_factor  # B₀ = I / γ.
 
         for j = 1 : i - 1
           l = mod(insert + j - 1, data.mem) + 1
           if data.ys[l] != 0
-            data.a[:, k] += dot(data.b[:, l], data.s[:, k]) * data.b[:, l]
-            data.a[:, k] -= dot(data.a[:, l], data.s[:, k]) * data.a[:, l]
+            data.a[k] .+= dot(data.b[l], data.s[k]) * data.b[l]
+            data.a[k] .-= dot(data.a[l], data.s[k]) * data.a[l]
           end
         end
-        data.a[:, k] /= sqrt(dot(data.s[:, k], data.a[:, k]))
+        data.a[k] /= sqrt(dot(data.s[k], data.a[k]))
       end
     end
   end
@@ -220,21 +232,27 @@ end
 
 """
     diag(op)
+    diag!(op, d)
 
 Extract the diagonal of a L-BFGS operator in forward mode.
 """
 function diag(op :: LBFGSOperator{T}) where T
+  d = zeros(T, op.nrow)
+  diag!(op, d)
+end
+
+function diag!(op :: LBFGSOperator{T}, d) where T
   op.inverse && throw(LinearOperatorException("only the diagonal of a forward L-BFGS approximation is available"))
   data = op.data
 
-  d = ones(T, op.nrow)
-  data.scaling && (d[:] /= data.scaling_factor)
+  fill!(d, 1)
+  data.scaling && (d ./= data.scaling_factor)
 
   for i = 1 : data.mem
     k = mod(data.insert + i - 2, data.mem) + 1;
     if data.ys[k] != 0
       for j = 1 : op.nrow
-        d[j] = d[j] + data.b[j, k]^2 - data.a[j, k]^2;
+        d[j] = d[j] + data.b[k][j]^2 - data.a[k][j]^2;
       end
     end
   end
@@ -246,13 +264,17 @@ end
 
 Resets the given LBFGS data.
 """
-function reset!(data :: LBFGSData{T}) where T
-  fill!(data.s, 0)
-  fill!(data.y, 0)
+function reset!(data :: LBFGSData{T}, inverse :: Bool) where T
+  for i = 1 : data.mem
+    fill!(data.s[i], 0)
+    fill!(data.y[i], 0)
+    if !inverse
+      fill!(data.a[i], 0)
+      fill!(data.b[i], 0)
+    end
+  end
   fill!(data.ys, 0)
   fill!(data.α , 0)
-  fill!(data.a, 0)
-  fill!(data.b, 0)
   data.scaling_factor = T(1)
   data.insert = 1
   return data
@@ -264,7 +286,7 @@ end
 Resets the LBFGS data of the given operator.
 """
 function reset!(op :: LBFGSOperator)
-  reset!(op.data)
+  reset!(op.data, op.inverse)
   op.nprod = 0
   op.ntprod = 0
   op.nctprod = 0
