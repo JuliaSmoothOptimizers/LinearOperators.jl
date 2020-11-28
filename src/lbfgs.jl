@@ -237,7 +237,7 @@ end
 Extract the diagonal of a L-BFGS operator in forward mode.
 """
 function diag(op :: LBFGSOperator{T}) where T
-  d = zeros(T, op.nrow)
+  d = Vector{T}(undef, op.nrow)
   diag!(op, d)
 end
 

@@ -77,6 +77,23 @@ function test_lsr1()
       @test eltype(B * v) == T
     end
   end
+
+  @testset "LSR1 allocations" begin
+    n = 100
+    mem = 20
+    B = LSR1Operator(n, mem=mem)
+    for _ = 1 :2:n
+      s = rand(n)
+      y = rand(n)
+      push!(B, s, y)
+    end
+    x = rand(n)
+    B * x  # warmup
+    nallocs = @allocated B * x
+    @test nallocs == 0
+    nallocs = @allocated diag!(B, x)
+    @test nallocs == 0
+  end
 end
 
 test_lsr1()
