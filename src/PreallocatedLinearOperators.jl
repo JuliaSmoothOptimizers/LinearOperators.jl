@@ -117,7 +117,7 @@ Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-function PreallocatedLinearOperator(M :: SymTridiagonal{T}; storagetype=Vector{T}) where T
+function PreallocatedLinearOperator(M :: SymTridiagonal{T}; storagetype=Vector{T}, kwargs...) where T
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
   hermitian = eltype(M) <: Real
@@ -132,7 +132,7 @@ Constructs a linear operator from a symmetric matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-function PreallocatedLinearOperator(M :: Symmetric{T}; storagetype=Vector{T}) where T
+function PreallocatedLinearOperator(M :: Symmetric{T}; storagetype=Vector{T}, kwargs...) where T
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
   hermitian = eltype(M) <: Real
@@ -146,7 +146,7 @@ end
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
 """
-function PreallocatedLinearOperator(M :: Hermitian{T}; storagetype=Vector{T}) where T
+function PreallocatedLinearOperator(M :: Hermitian{T}; storagetype=Vector{T}, kwargs...) where T
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
   symmetric = eltype(M) <: Real
