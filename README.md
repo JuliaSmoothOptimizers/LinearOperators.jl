@@ -1,7 +1,7 @@
 # A [Julia](http://julialang.org) Linear Operator Package
 
 [![DOI](https://zenodo.org/badge/20136006.svg)](https://zenodo.org/badge/latestdoi/20136006)
-[![Build Status](https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/workflows/CI/badge.svg?branch=master)
+[![Build Status](https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/workflows/CI/badge.svg?branch=master)](https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/actions)
 [![Build Status](https://api.cirrus-ci.com/github/JuliaSmoothOptimizers/LinearOperators.jl.svg)](https://cirrus-ci.com/github/JuliaSmoothOptimizers/LinearOperators.jl)
 [![codecov.io](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl/coverage.svg?branch=master)](https://codecov.io/github/JuliaSmoothOptimizers/LinearOperators.jl?branch=master)
 [![docs](https://img.shields.io/badge/docs-latest-3f51b5.svg)](https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/latest)
