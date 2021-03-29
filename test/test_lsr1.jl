@@ -99,7 +99,7 @@ function test_lsr1()
     n = 100
     mem = 20
     B = LSR1Operator(n, mem=mem)
-    for _ = 1 :2:n
+    for _ = 1:2:n
       s = rand(n)
       y = rand(n)
       push!(B, s, y)
