@@ -502,7 +502,7 @@ function test_linop()
     @test A == Matrix(opC)
     opF = LinearOperator(Float64, 2, 2, false, false, prod, tprod, ctprod) # The type is a lie
     @test eltype(opF) == Float64
-    @test_throws TypeError Matrix(opF)
+    @test_throws InexactError Matrix(opF)
   end
 
   # Issue #80
