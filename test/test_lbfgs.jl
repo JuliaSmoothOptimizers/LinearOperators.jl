@@ -182,6 +182,23 @@ function test_lbfgs()
     @test nallocs == 0
   end
 
+  @testset "LBFGS eigenvalues" begin
+    n = 100
+    mem = 20
+    B = LBFGSOperator(n, mem=mem)
+    H = InverseLBFGSOperator(n, mem=mem)
+    for _ = 1:2:n
+      s = rand(n)
+      y = rand(n)
+      push!(B, s, y)
+      push!(H, s, y)
+    end
+    λ = eigs(B, nev=n)[1]  # call Arpack
+    @test minimum(λ) > 0
+    λ = eigs(H)[1]
+    @test minimum(λ) > 0
+  end
+
 end
 
 test_lbfgs()
