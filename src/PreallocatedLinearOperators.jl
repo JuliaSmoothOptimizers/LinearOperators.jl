@@ -28,10 +28,14 @@ mutable struct PreallocatedLinearOperator{T} <: AbstractPreallocatedLinearOperat
   nprod :: Int
   ntprod :: Int
   nctprod :: Int
+  Mv
+  Mtu
+  Maw
 end
 
 PreallocatedLinearOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod) where T =
-  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0)
+  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0,
+                                Vector{T}(undef, nrow), Vector{T}(undef, ncol), Vector{T}(undef, ncol))
 
 """
     show(io, op)
@@ -70,7 +74,7 @@ function PreallocatedLinearOperator(Mv :: AbstractVector{T}, Mtu :: AbstractVect
   prod = @closure v -> mul!(Mv, M, v)
   tprod = @closure u -> mul!(Mtu, transpose(M), u)
   ctprod = @closure w -> mul!(Maw, adjoint(M), w)
-  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
+  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0, Mv, Mtu, Maw)
 end
 
 """
@@ -152,4 +156,18 @@ function PreallocatedLinearOperator(M :: Hermitian{T}; storagetype=Vector{T}, kw
   symmetric = eltype(M) <: Real
   Mtu = symmetric ? Mv : storagetype(undef, ncol)
   PreallocatedLinearOperator(Mv, Mtu, Mv, M, symmetric=symmetric, hermitian=true)
+end
+
+function mul!(y :: AbstractVector, A :: PreallocatedLinearOperator, x :: AbstractVector)
+  A.prod(x)
+  increase_nprod(A)
+  y .= A.Mv
+  return y
+end
+
+function *(op :: PreallocatedLinearOperator{T}, v :: AbstractVector{T}) where T
+  size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
+  op.prod(v)
+  increase_nprod(op)
+  return op.Mv
 end

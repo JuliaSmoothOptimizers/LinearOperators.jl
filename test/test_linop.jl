@@ -656,6 +656,18 @@ function test_linop()
     @test transpose(opA) * b == transpose(A) * b
     @test adjoint(opA) * b == adjoint(A) * b
   end
+
+  # Issue #164
+  @testset "Product with a view" begin
+    A = PreallocatedLinearOperator(ones(2, 2))
+    x = ones(2)
+    @views xv = x[:]
+    y = zeros(2)
+    mul!(y, A, xv)
+    @test all(y .== [2 2])
+    z = A * xv
+    @test all(z .== [2 2])
+  end
 end
 
 test_linop()
