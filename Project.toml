@@ -15,8 +15,9 @@ TimerOutputs = "^0.5"
 julia = "^1.0.0"
 
 [extras]
+Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestSetExtensions = "98d24dd4-01ad-11ea-1b02-c9a08f80db04"
 
 [targets]
-test = ["Test", "TestSetExtensions"]
+test = ["Arpack", "Test", "TestSetExtensions"]

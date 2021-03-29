@@ -1,4 +1,4 @@
-using Test, TestSetExtensions, LinearOperators
+using Arpack, Test, TestSetExtensions, LinearOperators
 
 include("test_aux.jl")
 

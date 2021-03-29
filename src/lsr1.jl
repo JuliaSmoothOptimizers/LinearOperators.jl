@@ -214,3 +214,10 @@ function reset!(op :: LSR1Operator)
   op.nctprod = 0
   return op
 end
+
+# define mul! so we can call, e.g., Arpack
+function mul!(y :: AbstractVector, op :: LSR1Operator, x :: AbstractVector)
+  op.prod(x)
+  y .= op.data.Ax
+  return y
+end

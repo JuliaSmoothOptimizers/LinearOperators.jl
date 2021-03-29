@@ -94,6 +94,20 @@ function test_lsr1()
     nallocs = @allocated diag!(B, x)
     @test nallocs == 0
   end
+
+  @testset "LSR1 eigenvalues" begin
+    n = 100
+    mem = 20
+    B = LSR1Operator(n, mem=mem)
+    for _ = 1 :2:n
+      s = rand(n)
+      y = rand(n)
+      push!(B, s, y)
+    end
+    vals = eigs(B, nev=n)
+    resid = vals[end]
+    @test norm(resid) ≤ sqrt(eps(eltype(B)))
+  end
 end
 
 test_lsr1()
