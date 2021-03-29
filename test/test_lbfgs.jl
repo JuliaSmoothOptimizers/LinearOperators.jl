@@ -187,7 +187,7 @@ function test_lbfgs()
     mem = 20
     B = LBFGSOperator(n, mem=mem)
     H = InverseLBFGSOperator(n, mem=mem)
-    for _ = 1 :2:n
+    for _ = 1:2:n
       s = rand(n)
       y = rand(n)
       push!(B, s, y)
