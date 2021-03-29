@@ -221,3 +221,10 @@ function mul!(y :: AbstractVector, op :: LSR1Operator, x :: AbstractVector)
   y .= op.data.Ax
   return y
 end
+
+function *(op :: LSR1Operator, v :: AbstractVector)
+  size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
+  increase_nprod(op)
+  op.prod(v)
+  return op.data.Ax
+end

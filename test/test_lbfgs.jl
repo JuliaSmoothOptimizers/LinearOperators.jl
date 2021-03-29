@@ -199,6 +199,23 @@ function test_lbfgs()
     @test minimum(λ) > 0
   end
 
+  @testset "LBFGS product with a view" begin
+    n = 100
+    mem = 20
+    B = LBFGSOperator(n, mem=mem)
+    H = InverseLBFGSOperator(n, mem=mem)
+    for _ = 1:2:n
+      s = rand(n)
+      y = rand(n)
+      push!(B, s, y)
+      push!(H, s, y)
+    end
+    x = rand(2 * n)
+    y = view(x, 1:n)
+    z = x[1:n]
+    @test all(B * y .== B * z)
+    @test all(H * y .== H * z)
+  end
 end
 
 test_lbfgs()

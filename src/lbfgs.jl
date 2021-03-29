@@ -296,6 +296,14 @@ end
 # define mul! so we can call, e.g., Arpack
 function mul!(y :: AbstractVector, op :: LBFGSOperator, x :: AbstractVector)
   op.prod(x)
+  increase_nprod(op)
   y .= op.data.Ax
   return y
+end
+
+function *(op :: LBFGSOperator, v :: AbstractVector)
+  size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
+  increase_nprod(op)
+  op.prod(v)
+  return op.data.Ax
 end

@@ -108,6 +108,21 @@ function test_lsr1()
     resid = vals[end]
     @test norm(resid) ≤ sqrt(eps(eltype(B)))
   end
+
+  @testset "LSR1 product with a view" begin
+    n = 100
+    mem = 20
+    B = LSR1Operator(n, mem=mem)
+    for _ = 1:2:n
+      s = rand(n)
+      y = rand(n)
+      push!(B, s, y)
+    end
+    x = rand(2 * n)
+    y = view(x, 1:n)
+    z = x[1:n]
+    @test all(B * y .== B * z)
+  end
 end
 
 test_lsr1()
