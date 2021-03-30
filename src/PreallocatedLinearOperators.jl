@@ -29,13 +29,15 @@ mutable struct PreallocatedLinearOperator{T} <: AbstractPreallocatedLinearOperat
   ntprod :: Int
   nctprod :: Int
   Mv
+  Mcv
   Mtu
   Maw
 end
 
 PreallocatedLinearOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod) where T =
   PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0,
-                                Vector{T}(undef, nrow), Vector{T}(undef, ncol), Vector{T}(undef, ncol))
+                                Vector{T}(undef, nrow), Vector{T}(undef, nrow),
+                                Vector{T}(undef, ncol), Vector{T}(undef, ncol))
 
 """
     show(io, op)
@@ -65,53 +67,27 @@ for `M * v` and `Mtu` as storage space for `transpose(M) * u` and `Maw` to store
 `adjoint(M) * w`. Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
 """
-function PreallocatedLinearOperator(Mv :: AbstractVector{T}, Mtu :: AbstractVector{T}, Maw :: AbstractVector{T},
+function PreallocatedLinearOperator(Mv :: AbstractVector{T}, Mcv :: AbstractVector{T},
+                                    Mtu :: AbstractVector{T}, Maw :: AbstractVector{T},
                                     M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T
   nrow, ncol = size(M)
   @assert length(Mv) == nrow
+  @assert length(Mcv) == nrow
   @assert length(Mtu) == ncol
   @assert length(Maw) == ncol
   prod = @closure v -> mul!(Mv, M, v)
   tprod = @closure u -> mul!(Mtu, transpose(M), u)
   ctprod = @closure w -> mul!(Maw, adjoint(M), w)
-  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0, Mv, Mtu, Maw)
+  PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0, Mv, Mcv, Mtu, Maw)
 end
-
-"""
-    PreallocatedLinearOperator(Mv, M :: Symmetric{<:Real})
-
-Construct a linear operator from a symmetric real square matrix `M` with preallocation
-using `Mv` as storage space.
-"""
-PreallocatedLinearOperator(Mv :: AbstractVector{T}, M :: Union{SymTridiagonal{T},Symmetric{T}}) where T <: Real =
-  PreallocatedLinearOperator(Mv, Mv, Mv, M, symmetric=true, hermitian=true)
 
 function PreallocatedLinearOperator(M :: AbstractMatrix{T}; storagetype=Vector{T}, symmetric=false, hermitian=false) where T
   nrow, ncol = size(M)
-  local Mv, Mtu, Maw
-  if T <: Real
-    if symmetric
-      Maw = Mtu = Mv = storagetype(undef, nrow)
-    else
-      Mv = storagetype(undef, nrow)
-      Maw = Mtu = storagetype(undef, ncol)
-    end
-  else
-    if symmetric && hermitian # Actually real, but T is not
-      Maw = Mtu = Mv = storagetype(undef, nrow)
-    elseif symmetric
-      Mtu = Mv = storagetype(undef, nrow)
-      Maw = storagetype(undef, ncol)
-    elseif hermitian
-      Mv = storagetype(undef, nrow)
-      Maw = Mtu = storagetype(undef, ncol)
-    else
-      Mv = storagetype(undef, nrow)
-      Mtu = storagetype(undef, ncol)
-      Maw = storagetype(undef, ncol)
-    end
-  end
-  PreallocatedLinearOperator(Mv, Mtu, Maw, M, symmetric=symmetric, hermitian=hermitian)
+  Mv = storagetype(undef, nrow)
+  Mcv = storagetype(undef, nrow)
+  Mtu = storagetype(undef, ncol)
+  Maw = storagetype(undef, ncol)
+  PreallocatedLinearOperator(Mv, Mcv, Mtu, Maw, M, symmetric=symmetric, hermitian=hermitian)
 end
 
 """
@@ -121,12 +97,13 @@ Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-function PreallocatedLinearOperator(M :: SymTridiagonal{T}; storagetype=Vector{T}, kwargs...) where T
+function PreallocatedLinearOperator(M :: SymTridiagonal{T}; storagetype=Vector{T}, hermitian=false) where T
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
-  hermitian = eltype(M) <: Real
-  Maw = hermitian ? Mv : storagetype(undef, ncol)
-  PreallocatedLinearOperator(Mv, Mv, Maw, M, symmetric=true, hermitian=hermitian)
+  Mcv = storagetype(undef, nrow)
+  Mtu = storagetype(undef, ncol)
+  Maw = storagetype(undef, ncol)
+  PreallocatedLinearOperator(Mv, Mcv, Mtu, Maw, M, symmetric=true, hermitian=hermitian)
 end
 
 """
@@ -136,12 +113,13 @@ Constructs a linear operator from a symmetric matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-function PreallocatedLinearOperator(M :: Symmetric{T}; storagetype=Vector{T}, kwargs...) where T
+function PreallocatedLinearOperator(M :: Symmetric{T}; storagetype=Vector{T}, hermitian=false) where T
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
-  hermitian = eltype(M) <: Real
-  Maw = hermitian ? Mv : storagetype(undef, ncol)
-  PreallocatedLinearOperator(Mv, Mv, Maw, M, symmetric=true, hermitian=hermitian)
+  Mcv = storagetype(undef, nrow)
+  Mtu = storagetype(undef, ncol)
+  Maw = storagetype(undef, ncol)
+  PreallocatedLinearOperator(Mv, Mcv, Mtu, Maw, M, symmetric=true, hermitian=hermitian)
 end
 
 """
@@ -150,12 +128,13 @@ end
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
 """
-function PreallocatedLinearOperator(M :: Hermitian{T}; storagetype=Vector{T}, kwargs...) where T
+function PreallocatedLinearOperator(M :: Hermitian{T}; storagetype=Vector{T}, symmetric=false) where T
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
+  Mcv = storagetype(undef, nrow)
   symmetric = eltype(M) <: Real
   Mtu = symmetric ? Mv : storagetype(undef, ncol)
-  PreallocatedLinearOperator(Mv, Mtu, Mv, M, symmetric=symmetric, hermitian=true)
+  PreallocatedLinearOperator(Mv, Mcv, Mtu, Mv, M, symmetric=symmetric, hermitian=true)
 end
 
 function mul!(y :: AbstractVector, A :: PreallocatedLinearOperator, x :: AbstractVector)
@@ -170,4 +149,76 @@ function *(op :: PreallocatedLinearOperator{T}, v :: AbstractVector{T}) where T
   op.prod(v)
   increase_nprod(op)
   return op.Mv
+end
+
+function *(op :: AdjointLinearOperator{T,PreallocatedLinearOperator{T}}, v :: AbstractVector{T}) where T
+  p = op.parent
+  ishermitian(p) && return p * v
+  length(v) == size(p, 1) || throw(LinearOperatorException("shape mismatch"))
+  p.ctprod(v)
+  return p.Maw
+  if p.ctprod !== nothing
+    increase_nctprod(p)
+    p.ctprod(v)
+    return p.Maw
+  end
+  increment_tprod = true
+  if p.tprod === nothing
+    if issymmetric(p)
+      increment_tprod = false
+    else
+      throw(LinearOperatorException("unable to infer conjugate transpose operator"))
+    end
+  end
+  p.Mcv .= conj.(v)
+  if increment_tprod
+    p.tprod(p.Mcv)
+    increase_ntprod(p)
+    p.Mtu .= conj.(p.Mtu)
+    return p.Mtu
+  else
+    p.prod(p.Mcv)
+    increase_nprod(p)
+    p.Mv .= conj.(p.Mv)
+    return p.Mv
+  end
+end
+
+function *(op :: TransposeLinearOperator{T,PreallocatedLinearOperator{T}}, v :: AbstractVector{T}) where T
+  p = op.parent
+  issymmetric(p) && return p * v
+  length(v) == size(p, 1) || throw(LinearOperatorException("shape mismatch"))
+  if p.tprod !== nothing
+    increase_ntprod(p)
+    p.tprod(v)
+    return p.Mtu
+  end
+  increment_ctprod = true
+  if p.ctprod === nothing
+    if ishermitian(p)
+      increment_ctprod = false
+    else
+      throw(LinearOperatorException("unable to infer transpose operator"))
+    end
+  end
+  p.Mcv .= conj.(v)
+  if increment_ctprod
+    p.ctprod(p.Mcv)
+    increase_nctprod(p)
+    p.Maw .= conj.(p.Maw)
+    return p.Maw
+  else
+    p.prod(p.Mcv)
+    increase_nprod(p)
+    p.Mv .= conj.(p.Mv)
+    return p.Mv
+  end
+end
+
+function *(op :: ConjugateLinearOperator{T,PreallocatedLinearOperator{T}}, v :: AbstractVector{T}) where T
+  p = op.parent
+  p.Maw .= conj.(v)
+  p.prod(p.Maw)
+  p.Mv .= conj.(p.Mv)
+  return p.Mv
 end
