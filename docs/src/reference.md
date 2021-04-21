@@ -1,47 +1,17 @@
-## Operators
-
-```@docs
-LinearOperator
-PreallocatedLinearOperator
-TimedLinearOperator
-BlockDiagonalOperator
-opEye
-opOnes
-opZeros
-opDiagonal
-opInverse
-opCholesky
-opLDL
-opHouseholder
-opHermitian
-opRestriction
-opExtension
-LBFGSOperator
-InverseLBFGSOperator
-LSR1Operator
-kron
+# Reference
+​
+## Contents
+​
+```@contents
+Pages = ["reference.md"]
 ```
-
-## Utility functions
-
-```@docs
-check_ctranspose
-check_hermitian
-check_positive_definite
-diag
-Matrix
-hermitian
-push!
-reset!
-shape
-show
-size
-symmetric
+​
+## Index
+​
+```@index
+Pages = ["reference.md"]
 ```
-
-## Internal
-
-```@docs
-LinearOperators.LBFGSData
-LinearOperators.LSR1Data
+​
+```@autodocs
+Modules = [LinearOperators]
 ```
