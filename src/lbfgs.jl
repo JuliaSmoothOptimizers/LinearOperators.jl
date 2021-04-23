@@ -2,60 +2,79 @@ export LBFGSOperator, InverseLBFGSOperator, diag, diag!
 
 "A data type to hold information relative to LBFGS operators."
 mutable struct LBFGSData{T}
-  mem :: Int
-  scaling :: Bool
-  scaling_factor :: T
-  damped :: Bool
-  σ₂ :: T
-  σ₃ :: T
-  s   :: Vector{Vector{T}}
-  y   :: Vector{Vector{T}}
-  ys  :: Vector{T}
-  α   :: Vector{T}
-  a   :: Vector{Vector{T}}
-  b   :: Vector{Vector{T}}
-  insert :: Int
-  Ax :: Vector{T}
+  mem::Int
+  scaling::Bool
+  scaling_factor::T
+  damped::Bool
+  σ₂::T
+  σ₃::T
+  s::Vector{Vector{T}}
+  y::Vector{Vector{T}}
+  ys::Vector{T}
+  α::Vector{T}
+  a::Vector{Vector{T}}
+  b::Vector{Vector{T}}
+  insert::Int
+  Ax::Vector{T}
 end
 
-function LBFGSData(T :: DataType, n :: Int;
-                   mem :: Int = 5, scaling :: Bool=true, damped :: Bool=false, inverse :: Bool=true,
-                   σ₂ :: Float64 = 0.99, σ₃ :: Float64 = 10.0)
-  LBFGSData{T}(max(mem, 1),
-               scaling,
-               convert(T, 1),
-               damped,
-               convert(T, σ₂),
-               convert(T, σ₃),
-               [zeros(T, n) for _ = 1 : mem],
-               [zeros(T, n) for _ = 1 : mem],
-               zeros(T, mem),
-               inverse ? zeros(T, mem) : zeros(T, 0),
-               inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1 : mem],
-               inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1 : mem],
-               1,
-               Vector{T}(undef, n))
+function LBFGSData(
+  T::DataType,
+  n::Int;
+  mem::Int = 5,
+  scaling::Bool = true,
+  damped::Bool = false,
+  inverse::Bool = true,
+  σ₂::Float64 = 0.99,
+  σ₃::Float64 = 10.0,
+)
+  LBFGSData{T}(
+    max(mem, 1),
+    scaling,
+    convert(T, 1),
+    damped,
+    convert(T, σ₂),
+    convert(T, σ₃),
+    [zeros(T, n) for _ = 1:mem],
+    [zeros(T, n) for _ = 1:mem],
+    zeros(T, mem),
+    inverse ? zeros(T, mem) : zeros(T, 0),
+    inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
+    inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
+    1,
+    Vector{T}(undef, n),
+  )
 end
 
-LBFGSData(n :: Int; kwargs...) = LBFGSData(Float64, n; kwargs...)
+LBFGSData(n::Int; kwargs...) = LBFGSData(Float64, n; kwargs...)
 
 "A type for limited-memory BFGS approximations."
 mutable struct LBFGSOperator{T} <: AbstractLinearOperator{T}
-  nrow   :: Int
-  ncol   :: Int
-  symmetric :: Bool
-  hermitian :: Bool
+  nrow::Int
+  ncol::Int
+  symmetric::Bool
+  hermitian::Bool
   prod     # apply the operator to a vector
   tprod    # apply the transpose operator to a vector
   ctprod   # apply the transpose conjugate operator to a vector
-  inverse :: Bool
-  data :: LBFGSData{T}
-  nprod :: Int
-  ntprod :: Int
-  nctprod :: Int
+  inverse::Bool
+  data::LBFGSData{T}
+  nprod::Int
+  ntprod::Int
+  nctprod::Int
 end
 
-LBFGSOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod, inverse::Bool, data::LBFGSData{T}) where T =
+LBFGSOperator{T}(
+  nrow::Int,
+  ncol::Int,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod,
+  tprod,
+  ctprod,
+  inverse::Bool,
+  data::LBFGSData{T},
+) where {T} =
   LBFGSOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, inverse, data, 0, 0, 0)
 
 """
@@ -65,20 +84,19 @@ LBFGSOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, t
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function InverseLBFGSOperator(T :: DataType, n :: Int; kwargs...)
-
+function InverseLBFGSOperator(T::DataType, n::Int; kwargs...)
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
-  lbfgs_data = LBFGSData(T, n; inverse=true, kwargs...)
+  lbfgs_data = LBFGSData(T, n; inverse = true, kwargs...)
 
-  function lbfgs_multiply(data :: LBFGSData, x :: AbstractArray)
+  function lbfgs_multiply(data::LBFGSData, x::AbstractArray)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
 
     q = data.Ax
     q .= x
 
-    for i = 1 : data.mem
+    for i = 1:(data.mem)
       k = mod(data.insert - i - 1, data.mem) + 1
       if data.ys[k] != 0
         αk = dot(data.s[k], q) / data.ys[k]
@@ -91,7 +109,7 @@ function InverseLBFGSOperator(T :: DataType, n :: Int; kwargs...)
 
     data.scaling && (q .*= data.scaling_factor)
 
-    for i = 1 : data.mem
+    for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         αk = data.α[k]
@@ -106,12 +124,10 @@ function InverseLBFGSOperator(T :: DataType, n :: Int; kwargs...)
   end
 
   prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
-  return LBFGSOperator{T}(n, n, true, true,
-                          prod, prod, prod, true, lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true, prod, prod, prod, true, lbfgs_data)
 end
 
-InverseLBFGSOperator(n :: Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
-
+InverseLBFGSOperator(n::Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
 
 """
     LBFGSOperator(T, n; [mem=5, scaling=true])
@@ -120,13 +136,12 @@ InverseLBFGSOperator(n :: Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwa
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function LBFGSOperator(T :: DataType, n :: Int; kwargs...)
-
+function LBFGSOperator(T::DataType, n::Int; kwargs...)
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
-  lbfgs_data = LBFGSData(T, n; inverse=false, kwargs...)
+  lbfgs_data = LBFGSData(T, n; inverse = false, kwargs...)
 
-  function lbfgs_multiply(data :: LBFGSData, x :: AbstractArray)
+  function lbfgs_multiply(data::LBFGSData, x::AbstractArray)
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
 
@@ -136,7 +151,7 @@ function LBFGSOperator(T :: DataType, n :: Int; kwargs...)
     data.scaling && (q ./= data.scaling_factor)
 
     # B = B₀ + Σᵢ (bᵢbᵢ' - aᵢaᵢ').
-    for i = 1 : data.mem
+    for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         ax = dot(data.a[k], x)
@@ -150,11 +165,10 @@ function LBFGSOperator(T :: DataType, n :: Int; kwargs...)
   end
 
   prod = @closure x -> lbfgs_multiply(lbfgs_data, x)
-  return LBFGSOperator{T}(n, n, true, true,
-                          prod, prod, prod, false, lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true, prod, prod, prod, false, lbfgs_data)
 end
 
-LBFGSOperator(n :: Int; kwargs...) = LBFGSOperator(Float64, n; kwargs...)
+LBFGSOperator(n::Int; kwargs...) = LBFGSOperator(Float64, n; kwargs...)
 
 """
     push!(op, s, y)
@@ -165,15 +179,14 @@ The second calling sequence is used in inverse LBFGS updating in conjunction wit
 where α is the most recent steplength and g the gradient used when solving `d=-Hg`.
 In forward updating with damping, it is not necessary to supply α and g.
 """
-function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g :: Vector=zero(y))
-
+function push!(op::LBFGSOperator, s::Vector, y::Vector, α::Real = 1.0, g::Vector = zero(y))
   ys = dot(y, s)
   σ₂ = op.data.σ₂
   σ₃ = op.data.σ₃
 
   if op.data.damped
     # Powell's damped update strategy
-    Bs = op.inverse ? (- α * g) : (op * s)
+    Bs = op.inverse ? (-α * g) : (op * s)
     sBs = dot(s, Bs)
     damp = false
     if ys < (1 - σ₂) * sBs
@@ -208,12 +221,12 @@ function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g 
   if !op.inverse
     data.b[insert] .= y / sqrt(ys)
 
-    for i = 1 : data.mem
+    for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
         data.a[k] .= data.s[k] / data.scaling_factor  # B₀ = I / γ.
 
-        for j = 1 : i - 1
+        for j = 1:(i - 1)
           l = mod(insert + j - 1, data.mem) + 1
           if data.ys[l] != 0
             data.a[k] .+= dot(data.b[l], data.s[k]) * data.b[l]
@@ -229,30 +242,31 @@ function push!(op :: LBFGSOperator, s :: Vector, y :: Vector, α :: Real=1.0, g 
   return op
 end
 
-
 """
     diag(op)
     diag!(op, d)
 
 Extract the diagonal of a L-BFGS operator in forward mode.
 """
-function diag(op :: LBFGSOperator{T}) where T
+function diag(op::LBFGSOperator{T}) where {T}
   d = Vector{T}(undef, op.nrow)
   diag!(op, d)
 end
 
-function diag!(op :: LBFGSOperator{T}, d) where T
-  op.inverse && throw(LinearOperatorException("only the diagonal of a forward L-BFGS approximation is available"))
+function diag!(op::LBFGSOperator{T}, d) where {T}
+  op.inverse && throw(
+    LinearOperatorException("only the diagonal of a forward L-BFGS approximation is available"),
+  )
   data = op.data
 
   fill!(d, 1)
   data.scaling && (d ./= data.scaling_factor)
 
-  for i = 1 : data.mem
-    k = mod(data.insert + i - 2, data.mem) + 1;
+  for i = 1:(data.mem)
+    k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      for j = 1 : op.nrow
-        d[j] = d[j] + data.b[k][j]^2 - data.a[k][j]^2;
+      for j = 1:(op.nrow)
+        d[j] = d[j] + data.b[k][j]^2 - data.a[k][j]^2
       end
     end
   end
@@ -264,8 +278,8 @@ end
 
 Resets the given LBFGS data.
 """
-function reset!(data :: LBFGSData{T}, inverse :: Bool) where T
-  for i = 1 : data.mem
+function reset!(data::LBFGSData{T}, inverse::Bool) where {T}
+  for i = 1:(data.mem)
     fill!(data.s[i], 0)
     fill!(data.y[i], 0)
     if !inverse
@@ -274,7 +288,7 @@ function reset!(data :: LBFGSData{T}, inverse :: Bool) where T
     end
   end
   fill!(data.ys, 0)
-  fill!(data.α , 0)
+  fill!(data.α, 0)
   data.scaling_factor = T(1)
   data.insert = 1
   return data
@@ -285,7 +299,7 @@ end
 
 Resets the LBFGS data of the given operator.
 """
-function reset!(op :: LBFGSOperator)
+function reset!(op::LBFGSOperator)
   reset!(op.data, op.inverse)
   op.nprod = 0
   op.ntprod = 0
@@ -294,7 +308,7 @@ function reset!(op :: LBFGSOperator)
 end
 
 # define mul! so we can call, e.g., Arpack
-function mul!(y :: AbstractVector, op :: LBFGSOperator, x :: AbstractVector)
+function mul!(y::AbstractVector, op::LBFGSOperator, x::AbstractVector)
   op.prod(x)
   y .= op.data.Ax
   return y

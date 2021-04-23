@@ -5,7 +5,7 @@ function test_lsr1()
   @testset ExtendedTestSet "LSR1" begin
     n = 10
     mem = 5
-    B = LSR1Operator(n, mem=mem, scaling=false)
+    B = LSR1Operator(n, mem = mem, scaling = false)
 
     for t = 1:2
       @test norm(diag(B) - diag(Matrix(B))) <= rtol
@@ -20,9 +20,9 @@ function test_lsr1()
       @test B.data.insert == 1
 
       # Insert a few {s,y} pairs.
-      for i = 1 : mem+2
+      for i = 1:(mem + 2)
         s = ones(n) * i
-        y = [i; ones(n-1)]
+        y = [i; ones(n - 1)]
         push!(B, s, y)
       end
 
@@ -38,7 +38,7 @@ function test_lsr1()
 
     # test against full SR1 without scaling
     mem = n
-    LB = LSR1Operator(n, mem=mem, scaling=false)
+    LB = LSR1Operator(n, mem = mem, scaling = false)
     B = Matrix(1.0I, n, n)
 
     function sr1!(B, s, y)
@@ -54,7 +54,7 @@ function test_lsr1()
     @test norm(Matrix(LB) - B) < rtol * norm(B)
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
-    for k = 1 : mem
+    for k = 1:mem
       s = simple_vector(Float64, n)
       y = simple_vector(Float64, n)
       B = sr1!(B, s, y)
@@ -68,7 +68,7 @@ function test_lsr1()
     n = 10
     mem = 5
     for T in (Float16, Float32, Float64, BigFloat)
-      B = LSR1Operator(T, n, mem=mem)
+      B = LSR1Operator(T, n, mem = mem)
       s = ones(T, n)
       y = ones(T, n)
       push!(B, s, y)
@@ -81,8 +81,8 @@ function test_lsr1()
   @testset "LSR1 allocations" begin
     n = 100
     mem = 20
-    B = LSR1Operator(n, mem=mem)
-    for _ = 1 :2:n
+    B = LSR1Operator(n, mem = mem)
+    for _ = 1:2:n
       s = rand(n)
       y = rand(n)
       push!(B, s, y)
@@ -98,13 +98,13 @@ function test_lsr1()
   @testset "LSR1 eigenvalues" begin
     n = 100
     mem = 20
-    B = LSR1Operator(n, mem=mem)
+    B = LSR1Operator(n, mem = mem)
     for _ = 1:2:n
       s = rand(n)
       y = rand(n)
       push!(B, s, y)
     end
-    vals = eigs(B, nev=n)
+    vals = eigs(B, nev = n)
     resid = vals[end]
     @test norm(resid) ≤ sqrt(eps(eltype(B)))
   end

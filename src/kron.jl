@@ -7,7 +7,7 @@ Kronecker tensor product of A and B in linear operator form, if either
 or both are linear operators. If both A and B are matrices, then
 `Base.kron` is used.
 """
-function kron(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
+function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
   m, n = size(A)
   p, q = size(B)
   T = promote_type(eltype(A), eltype(B))
@@ -31,8 +31,6 @@ function kron(A :: AbstractLinearOperator, B :: AbstractLinearOperator)
   return LinearOperator{T}(m * p, n * q, symm, herm, prod, tprod, ctprod)
 end
 
-kron(A :: AbstractMatrix, B :: AbstractLinearOperator) =
-    kron(LinearOperator(A), B)
+kron(A::AbstractMatrix, B::AbstractLinearOperator) = kron(LinearOperator(A), B)
 
-kron(A :: AbstractLinearOperator, B :: AbstractMatrix) =
-    kron(A, LinearOperator(B))
+kron(A::AbstractLinearOperator, B::AbstractMatrix) = kron(A, LinearOperator(B))

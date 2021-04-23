@@ -6,8 +6,8 @@ function test_lbfgs()
   @testset ExtendedTestSet "LBFGS" begin
     n = 10
     mem = 5
-    B = LBFGSOperator(n, mem=mem, scaling=false)
-    H = InverseLBFGSOperator(n, mem=mem, scaling=false)
+    B = LBFGSOperator(n, mem = mem, scaling = false)
+    H = InverseLBFGSOperator(n, mem = mem, scaling = false)
 
     for t = 1:2 # Run again after reset!
       @test norm(diag(B) - diag(Matrix(B))) <= rtol
@@ -20,16 +20,20 @@ function test_lbfgs()
       # Test that nonpositive curvature can't be added.
       s = simple_vector(Float64, n)
       z = zeros(n)
-      push!(B, s, -s); @test B.data.insert == 1
-      push!(B, s,  z); @test B.data.insert == 1
-      push!(H, s, -s); @test H.data.insert == 1
-      push!(H, s,  z); @test H.data.insert == 1
+      push!(B, s, -s)
+      @test B.data.insert == 1
+      push!(B, s, z)
+      @test B.data.insert == 1
+      push!(H, s, -s)
+      @test H.data.insert == 1
+      push!(H, s, z)
+      @test H.data.insert == 1
 
       # Insert a few {s,y} pairs.
       insert = 0
-      for i = 1 : mem+2
+      for i = 1:(mem + 2)
         s = ones(n) * i
-        y = [i; ones(n-1)]
+        y = [i; ones(n - 1)]
         if dot(s, y) > 1.0e-20
           insert += 1
           push!(B, s, y)
@@ -64,10 +68,10 @@ function test_lbfgs()
 
     # test against full BFGS without scaling
     mem = n
-    LB = LBFGSOperator(n, mem=mem, scaling=false)
+    LB = LBFGSOperator(n, mem = mem, scaling = false)
     B = Matrix(1.0I, n, n)
 
-    function bfgs!(B, s, y, damped=false)
+    function bfgs!(B, s, y, damped = false)
       # dense BFGS update
       ys = dot(y, s)
       Bs = B * s
@@ -81,7 +85,7 @@ function test_lbfgs()
     @test norm(Matrix(LB) - B) < rtol * norm(B)
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
-    for k = 1 : mem
+    for k = 1:mem
       s = simple_vector(Float64, n)
       y = simple_vector(Float64, n)
       B = bfgs!(B, s, y)
@@ -91,11 +95,11 @@ function test_lbfgs()
     end
 
     # test damped L-BFGS
-    B = LBFGSOperator(n, mem=mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
-    H = InverseLBFGSOperator(n, mem=mem, damped=true, scaling=false, σ₂=0.8, σ₃=Inf)
+    B = LBFGSOperator(n, mem = mem, damped = true, scaling = false, σ₂ = 0.8, σ₃ = Inf)
+    H = InverseLBFGSOperator(n, mem = mem, damped = true, scaling = false, σ₂ = 0.8, σ₃ = Inf)
 
     insert_B = insert_H = 0
-    for i = 1 : mem+2
+    for i = 1:(mem + 2)
       s = simple_vector(Float64, n)
       y = simple_vector(Float64, n)
       ys = dot(y, s)
@@ -126,13 +130,13 @@ function test_lbfgs()
 
     # test against full BFGS without scaling
     mem = n
-    LB = LBFGSOperator(n, mem=mem, damped=true, scaling=false)
+    LB = LBFGSOperator(n, mem = mem, damped = true, scaling = false)
     B = Matrix(1.0I, n, n)
 
     @test norm(Matrix(LB) - B) < rtol * norm(B)
     @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
 
-    for k = 1 : mem
+    for k = 1:mem
       s = simple_vector(Float64, n)
       y = simple_vector(Float64, n)
       B = bfgs!(B, s, y, true)
@@ -146,8 +150,8 @@ function test_lbfgs()
     n = 10
     mem = 5
     for T in (Float16, Float32, Float64, BigFloat)
-      B = LBFGSOperator(T, n, mem=mem)
-      H = InverseLBFGSOperator(T, n, mem=mem)
+      B = LBFGSOperator(T, n, mem = mem)
+      H = InverseLBFGSOperator(T, n, mem = mem)
       s = ones(T, n)
       y = ones(T, n)
       push!(B, s, y)
@@ -163,9 +167,9 @@ function test_lbfgs()
   @testset "LBFGS allocations" begin
     n = 100
     mem = 20
-    B = LBFGSOperator(n, mem=mem)
-    H = InverseLBFGSOperator(n, mem=mem)
-    for _ = 1 :2:n
+    B = LBFGSOperator(n, mem = mem)
+    H = InverseLBFGSOperator(n, mem = mem)
+    for _ = 1:2:n
       s = rand(n)
       y = rand(n)
       push!(B, s, y)
@@ -185,20 +189,19 @@ function test_lbfgs()
   @testset "LBFGS eigenvalues" begin
     n = 100
     mem = 20
-    B = LBFGSOperator(n, mem=mem)
-    H = InverseLBFGSOperator(n, mem=mem)
+    B = LBFGSOperator(n, mem = mem)
+    H = InverseLBFGSOperator(n, mem = mem)
     for _ = 1:2:n
       s = rand(n)
       y = rand(n)
       push!(B, s, y)
       push!(H, s, y)
     end
-    λ = eigs(B, nev=n)[1]  # call Arpack
+    λ = eigs(B, nev = n)[1]  # call Arpack
     @test minimum(λ) > 0
     λ = eigs(H)[1]
     @test minimum(λ) > 0
   end
-
 end
 
 test_lbfgs()
