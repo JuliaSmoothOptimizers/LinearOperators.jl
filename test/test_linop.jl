@@ -1,15 +1,18 @@
 function test_linop()
-  (nrow, ncol) = (10, 6);
-  ϵ = eps(Float64);
-  rtol = sqrt(ϵ);
+  (nrow, ncol) = (10, 6)
+  ϵ = eps(Float64)
+  rtol = sqrt(ϵ)
   A1 = simple_matrix(ComplexF64, nrow, ncol)
 
   @testset ExtendedTestSet "Basic operations" begin
-    for op = (LinearOperator(A1), LinearOperator(A1')',
-              transpose(LinearOperator(transpose(A1))),
-              conj(LinearOperator(conj(A1))),
-              PreallocatedLinearOperator(A1))
-      show(op);
+    for op in (
+      LinearOperator(A1),
+      LinearOperator(A1')',
+      transpose(LinearOperator(transpose(A1))),
+      conj(LinearOperator(conj(A1))),
+      PreallocatedLinearOperator(A1),
+    )
+      show(op)
 
       @testset "Data type" begin
         @test eltype(op) == eltype(A1)
@@ -17,45 +20,45 @@ function test_linop()
       end
 
       @testset "Size" begin
-        @test(size(op) == (nrow, ncol));
-        @test(shape(op) == (nrow, ncol));
-        @test(size(op, 1) == nrow);
-        @test(size(op, 2) == ncol);
+        @test(size(op) == (nrow, ncol))
+        @test(shape(op) == (nrow, ncol))
+        @test(size(op, 1) == nrow)
+        @test(size(op, 2) == ncol)
         @test_throws LinearOperatorException size(op, 3)
         @test_throws LinearOperatorException op * ones(ncol + 1)
       end
 
       @testset "Boolean operators" begin
-        @test(symmetric(op) == false);
-        @test(hermitian(op) == false);
+        @test(symmetric(op) == false)
+        @test(hermitian(op) == false)
       end
 
       @testset "Full" begin
-        @test(norm(A1 - Matrix(op)) <= ϵ * norm(A1));
+        @test(norm(A1 - Matrix(op)) <= ϵ * norm(A1))
       end
 
       @testset "Unary +." begin
-        @test(norm(A1 - Matrix(+op)) <= ϵ * norm(A1));
+        @test(norm(A1 - Matrix(+op)) <= ϵ * norm(A1))
       end
     end
 
     @testset "LinearOperator(Matrix)" begin
       A2 = simple_sparse_matrix(ComplexF64, nrow, ncol)
       for A in (A1, A2)
-        op = LinearOperator(A);
-        @test(op.nrow == nrow);
-        @test(op.ncol == ncol);
+        op = LinearOperator(A)
+        @test(op.nrow == nrow)
+        @test(op.ncol == ncol)
 
-        @test(norm(A   - Matrix(op))   <= rtol * norm(A));
-        @test(norm(transpose(A) - Matrix(transpose(op))) <= rtol * norm(A));
-        @test(norm(A'  - Matrix(op'))  <= rtol * norm(A));
+        @test(norm(A - Matrix(op)) <= rtol * norm(A))
+        @test(norm(transpose(A) - Matrix(transpose(op))) <= rtol * norm(A))
+        @test(norm(A' - Matrix(op')) <= rtol * norm(A))
 
         v = simple_vector(ComplexF64, ncol)
-        @test(norm(A * v - op * v) <= rtol * norm(v));
+        @test(norm(A * v - op * v) <= rtol * norm(v))
 
         u = simple_vector(ComplexF64, nrow)
-        @test(norm(transpose(A) * u - transpose(op) * u) <= rtol * norm(u));
-        @test(norm(A'  * u - op'  * u) <= rtol * norm(u));
+        @test(norm(transpose(A) * u - transpose(op) * u) <= rtol * norm(u))
+        @test(norm(A' * u - op' * u) <= rtol * norm(u))
       end
     end
 
@@ -84,8 +87,7 @@ function test_linop()
         @test norm(op' * u - A' * u) <= rtol * norm(A)
       end
 
-      for B in (simple_matrix(Float64, nrow, nrow),
-                simple_sparse_matrix(Float64, nrow, nrow))
+      for B in (simple_matrix(Float64, nrow, nrow), simple_sparse_matrix(Float64, nrow, nrow))
         for A in (SymTridiagonal(Symmetric(B)), Symmetric(B))
           v = simple_vector(Float64, nrow)
 
@@ -108,22 +110,23 @@ function test_linop()
       # Symmetric and Hermitian - actually a Real matrix, but with Complex type.
       # This tests a specific condition located in PreallocatedLinearOperators.jl
       # when eltype(A) is not Real but A is symmetric and hermitian.
-      A = A + A'; A = A + transpose(A)
-      op = PreallocatedLinearOperator(A, symmetric=true, hermitian=true)
+      A = A + A'
+      A = A + transpose(A)
+      op = PreallocatedLinearOperator(A, symmetric = true, hermitian = true)
       @test norm(op * v - A * v) <= rtol * norm(A)
       @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
       @test norm(op' * v - A' * v) <= rtol * norm(A)
 
       A = simple_matrix(ComplexF64, nrow, nrow)
       A = A + A' # Hermitian
-      op = PreallocatedLinearOperator(A, symmetric=false, hermitian=true)
+      op = PreallocatedLinearOperator(A, symmetric = false, hermitian = true)
       @test norm(op * v - A * v) <= rtol * norm(A)
       @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
       @test norm(op' * v - A' * v) <= rtol * norm(A)
 
       A = simple_matrix(ComplexF64, nrow, nrow)
       A = A + transpose(A) # Symmetric
-      op = PreallocatedLinearOperator(A, symmetric=true, hermitian=false)
+      op = PreallocatedLinearOperator(A, symmetric = true, hermitian = false)
       @test norm(op * v - A * v) <= rtol * norm(A)
       @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
       @test norm(op' * v - A' * v) <= rtol * norm(A)
@@ -140,83 +143,83 @@ function test_linop()
       B1 = simple_matrix(ComplexF64, nrow, ncol)
 
       for q in (+, -)
-        C = q(A1, B1);
-        opC = q(LinearOperator(A1), LinearOperator(B1));
+        C = q(A1, B1)
+        opC = q(LinearOperator(A1), LinearOperator(B1))
         v = simple_vector(ComplexF64, ncol)
-        @test(norm(opC * v - C * v) <= rtol * norm(v));
+        @test(norm(opC * v - C * v) <= rtol * norm(v))
         u = simple_vector(ComplexF64, nrow)
-        @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
-        @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
+        @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u))
+        @test(norm(opC' * u - C' * u) <= rtol * norm(u))
 
-        opC = q(A1, LinearOperator(B1));
-        @test(norm(opC * v - C * v) <= rtol * norm(v));
-        @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
-        @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
+        opC = q(A1, LinearOperator(B1))
+        @test(norm(opC * v - C * v) <= rtol * norm(v))
+        @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u))
+        @test(norm(opC' * u - C' * u) <= rtol * norm(u))
 
-        opC = q(LinearOperator(A1), B1);
-        @test(norm(opC * v - C * v) <= rtol * norm(v));
-        @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
-        @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
+        opC = q(LinearOperator(A1), B1)
+        @test(norm(opC * v - C * v) <= rtol * norm(v))
+        @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u))
+        @test(norm(opC' * u - C' * u) <= rtol * norm(u))
       end
     end
 
-    B2 = simple_matrix(ComplexF64, ncol, ncol+1)
+    B2 = simple_matrix(ComplexF64, ncol, ncol + 1)
     @testset "Operator ± scalar" begin
-      opC = LinearOperator(A1) + 2.12345;
-      @test(norm(A1 .+ 2.12345 - Matrix(opC)) <= rtol * norm(A1 .+ 2.12345));
+      opC = LinearOperator(A1) + 2.12345
+      @test(norm(A1 .+ 2.12345 - Matrix(opC)) <= rtol * norm(A1 .+ 2.12345))
 
-      opC = 2.12345 + LinearOperator(A1);
-      @test(norm(A1 .+ 2.12345 - Matrix(opC)) <= rtol * norm(A1 .+ 2.12345));
+      opC = 2.12345 + LinearOperator(A1)
+      @test(norm(A1 .+ 2.12345 - Matrix(opC)) <= rtol * norm(A1 .+ 2.12345))
 
-      opC = LinearOperator(A1) - 2.12345;
-      @test(norm((A1 .- 2.12345) - Matrix(opC)) <= rtol * norm(A1 .- 2.12345));
+      opC = LinearOperator(A1) - 2.12345
+      @test(norm((A1 .- 2.12345) - Matrix(opC)) <= rtol * norm(A1 .- 2.12345))
 
-      opC = 2.12345 - LinearOperator(A1);
-      @test(norm((2.12345 .- A1) - Matrix(opC)) <= rtol * norm(2.12345 .- A1));
+      opC = 2.12345 - LinearOperator(A1)
+      @test(norm((2.12345 .- A1) - Matrix(opC)) <= rtol * norm(2.12345 .- A1))
 
-      C = A1 * B2;
-      opC = LinearOperator(A1) * LinearOperator(B2);
-      v = simple_vector(ComplexF64, ncol+1)
-      @test(norm(opC * v - C * v) <= rtol * norm(v));
+      C = A1 * B2
+      opC = LinearOperator(A1) * LinearOperator(B2)
+      v = simple_vector(ComplexF64, ncol + 1)
+      @test(norm(opC * v - C * v) <= rtol * norm(v))
       u = simple_vector(ComplexF64, nrow)
-      @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u));
-      @test(norm(opC'  * u - C'  * u) <= rtol * norm(u));
+      @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u))
+      @test(norm(opC' * u - C' * u) <= rtol * norm(u))
 
-      @test_throws LinearOperatorException LinearOperator(A1) + LinearOperator(B2);
-      @test_throws LinearOperatorException LinearOperator(B2) * LinearOperator(A1);
+      @test_throws LinearOperatorException LinearOperator(A1) + LinearOperator(B2)
+      @test_throws LinearOperatorException LinearOperator(B2) * LinearOperator(A1)
     end
 
-    A1B2 = A1 * B2;
+    A1B2 = A1 * B2
     @testset "Matrix × operator" begin
-      opC = A1 * LinearOperator(B2);
-      @test(norm(A1B2 - Matrix(opC)) <= rtol * norm(A1B2));
+      opC = A1 * LinearOperator(B2)
+      @test(norm(A1B2 - Matrix(opC)) <= rtol * norm(A1B2))
     end
 
     @testset "Operator × matrix" begin
-      opC = LinearOperator(A1) * B2;
-      @test(norm(A1B2 - Matrix(opC)) <= rtol * norm(A1B2));
+      opC = LinearOperator(A1) * B2
+      @test(norm(A1B2 - Matrix(opC)) <= rtol * norm(A1B2))
     end
 
-    AA1 = 2.12345 * A1;
+    AA1 = 2.12345 * A1
     @testset "Scalar × operator" begin
-      opC = 2.12345 * LinearOperator(A1);
-      @test(norm(AA1 - Matrix(opC)) <= rtol * norm(AA1));
+      opC = 2.12345 * LinearOperator(A1)
+      @test(norm(AA1 - Matrix(opC)) <= rtol * norm(AA1))
     end
 
     @testset "Operator × scalar" begin
-      opC = LinearOperator(A1) * 2.12345;
-      @test(norm(AA1 - Matrix(opC)) <= rtol * norm(AA1));
+      opC = LinearOperator(A1) * 2.12345
+      @test(norm(AA1 - Matrix(opC)) <= rtol * norm(AA1))
     end
   end
 
   @testset ExtendedTestSet "Basic operators" begin
     @testset "Identity" begin
-      opI = opEye(nrow);
+      opI = opEye(nrow)
       v = simple_vector(ComplexF64, nrow)
-      @test(abs(norm(opI * v - v)) <= ϵ * norm(v));
-      @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v));
-      @test(abs(norm(opI' * v - v)) <= ϵ * norm(v));
-      @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)));
+      @test(abs(norm(opI * v - v)) <= ϵ * norm(v))
+      @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v))
+      @test(abs(norm(opI' * v - v)) <= ϵ * norm(v))
+      @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)))
 
       w = opI * v
       w[1] = -1.0
@@ -224,8 +227,8 @@ function test_linop()
 
       opI = opEye(nrow, ncol)
       v = simple_vector(ComplexF64, ncol)
-      v0 = [v ; zeros(nrow - ncol)]
-      vu = [v ; ones(nrow - ncol)]
+      v0 = [v; zeros(nrow - ncol)]
+      vu = [v; ones(nrow - ncol)]
       @test(abs(norm(opI * v - v0)) <= ϵ * norm(v))
       @test(abs(norm(transpose(opI) * vu - v)) <= ϵ * norm(v))
       @test(abs(norm(opI' * vu - v)) <= ϵ * norm(v))
@@ -264,54 +267,55 @@ function test_linop()
     end
 
     @testset "Ones" begin
-      E = opOnes(nrow, ncol);
+      E = opOnes(nrow, ncol)
       v = simple_vector(ComplexF64, nrow)
       u = simple_vector(ComplexF64, ncol)
-      @test(norm(E * u - sum(u) * ones(nrow)) <= rtol * norm(u));
-      @test(norm(transpose(E) * v - sum(v) * ones(ncol)) <= rtol * norm(v));
-      @test(norm(E' * v - sum(v) * ones(ncol)) <= rtol * norm(v));
+      @test(norm(E * u - sum(u) * ones(nrow)) <= rtol * norm(u))
+      @test(norm(transpose(E) * v - sum(v) * ones(ncol)) <= rtol * norm(v))
+      @test(norm(E' * v - sum(v) * ones(ncol)) <= rtol * norm(v))
     end
 
     @testset "Zeros" begin
-      O = opZeros(nrow, ncol);
+      O = opZeros(nrow, ncol)
       v = simple_vector(ComplexF64, nrow)
       u = simple_vector(ComplexF64, ncol)
-      @test(norm(O * u) <= ϵ);
-      @test(norm(transpose(O) * v) <= ϵ);
-      @test(norm(O' * v) <= ϵ);
+      @test(norm(O * u) <= ϵ)
+      @test(norm(transpose(O) * v) <= ϵ)
+      @test(norm(O' * v) <= ϵ)
     end
 
     @testset "Diagonal" begin
       v = simple_vector(ComplexF64, nrow)
-      D = opDiagonal(v);
+      D = opDiagonal(v)
       u = simple_vector(ComplexF64, nrow)
-      @test(norm(D * u - v .* u) <= ϵ * norm(u));
-      @test(norm(transpose(D) * u - v .* u) <= ϵ * norm(u));
-      @test(norm(D' * u - conj(v) .* u) <= ϵ * norm(u));
+      @test(norm(D * u - v .* u) <= ϵ * norm(u))
+      @test(norm(transpose(D) * u - v .* u) <= ϵ * norm(u))
+      @test(norm(D' * u - conj(v) .* u) <= ϵ * norm(u))
     end
 
     @testset "Rectangular diagonal" begin
-      nmin = min(nrow, ncol); nmax = max(nrow, ncol);
-      A = zeros(ComplexF64, nmax, nmin);
+      nmin = min(nrow, ncol)
+      nmax = max(nrow, ncol)
+      A = zeros(ComplexF64, nmax, nmin)
       v = simple_vector(ComplexF64, nmin)
-      for i = 1 : nmin
-        A[i,i] = v[i];
+      for i = 1:nmin
+        A[i, i] = v[i]
       end
-      D = opDiagonal(nmax, nmin, v);
+      D = opDiagonal(nmax, nmin, v)
       u = simple_vector(ComplexF64, nmin)
-      @test(norm(A * u - D * u) <= ϵ * norm(u));
+      @test(norm(A * u - D * u) <= ϵ * norm(u))
       w = simple_vector(ComplexF64, nmax)
-      @test(norm(transpose(A) * w - transpose(D) * w) <= ϵ * norm(w));
-      @test(norm(A' * w - D' * w) <= ϵ * norm(w));
+      @test(norm(transpose(A) * w - transpose(D) * w) <= ϵ * norm(w))
+      @test(norm(A' * w - D' * w) <= ϵ * norm(w))
 
-      A = zeros(ComplexF64, nmin, nmax);
-      for i = 1 : nmin
-        A[i,i] = v[i];
+      A = zeros(ComplexF64, nmin, nmax)
+      for i = 1:nmin
+        A[i, i] = v[i]
       end
-      D = opDiagonal(nmin, nmax, v);
-      @test(norm(A * w - D * w) <= ϵ * norm(w));
-      @test(norm(transpose(A) * u - transpose(D) * u) <= ϵ * norm(u));
-      @test(norm(A' * u - D' * u) <= ϵ * norm(u));
+      D = opDiagonal(nmin, nmax, v)
+      @test(norm(A * w - D * w) <= ϵ * norm(w))
+      @test(norm(transpose(A) * u - transpose(D) * u) <= ϵ * norm(u))
+      @test(norm(A' * u - D' * u) <= ϵ * norm(u))
     end
 
     @testset "posdef" begin
@@ -320,40 +324,41 @@ function test_linop()
       Λ = collect(eltype(v), 1:nrow)
       op = H * opDiagonal(Λ) * H'
       @test check_positive_definite(op)
-      @test check_positive_definite(op, semi=true)
-      Λ = collect(eltype(v), 0:nrow-1)
+      @test check_positive_definite(op, semi = true)
+      Λ = collect(eltype(v), 0:(nrow - 1))
       op = H * opDiagonal(Λ) * H'
-      @test check_positive_definite(op, semi=true)
+      @test check_positive_definite(op, semi = true)
       A = Matrix(op)
-      @test check_positive_definite(A, semi=true)
+      @test check_positive_definite(A, semi = true)
     end
 
     @testset "Hermitian" begin
       A = simple_matrix(ComplexF64, nrow, nrow)
-      d = real.(diag(A)); A = tril(A, -1);
+      d = real.(diag(A))
+      A = tril(A, -1)
       C = A + A' + diagm(0 => d)
-      H = opHermitian(d, A);
+      H = opHermitian(d, A)
       v = simple_vector(ComplexF64, nrow)
-      @test(norm(H * v - C * v) <= rtol * norm(v));
-      @test(norm(transpose(H) * v - transpose(C) * v) <= rtol * norm(v));
-      @test(norm(H' * v - C * v) <= rtol * norm(v));
+      @test(norm(H * v - C * v) <= rtol * norm(v))
+      @test(norm(transpose(H) * v - transpose(C) * v) <= rtol * norm(v))
+      @test(norm(H' * v - C * v) <= rtol * norm(v))
 
-      @test(! check_hermitian(LinearOperator(A - A')));
-      @test(! check_positive_definite(LinearOperator(-A'*A)));
+      @test(!check_hermitian(LinearOperator(A - A')))
+      @test(!check_positive_definite(LinearOperator(-A' * A)))
 
-      C = simple_matrix(ComplexF64, nrow, nrow, symmetric=true)
-      H = opHermitian(C);
+      C = simple_matrix(ComplexF64, nrow, nrow, symmetric = true)
+      H = opHermitian(C)
       v = simple_vector(ComplexF64, nrow)
-      @test(norm(H * v - C * v) <= rtol * norm(v));
-      @test(norm(transpose(H) * v - transpose(C) * v) <= rtol * norm(v));
-      @test(norm(H' * v - C * v) <= rtol * norm(v));
+      @test(norm(H * v - C * v) <= rtol * norm(v))
+      @test(norm(transpose(H) * v - transpose(C) * v) <= rtol * norm(v))
+      @test(norm(H' * v - C * v) <= rtol * norm(v))
     end
 
     @testset "Transpose and adjoint" begin
       A = simple_matrix(ComplexF64, nrow, nrow)
       v = simple_vector(ComplexF64, nrow)
 
-      op = LinearOperator(nrow, nrow, false, false, v->A*v, v->transpose(A)*v, nothing)
+      op = LinearOperator(nrow, nrow, false, false, v -> A * v, v -> transpose(A) * v, nothing)
       @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
       @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
       @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
@@ -361,7 +366,7 @@ function test_linop()
       @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
 
-      op = LinearOperator(nrow, nrow, false, false, v->A*v, nothing, v->adjoint(A)*v)
+      op = LinearOperator(nrow, nrow, false, false, v -> A * v, nothing, v -> adjoint(A) * v)
       @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
       @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
       @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
@@ -371,16 +376,16 @@ function test_linop()
     end
 
     @testset "Integer" begin
-        A = round.(Int, simple_matrix(Float64, nrow, nrow))
-        op = LinearOperator(A)
-        @test check_ctranspose(op)
-        @test check_hermitian(op + op')
-        @test check_positive_definite(op * op')
+      A = round.(Int, simple_matrix(Float64, nrow, nrow))
+      op = LinearOperator(A)
+      @test check_ctranspose(op)
+      @test check_hermitian(op + op')
+      @test check_positive_definite(op * op')
     end
 
     @testset "Restriction and Extension" begin
       n = 10
-      J = [1;2;4;7]
+      J = [1; 2; 4; 7]
       r = 3:6
       s = 1:2:7
       k = 4
@@ -393,7 +398,8 @@ function test_linop()
         # 1d slices are different; in Julia, v[idx] is a scalar
         w = v[idx]
         typeof(idx) <: Number && (w = [w])
-        vz = zeros(n); vz[idx] = v[idx]
+        vz = zeros(n)
+        vz[idx] = v[idx]
 
         @test P * v == w
         @test P' * w == vz
@@ -410,67 +416,66 @@ function test_linop()
     v = simple_vector(Float64, nrow)
 
     @testset "Inverse" begin
-      Ainv = opInverse(A);
-      @test(norm(A \ v - Ainv * v) <= rtol * norm(v));
-      @test(norm(transpose(A) \ v - transpose(Ainv) * v) <= rtol * norm(v));
-      @test(norm(A' \ v - Ainv' * v) <= rtol * norm(v));
+      Ainv = opInverse(A)
+      @test(norm(A \ v - Ainv * v) <= rtol * norm(v))
+      @test(norm(transpose(A) \ v - transpose(Ainv) * v) <= rtol * norm(v))
+      @test(norm(A' \ v - Ainv' * v) <= rtol * norm(v))
     end
 
     @testset "Cholesky and LDL" begin
-      B = A' * A;
+      B = A' * A
       Binv = opCholesky(B)  #, check=true);
-      @test(norm(B \ v - Binv * v) <= rtol * norm(v));
-      @test(norm(transpose(B) \ v - transpose(Binv) * v) <= rtol * norm(v));
-      @test(norm(B' \ v - Binv' * v) <= rtol * norm(v));
+      @test(norm(B \ v - Binv * v) <= rtol * norm(v))
+      @test(norm(transpose(B) \ v - transpose(Binv) * v) <= rtol * norm(v))
+      @test(norm(B' \ v - Binv' * v) <= rtol * norm(v))
 
-      @test_throws LinearOperatorException opCholesky(simple_matrix(Float64,3,5));
-      @test_throws LinearOperatorException opCholesky(simple_matrix(Float64,5,5), check=true);
+      @test_throws LinearOperatorException opCholesky(simple_matrix(Float64, 3, 5))
+      @test_throws LinearOperatorException opCholesky(simple_matrix(Float64, 5, 5), check = true)
 
       # Test Cholesky operator on SQD matrix.
-      A = simple_matrix(Float64, 3, 3, symmetric=true)
+      A = simple_matrix(Float64, 3, 3, symmetric = true)
       B = simple_matrix(Float64, 2, 3)
-      C = simple_matrix(Float64, 2, 2, symmetric=true)
-      K = Symmetric([A B' ; B -C])
+      C = simple_matrix(Float64, 2, 2, symmetric = true)
+      K = Symmetric([A B'; B -C])
 
       # Dense Cholesky should throw an exception.
-      @test_throws LinearAlgebra.PosDefException opCholesky(K);
+      @test_throws LinearAlgebra.PosDefException opCholesky(K)
 
       # Compute the LDL' factorization.
-      LDL = opLDL(sparse(K));
-      e = ones(size(K,1));
+      LDL = opLDL(sparse(K))
+      e = ones(size(K, 1))
       @test(norm(LDL * (K * e) - e) < rtol * norm(e))
     end
 
     @testset "Householder" begin
       v = simple_vector(ComplexF64, nrow)
-      H = opHouseholder(v);
+      H = opHouseholder(v)
       u = simple_vector(ComplexF64, nrow)
-      @test(norm(H * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u));
-      @test(norm(transpose(H) * u - (u - 2 * dot(conj(v), u) * conj(v))) <= rtol * norm(u));
-      @test(norm(H' * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u));
+      @test(norm(H * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u))
+      @test(norm(transpose(H) * u - (u - 2 * dot(conj(v), u) * conj(v))) <= rtol * norm(u))
+      @test(norm(H' * u - (u - 2 * dot(v, u) * v)) <= rtol * norm(u))
     end
   end
 
   @testset ExtendedTestSet "Inference" begin
-    op = LinearOperator(5, 3, false, false,
-                        p -> ones(5) + im * ones(5));
+    op = LinearOperator(5, 3, false, false, p -> ones(5) + im * ones(5))
     @test eltype(op) == ComplexF64
     v = rand(5)
     @test_throws LinearOperatorException transpose(op) * v  # cannot be inferred
     @test_throws LinearOperatorException op' * v            # cannot be inferred
 
-    op2 = conj(op);
-    @test(norm(Matrix(op2) - conj(Matrix(op))) <= ϵ * norm(Matrix(op)));
+    op2 = conj(op)
+    @test(norm(Matrix(op2) - conj(Matrix(op))) <= ϵ * norm(Matrix(op)))
 
     A = simple_matrix(ComplexF64, 5, 3)
-    op = LinearOperator(A);
-    @test(check_ctranspose(A));
-    @test(check_ctranspose(op));
+    op = LinearOperator(A)
+    @test(check_ctranspose(A))
+    @test(check_ctranspose(op))
     @test_throws LinearOperatorException opCholesky(A)  # Shape mismatch
 
     A = simple_matrix(ComplexF64, 5, 5)
-    @test_throws LinearOperatorException opCholesky(A, check=true)  # Not Hermitian / positive definite
-    @test_throws LinearOperatorException opCholesky(-A'*A, check=true)  # Not positive definite
+    @test_throws LinearOperatorException opCholesky(A, check = true)  # Not Hermitian / positive definite
+    @test_throws LinearOperatorException opCholesky(-A' * A, check = true)  # Not positive definite
 
     # Adjoint of a symmetric non-hermitian
     A = simple_matrix(ComplexF64, 3, 3)
@@ -526,53 +531,53 @@ function test_linop()
 
   # Issue #109
   @testset ExtendedTestSet "Sum with Adjoint and Transpose" begin
-    A = rand(3,3) + im * rand(3,3)
+    A = rand(3, 3) + im * rand(3, 3)
     opA = LinearOperator(A)
     for adjtrans in [adjoint, transpose]
       @test Matrix(adjtrans(opA) + opA) == Matrix(opA + adjtrans(opA)) == A + adjtrans(A)
-      @test Matrix(adjtrans(opA) + A)   == Matrix(A + adjtrans(opA))   == A + adjtrans(A)
+      @test Matrix(adjtrans(opA) + A) == Matrix(A + adjtrans(opA)) == A + adjtrans(A)
     end
   end
 
   # Issue #109
   @testset ExtendedTestSet "Cat with Adjoint and Transpose" begin
-    A = rand(3,3) + im * rand(3,3)
+    A = rand(3, 3) + im * rand(3, 3)
     opA = LinearOperator(A)
     for adjtrans in [adjoint, transpose]
-      @test Matrix([adjtrans(opA)  opA]) == Matrix([adjtrans(A)  A])
+      @test Matrix([adjtrans(opA) opA]) == Matrix([adjtrans(A) A])
       @test Matrix([adjtrans(opA); opA]) == Matrix([adjtrans(A); A])
       @test Matrix([adjtrans(opA); adjtrans(opA)]) == Matrix([adjtrans(A); adjtrans(A)])
-      @test Matrix([opA  adjtrans(opA)]) == Matrix([A  adjtrans(A)])
+      @test Matrix([opA adjtrans(opA)]) == Matrix([A adjtrans(A)])
       @test Matrix([opA; adjtrans(opA)]) == Matrix([A; adjtrans(A)])
-      @test Matrix([adjtrans(opA)  A]) == Matrix([adjtrans(A)  A])
+      @test Matrix([adjtrans(opA) A]) == Matrix([adjtrans(A) A])
       @test Matrix([adjtrans(opA); A]) == Matrix([adjtrans(A); A])
-      @test Matrix([A  adjtrans(opA)]) == Matrix([A  adjtrans(A)])
+      @test Matrix([A adjtrans(opA)]) == Matrix([A adjtrans(A)])
       @test Matrix([A; adjtrans(opA)]) == Matrix([A; adjtrans(A)])
-      @test Matrix([adjtrans(opA)  opA; opA adjtrans(opA)]) == Matrix([adjtrans(A)  A; A adjtrans(A)])
+      @test Matrix([adjtrans(opA) opA; opA adjtrans(opA)]) == Matrix([adjtrans(A) A; A adjtrans(A)])
     end
   end
 
   @testset ExtendedTestSet "Counters" begin
-    op = LinearOperator(rand(3,4) + im * rand(3,4))
+    op = LinearOperator(rand(3, 4) + im * rand(3, 4))
     @test nprod(op) == 0
     @test ntprod(op) == 0
     @test nctprod(op) == 0
     nprods = 5
     ntprods = 4
     nctprods = 7
-    for _ = 1 : nprods
+    for _ = 1:nprods
       op * rand(4)
     end
-    for _ = 1 : ntprods
+    for _ = 1:ntprods
       transpose(op) * rand(3)
     end
-    for _ = 1 : nctprods
+    for _ = 1:nctprods
       op' * rand(3)
     end
     @test nprod(op) == nprods
     @test ntprod(op) == ntprods
     @test nctprod(op) == nctprods
-    for _ = 1 : nprods
+    for _ = 1:nprods
       conj(op) * rand(4)
     end
     @test nprod(op) == 2 * nprods
@@ -594,21 +599,31 @@ function test_linop()
   end
 
   @testset ExtendedTestSet "Timers" begin
-    op = LinearOperator(rand(3,4) + im * rand(3,4))
+    op = LinearOperator(rand(3, 4) + im * rand(3, 4))
     top = TimedLinearOperator(op)
     nprods = 5
     ntprods = 4
     nctprods = 7
-    for _ = 1 : nprods
+    for _ = 1:nprods
       op * rand(4)
     end
-    for _ = 1 : ntprods
+    for _ = 1:ntprods
       transpose(op) * rand(3)
     end
-    for _ = 1 : nctprods
+    for _ = 1:nctprods
       op' * rand(3)
     end
-    for fn ∈ (:size, :shape, :symmetric, :issymmetric, :hermitian, :ishermitian, :nprod, :ntprod, :nctprod)
+    for fn ∈ (
+      :size,
+      :shape,
+      :symmetric,
+      :issymmetric,
+      :hermitian,
+      :ishermitian,
+      :nprod,
+      :ntprod,
+      :nctprod,
+    )
       @eval begin
         @test $fn($top) == $fn($top.op)
       end
@@ -633,12 +648,14 @@ function test_linop()
   end
 
   @testset ExtendedTestSet "BlockDiagonal" begin
-    A = rand(3,4) + im * rand(3,4)
-    B = rand(3,3) + im * rand(3,3)
-    C = rand(4,2) + im * rand(4,2)
-    D = [A          zeros(3,3) zeros(3,2) ;
-         zeros(3,4) B          zeros(3,2) ;
-         zeros(4,4) zeros(4,3) C ]
+    A = rand(3, 4) + im * rand(3, 4)
+    B = rand(3, 3) + im * rand(3, 3)
+    C = rand(4, 2) + im * rand(4, 2)
+    D = [
+      A zeros(3, 3) zeros(3, 2)
+      zeros(3, 4) B zeros(3, 2)
+      zeros(4, 4) zeros(4, 3) C
+    ]
     M = BlockDiagonalOperator(LinearOperator.((A, B, C))...)
     @test size(M, 1) == size(A, 1) + size(B, 1) + size(C, 1)
     @test size(M, 2) == size(A, 2) + size(B, 2) + size(C, 2)

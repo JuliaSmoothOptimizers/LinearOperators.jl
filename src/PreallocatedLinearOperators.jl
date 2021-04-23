@@ -18,19 +18,27 @@ y == zeros(5)     # true. op * v and op * x are lost
 ```
 """
 mutable struct PreallocatedLinearOperator{T} <: AbstractPreallocatedLinearOperator{T}
-  nrow   :: Int
-  ncol   :: Int
-  symmetric :: Bool
-  hermitian :: Bool
+  nrow::Int
+  ncol::Int
+  symmetric::Bool
+  hermitian::Bool
   prod    # apply the operator to a vector
   tprod   # apply the transpose operator to a vector
   ctprod  # apply the transpose conjugate operator to a vector
-  nprod :: Int
-  ntprod :: Int
-  nctprod :: Int
+  nprod::Int
+  ntprod::Int
+  nctprod::Int
 end
 
-PreallocatedLinearOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod) where T =
+PreallocatedLinearOperator{T}(
+  nrow::Int,
+  ncol::Int,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod,
+  tprod,
+  ctprod,
+) where {T} =
   PreallocatedLinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0)
 
 """
@@ -38,8 +46,8 @@ PreallocatedLinearOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::
 
 Display basic information about a linear operator.
 """
-function show(io :: IO, op :: AbstractPreallocatedLinearOperator)
-  s  = "Preallocated linear operator\n"
+function show(io::IO, op::AbstractPreallocatedLinearOperator)
+  s = "Preallocated linear operator\n"
   s *= @sprintf("  nrow: %s\n", op.nrow)
   s *= @sprintf("  ncol: %d\n", op.ncol)
   s *= @sprintf("  eltype: %s\n", eltype(op))
@@ -61,8 +69,14 @@ for `M * v` and `Mtu` as storage space for `transpose(M) * u` and `Maw` to store
 `adjoint(M) * w`. Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
 """
-function PreallocatedLinearOperator(Mv :: AbstractVector{T}, Mtu :: AbstractVector{T}, Maw :: AbstractVector{T},
-                                    M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T
+function PreallocatedLinearOperator(
+  Mv::AbstractVector{T},
+  Mtu::AbstractVector{T},
+  Maw::AbstractVector{T},
+  M::AbstractMatrix{T};
+  symmetric = false,
+  hermitian = false,
+) where {T}
   nrow, ncol = size(M)
   @assert length(Mv) == nrow
   @assert length(Mtu) == ncol
@@ -79,10 +93,17 @@ end
 Construct a linear operator from a symmetric real square matrix `M` with preallocation
 using `Mv` as storage space.
 """
-PreallocatedLinearOperator(Mv :: AbstractVector{T}, M :: Union{SymTridiagonal{T},Symmetric{T}}) where T <: Real =
-  PreallocatedLinearOperator(Mv, Mv, Mv, M, symmetric=true, hermitian=true)
+PreallocatedLinearOperator(
+  Mv::AbstractVector{T},
+  M::Union{SymTridiagonal{T}, Symmetric{T}},
+) where {T <: Real} = PreallocatedLinearOperator(Mv, Mv, Mv, M, symmetric = true, hermitian = true)
 
-function PreallocatedLinearOperator(M :: AbstractMatrix{T}; storagetype=Vector{T}, symmetric=false, hermitian=false) where T
+function PreallocatedLinearOperator(
+  M::AbstractMatrix{T};
+  storagetype = Vector{T},
+  symmetric = false,
+  hermitian = false,
+) where {T}
   nrow, ncol = size(M)
   local Mv, Mtu, Maw
   if T <: Real
@@ -107,7 +128,7 @@ function PreallocatedLinearOperator(M :: AbstractMatrix{T}; storagetype=Vector{T
       Maw = storagetype(undef, ncol)
     end
   end
-  PreallocatedLinearOperator(Mv, Mtu, Maw, M, symmetric=symmetric, hermitian=hermitian)
+  PreallocatedLinearOperator(Mv, Mtu, Maw, M, symmetric = symmetric, hermitian = hermitian)
 end
 
 """
@@ -117,12 +138,16 @@ Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-function PreallocatedLinearOperator(M :: SymTridiagonal{T}; storagetype=Vector{T}, kwargs...) where T
+function PreallocatedLinearOperator(
+  M::SymTridiagonal{T};
+  storagetype = Vector{T},
+  kwargs...,
+) where {T}
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
   hermitian = eltype(M) <: Real
   Maw = hermitian ? Mv : storagetype(undef, ncol)
-  PreallocatedLinearOperator(Mv, Mv, Maw, M, symmetric=true, hermitian=hermitian)
+  PreallocatedLinearOperator(Mv, Mv, Maw, M, symmetric = true, hermitian = hermitian)
 end
 
 """
@@ -132,12 +157,12 @@ Constructs a linear operator from a symmetric matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-function PreallocatedLinearOperator(M :: Symmetric{T}; storagetype=Vector{T}, kwargs...) where T
+function PreallocatedLinearOperator(M::Symmetric{T}; storagetype = Vector{T}, kwargs...) where {T}
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
   hermitian = eltype(M) <: Real
   Maw = hermitian ? Mv : storagetype(undef, ncol)
-  PreallocatedLinearOperator(Mv, Mv, Maw, M, symmetric=true, hermitian=hermitian)
+  PreallocatedLinearOperator(Mv, Mv, Maw, M, symmetric = true, hermitian = hermitian)
 end
 
 """
@@ -146,10 +171,10 @@ end
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
 """
-function PreallocatedLinearOperator(M :: Hermitian{T}; storagetype=Vector{T}, kwargs...) where T
+function PreallocatedLinearOperator(M::Hermitian{T}; storagetype = Vector{T}, kwargs...) where {T}
   nrow, ncol = size(M)
   Mv = storagetype(undef, nrow)
   symmetric = eltype(M) <: Real
   Mtu = symmetric ? Mv : storagetype(undef, ncol)
-  PreallocatedLinearOperator(Mv, Mtu, Mv, M, symmetric=symmetric, hermitian=true)
+  PreallocatedLinearOperator(Mv, Mtu, Mv, M, symmetric = symmetric, hermitian = true)
 end

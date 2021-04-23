@@ -6,7 +6,7 @@ Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
 """
-function LinearOperator(M :: AbstractMatrix{T}; symmetric=false, hermitian=false) where T
+function LinearOperator(M::AbstractMatrix{T}; symmetric = false, hermitian = false) where {T}
   nrow, ncol = size(M)
   prod = @closure v -> M * v
   tprod = @closure u -> transpose(M) * u
@@ -21,8 +21,8 @@ Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-LinearOperator(M :: SymTridiagonal{T}) where T =
-  LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
+LinearOperator(M::SymTridiagonal{T}) where {T} =
+  LinearOperator(M; symmetric = true, hermitian = eltype(M) <: Real)
 
 """
     LinearOperator(M)
@@ -31,8 +31,8 @@ Constructs a linear operator from a symmetric matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
 """
-LinearOperator(M :: Symmetric{T}) where T =
-  LinearOperator(M; symmetric=true, hermitian=eltype(M) <: Real)
+LinearOperator(M::Symmetric{T}) where {T} =
+  LinearOperator(M; symmetric = true, hermitian = eltype(M) <: Real)
 
 """
     LinearOperator(M)
@@ -40,8 +40,8 @@ LinearOperator(M :: Symmetric{T}) where T =
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
 """
-LinearOperator(M :: Hermitian{T}) where T =
-  LinearOperator(M; symmetric=eltype(M) <: Real, hermitian=true)
+LinearOperator(M::Hermitian{T}) where {T} =
+  LinearOperator(M; symmetric = eltype(M) <: Real, hermitian = true)
 
 # the only advantage of this constructor is optional args
 # use LinearOperator{Float64} if you mean real instead of complex
@@ -52,12 +52,15 @@ LinearOperator(M :: Hermitian{T}) where T =
 
 Construct a linear operator from functions.
 """
-function LinearOperator(nrow :: Int, ncol :: Int,
-                        symmetric :: Bool, hermitian :: Bool,
-                        prod,
-                        tprod=nothing,
-                        ctprod=nothing)
-
+function LinearOperator(
+  nrow::Int,
+  ncol::Int,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod,
+  tprod = nothing,
+  ctprod = nothing,
+)
   T = hermitian ? (symmetric ? Float64 : ComplexF64) : ComplexF64
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end
@@ -78,11 +81,15 @@ Matrix(op) # InexactError
 The error is caused because `Matrix(op)` tries to create a Float64 matrix with the
 contents of the complex matrix `A`.
 """
-function LinearOperator(::Type{T}, nrow :: Int, ncol :: Int,
-                        symmetric :: Bool, hermitian :: Bool,
-                        prod,
-                        tprod=nothing,
-                        ctprod=nothing) where T
-
+function LinearOperator(
+  ::Type{T},
+  nrow::Int,
+  ncol::Int,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod,
+  tprod = nothing,
+  ctprod = nothing,
+) where {T}
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod)
 end

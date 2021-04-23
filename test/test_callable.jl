@@ -1,5 +1,4 @@
-struct Flip
-end
+struct Flip end
 
 function (::Flip)(x)
   return -x

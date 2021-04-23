@@ -1,10 +1,11 @@
 function test_kron()
   @testset ExtendedTestSet "Kron" begin
-    for A in Any[simple_matrix(Float64, 2, 3),
-                 simple_sparse_matrix(Float64, 10, 10)]
-      for B in Any[simple_matrix(Float64, 2, 3),
-                   simple_matrix(ComplexF64, 2, 3),
-                   simple_sparse_matrix(Float64, 10, 10)]
+    for A in Any[simple_matrix(Float64, 2, 3), simple_sparse_matrix(Float64, 10, 10)]
+      for B in Any[
+        simple_matrix(Float64, 2, 3),
+        simple_matrix(ComplexF64, 2, 3),
+        simple_sparse_matrix(Float64, 10, 10),
+      ]
         K = kron(A, B)
         normK = norm(K, 1)
         T1 = kron(LinearOperator(A), B)

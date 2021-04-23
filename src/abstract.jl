@@ -1,9 +1,18 @@
-export AbstractLinearOperator, LinearOperator, LinearOperatorException,
-       hermitian, ishermitian, symmetric, issymmetric,
-       nprod, ntprod, nctprod, reset!, shape
+export AbstractLinearOperator,
+  LinearOperator,
+  LinearOperatorException,
+  hermitian,
+  ishermitian,
+  symmetric,
+  issymmetric,
+  nprod,
+  ntprod,
+  nctprod,
+  reset!,
+  shape
 
 mutable struct LinearOperatorException <: Exception
-  msg :: AbstractString
+  msg::AbstractString
 end
 
 # when indexing, Colon() is treated separately
@@ -16,8 +25,8 @@ import LinearAlgebra.issymmetric, LinearAlgebra.ishermitian
 abstract type AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
-eltype(A :: AbstractLinearOperator{T}) where {T} = T
-isreal(A :: AbstractLinearOperator{T}) where {T} = T <: Real
+eltype(A::AbstractLinearOperator{T}) where {T} = T
+isreal(A::AbstractLinearOperator{T}) where {T} = T <: Real
 
 """
 Base type to represent a linear operator.
@@ -27,20 +36,27 @@ other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
 mutable struct LinearOperator{T} <: AbstractLinearOperator{T}
-  nrow   :: Int
-  ncol   :: Int
-  symmetric :: Bool
-  hermitian :: Bool
+  nrow::Int
+  ncol::Int
+  symmetric::Bool
+  hermitian::Bool
   prod    # apply the operator to a vector
   tprod   # apply the transpose operator to a vector
   ctprod  # apply the transpose conjugate operator to a vector
-  nprod :: Int
-  ntprod :: Int
-  nctprod :: Int
+  nprod::Int
+  ntprod::Int
+  nctprod::Int
 end
 
-LinearOperator{T}(nrow::Int, ncol::Int, symmetric::Bool, hermitian::Bool, prod, tprod, ctprod) where T =
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0)
+LinearOperator{T}(
+  nrow::Int,
+  ncol::Int,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod,
+  tprod,
+  ctprod,
+) where {T} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0)
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod
@@ -67,14 +83,14 @@ end
 
 Return the size of a linear operator as a tuple.
 """
-size(op :: AbstractLinearOperator) = (op.nrow, op.ncol)
+size(op::AbstractLinearOperator) = (op.nrow, op.ncol)
 
 """
     m = size(op, d)
 
 Return the size of a linear operator along dimension `d`.
 """
-function size(op :: AbstractLinearOperator, d :: Int)
+function size(op::AbstractLinearOperator, d::Int)
   nrow, ncol = size(op)
   if d == 1
     return nrow
@@ -90,7 +106,7 @@ end
 
 An alias for size.
 """
-shape(op :: AbstractLinearOperator) = size(op)
+shape(op::AbstractLinearOperator) = size(op)
 
 """
     hermitian(op)
@@ -98,8 +114,8 @@ shape(op :: AbstractLinearOperator) = size(op)
 
 Determine whether the operator is Hermitian.
 """
-hermitian(op :: AbstractLinearOperator) = op.hermitian
-ishermitian(op :: AbstractLinearOperator) = op.hermitian
+hermitian(op::AbstractLinearOperator) = op.hermitian
+ishermitian(op::AbstractLinearOperator) = op.hermitian
 
 """
     symmetric(op)
@@ -107,17 +123,16 @@ ishermitian(op :: AbstractLinearOperator) = op.hermitian
 
 Determine whether the operator is symmetric.
 """
-symmetric(op :: AbstractLinearOperator) = op.symmetric
-issymmetric(op :: AbstractLinearOperator) = op.symmetric
-
+symmetric(op::AbstractLinearOperator) = op.symmetric
+issymmetric(op::AbstractLinearOperator) = op.symmetric
 
 """
     show(io, op)
 
 Display basic information about a linear operator.
 """
-function show(io :: IO, op :: AbstractLinearOperator)
-  s  = "Linear operator\n"
+function show(io::IO, op::AbstractLinearOperator)
+  s = "Linear operator\n"
   nrow, ncol = size(op)
   s *= @sprintf("  nrow: %s\n", nrow)
   s *= @sprintf("  ncol: %d\n", ncol)
@@ -136,11 +151,11 @@ end
 
 Materialize an operator as a dense array using `op.ncol` products.
 """
-function Base.Matrix(op :: AbstractLinearOperator{T}) where T
+function Base.Matrix(op::AbstractLinearOperator{T}) where {T}
   (m, n) = size(op)
   A = Array{T}(undef, m, n)
   ei = zeros(T, n)
-  for i = 1 : n
+  for i = 1:n
     ei[i] = one(T)
     A[:, i] = op * ei
     ei[i] = zero(T)
