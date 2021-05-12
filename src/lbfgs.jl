@@ -179,7 +179,7 @@ The second calling sequence is used in inverse LBFGS updating in conjunction wit
 where α is the most recent steplength and g the gradient used when solving `d=-Hg`.
 In forward updating with damping, it is not necessary to supply α and g.
 """
-function push!(op::LBFGSOperator, s::Vector, y::Vector, α::Real = 1.0, g::Vector = zero(y))
+function push!(op::LBFGSOperator, s::Vector, y::Vector, α::Real = 1.0, g::Vector = eltype(y)[])
   ys = dot(y, s)
   σ₂ = op.data.σ₂
   σ₃ = op.data.σ₃
