@@ -1,65 +1,111 @@
 import Base.+, Base.-, Base.*, LinearAlgebra.mul!
 
+function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where T 
+  (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) || throw(LinearOperatorException("shape mismatch"))
+  increase_nprod(op)
+  op.prod!(res, v, α, β)
+end
+
+function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector) where T
+  mul!(res, op, v, one(T), zero(T))
+end
+
 # Apply an operator to a vector.
 function *(op::AbstractLinearOperator{T}, v::AbstractVector{S}) where {T, S}
-  size(v, 1) == size(op, 2) || throw(LinearOperatorException("shape mismatch"))
-  increase_nprod(op)
-  op.prod(v)::typeof(v).name.wrapper{promote_type(T, S), typeof(v).parameters[2]}
+  nrow, ncol = size(op)
+  res = Vector{promote_type(T, S)}(undef, nrow)
+  res .= 0 # in case v has some NaN
+  mul!(res, op, v)
+  return res
 end
 
 # Unary operations.
 +(op::AbstractLinearOperator) = op
 
-function -(op::AbstractLinearOperator{T}) where {T}
-  prod = @closure v -> -op.prod(v)
-  tprod = @closure u -> -op.tprod(u)
-  ctprod = @closure w -> -op.ctprod(w)
-  LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod, tprod, ctprod)
+function -(op::AbstractLinearOperator{T}) where T
+  prod! = @closure (res, v, α, β) -> mul!(res, op, v, -α, β)
+  tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, -α, β)
+  ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, -α, β)
+  LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod!, tprod!, ctprod!, op.Mv, op.Mtu, op.Maw)
 end
 
-function mul!(y::AbstractVector, op::AbstractLinearOperator, x::AbstractVector)
-  y .= op * x
-  return y
+function prod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
+                  vtmp::AbstractVector, v::AbstractVector, α, β)
+  mul!(vtmp, op2, v)
+  mul!(res, op1, vtmp, α, β)
 end
 
-# Binary operations.
+function tprod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
+                   utmp::AbstractVector, u::AbstractVector, α, β)
+  mul!(utmp, transpose(op1), u)
+  mul!(res, transpose(op2), utmp, α, β)
+end
+
+function ctprod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
+                    wtmp::AbstractVector, w::AbstractVector, α, β)
+  mul!(wtmp, adjoint(op1), w)
+  mul!(res, adjoint(op2), wtmp, α, β)
+end
 
 ## Operator times operator.
 function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
+  T = promote_type(eltype(op1), eltype(op2))
   (m1, n1) = size(op1)
   (m2, n2) = size(op2)
   if m2 != n1
     throw(LinearOperatorException("shape mismatch"))
   end
-  S = promote_type(eltype(op1), eltype(op2))
-  prod = @closure v -> op1 * (op2 * v)
-  tprod = @closure u -> transpose(op2) * (transpose(op1) * u)
-  ctprod = @closure w -> op2' * (op1' * w)
-  LinearOperator{S}(m1, n2, false, false, prod, tprod, ctprod)
+  #tmp vector for products
+  if typeof(op2) <: AdjointLinearOperator || typeof(op2) <: TransposeLinearOperator 
+    vtmp = op2.parent.Mtu 
+  elseif typeof(op2) <: ConjugateLinearOperator
+    vtmp = op2.parent.Mv
+  else
+    vtmp = op2.Mv
+  end
+  if typeof(op1) <: AdjointLinearOperator || typeof(op1) <: TransposeLinearOperator 
+    utmp = op1.parent.Mv 
+    wtmp = op1.parent.Mv 
+  elseif typeof(op1) <: ConjugateLinearOperator
+    utmp = op1.parent.Mtu
+    wtmp = op1.parent.Maw 
+  else
+    utmp = op1.Mtu 
+    wtmp = op1.Maw
+  end
+  prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
+  tprod! = @closure (res, u, α, β) -> tprod_op!(res, op1, op2, utmp, u, α, β)
+  ctprod! = @closure (res, w, α, β) -> ctprod_op!(res, op1, op2, wtmp, w, α, β)
+  Mv = Vector{T}(undef, m1)
+  Mtu = Vector{T}(undef, n2)
+  Maw = Vector{T}(undef, n2)
+  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
 end
 
 ## Matrix times operator.
 *(M::AbstractMatrix, op::AbstractLinearOperator) = LinearOperator(M) * op
 *(op::AbstractLinearOperator, M::AbstractMatrix) = op * LinearOperator(M)
 
-## Scalar times operator.
+## Scalar times operator. (# commutation α*v ???)
 function *(op::AbstractLinearOperator, x::Number)
   S = promote_type(eltype(op), typeof(x))
-  prod = @closure v -> (op * v) * x
-  tprod = @closure u -> x * (transpose(op) * u)
-  ctprod = @closure w -> x' * (op' * w)
-  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod, tprod, ctprod)
+  prod! = @closure (res, v, α, β) -> mul!(res, op, v, x * α, β)
+  tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, x * α, β)
+  ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, x' * α, β)
+  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod!, tprod!, ctprod!, op.Mv, op.Mtu, op.Maw)
 end
 
 function *(x::Number, op::AbstractLinearOperator)
-  S = promote_type(eltype(op), typeof(x))
-  prod = @closure v -> x * (op * v)
-  tprod = @closure u -> (transpose(op) * u) * x
-  ctprod = @closure w -> (op' * w) * x'
-  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod, tprod, ctprod)
+  return op * x
 end
 
 # Operator + operator.
+
+function sum_prod!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator{T}, v::AbstractVector, α, β) where T
+  mul!(res, op1, v, α, β)
+  mul!(res, op2, v, α, one(T))
+end
+
 function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   (m1, n1) = size(op1)
   (m2, n2) = size(op2)
@@ -67,17 +113,25 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
     throw(LinearOperatorException("shape mismatch"))
   end
   S = promote_type(eltype(op1), eltype(op2))
-  prod = @closure v -> (op1 * v) + (op2 * v)
-  tprod = @closure u -> (transpose(op1) * u) + (transpose(op2) * u)
-  ctprod = @closure w -> (op1' * w) + (op2' * w)
+  prod! = @closure (res, v, α, β) -> sum_prod!(res, op1, op2, v, α, β)
+  tprod! = @closure (res, u, α, β) -> sum_prod!(res, transpose(op1), transpose(op2), u, α, β)
+  ctprod! = @closure (res, w, α, β) -> sum_prod!(res, adjoint(op1), adjoint(op2), w, α, β)
+  symm = (symmetric(op1) && symmetric(op2))
+  herm = (hermitian(op1) && hermitian(op2))
+  Mv = Vector{S}(undef, m1)
+  Mtu = symm ? Mv : Vector{S}(undef, n1)
+  Maw = herm ? Mv : Vector{S}(undef, n1)
   return LinearOperator{S}(
     m1,
     n1,
-    symmetric(op1) && symmetric(op2),
-    hermitian(op1) && hermitian(op2),
-    prod,
-    tprod,
-    ctprod,
+    symm,
+    herm,
+    prod!,
+    tprod!,
+    ctprod!,
+    Mv,
+    Mtu,
+    Maw
   )
 end
 
@@ -85,7 +139,7 @@ end
 +(M::AbstractMatrix, op::AbstractLinearOperator) = LinearOperator(M) + op
 +(op::AbstractLinearOperator, M::AbstractMatrix) = op + LinearOperator(M)
 
-# Operator .+ scalar.
+# # Operator .+ scalar.
 +(op::AbstractLinearOperator, x::Number) = op + x * opOnes(op.nrow, op.ncol)
 +(x::Number, op::AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
 
@@ -96,6 +150,6 @@ end
 -(M::AbstractMatrix, op::AbstractLinearOperator) = LinearOperator(M) - op
 -(op::AbstractLinearOperator, M::AbstractMatrix) = op - LinearOperator(M)
 
-# Operator - scalar.
+# # Operator - scalar.
 -(op::AbstractLinearOperator, x::Number) = op + (-x)
 -(x::Number, op::AbstractLinearOperator) = x + (-op)

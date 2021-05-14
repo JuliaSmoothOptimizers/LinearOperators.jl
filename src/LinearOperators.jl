@@ -17,7 +17,6 @@ include("qn.jl")
 
 # Special operators
 include("linalg.jl")
-include("PreallocatedLinearOperators.jl")
 include("special-operators.jl")
 include("TimedOperators.jl")
 

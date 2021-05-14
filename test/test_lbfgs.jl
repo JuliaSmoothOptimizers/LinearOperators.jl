@@ -104,7 +104,7 @@ function test_lbfgs()
       y = simple_vector(Float64, n)
       ys = dot(y, s)
       g = simple_vector(Float64, n)
-      d = -H * g
+      d = -(H * g) # added brackets here
       α = i / mem
       s = α * d
       if ys > 0.2 * dot(s, B * s)
@@ -176,11 +176,12 @@ function test_lbfgs()
       push!(H, s, y)
     end
     x = rand(n)
-    B * x  # warmup
-    nallocs = @allocated B * x
+    res = similar(x)
+    mul!(res, B, x)  # warmup
+    nallocs = @allocated mul!(res, B, x)
     @test nallocs == 0
-    H * x  # warmup
-    nallocs = @allocated H * x
+    mul!(res, H, x)  # warmup
+    nallocs = @allocated mul!(res, H, x)
     @test nallocs == 0
     nallocs = @allocated diag!(B, x)
     @test nallocs == 0

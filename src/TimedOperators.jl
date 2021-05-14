@@ -2,25 +2,28 @@ using TimerOutputs
 
 export TimedLinearOperator
 
-mutable struct TimedLinearOperator{T} <: AbstractLinearOperator{T}
+mutable struct TimedLinearOperator{T, F, Ft, Fct} <: AbstractLinearOperator{T}
   timer::TimerOutput
   op::AbstractLinearOperator{T}
-  prod
-  tprod
-  ctprod
+  prod!::F
+  tprod!::Ft
+  ctprod!::Fct
 end
+
+TimedLinearOperator{T}(timer::TimerOutput, op::AbstractLinearOperator{T}, 
+                       prod!::F, tprod!::Ft, ctprod!::Fct
+                       ) where {T,F,Ft,Fct} = TimedLinearOperator{T,F,Ft,Fct}(timer, op, prod!, tprod!, ctprod!)
 
 """
     TimedLinearOperator(op)
-
 Creates a linear operator instrumented with timers from TimerOutputs.
 """
 function TimedLinearOperator(op::AbstractLinearOperator{T}) where {T}
   timer = TimerOutput()
-  prod(x) = @timeit timer "prod" op.prod(x)
-  tprod(x) = @timeit timer "tprod" op.tprod(x)
-  ctprod(x) = @timeit timer "ctprod" op.ctprod(x)
-  TimedLinearOperator{T}(timer, op, prod, tprod, ctprod)
+  prod!(res, x, α, β) = @timeit timer "prod" op.prod!(res, x, α, β)
+  tprod!(res, x, α, β) = @timeit timer "tprod" op.tprod!(res, x, α, β)
+  ctprod!(res, x, α, β) = @timeit timer "ctprod" op.ctprod!(res, x, α, β)
+  TimedLinearOperator{T}(timer, op, prod!, tprod!, ctprod!)
 end
 
 TimedLinearOperator(op::AdjointLinearOperator) = adjoint(TimedLinearOperator(op.parent))

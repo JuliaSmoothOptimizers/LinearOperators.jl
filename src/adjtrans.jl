@@ -86,20 +86,24 @@ function show(io::IO, op::ConjugateLinearOperator)
   show(io, op.parent)
 end
 
-function *(op::AdjointLinearOperator{T, S}, v::AbstractVector{U}) where {T, S, U}
+function mul!(res::AbstractVector, op::AdjointLinearOperator{T, S}, v::AbstractVector, α, β) where {T, S}
   p = op.parent
-  length(v) == size(p, 1) || throw(LinearOperatorException("shape mismatch"))
-  ishermitian(p) && return p * v
-  if p.ctprod !== nothing
-    increase_nctprod(p)
-    return p.ctprod(v)::typeof(v).name.wrapper{promote_type(T, U), typeof(v).parameters[2]}
+  (length(v) == size(p, 1) && length(res) == size(p, 2)) || throw(LinearOperatorException("shape mismatch"))
+  if ishermitian(p)
+    mul!(res, p, v, α, β) 
+    return nothing
   end
-  tprod = p.tprod
+  if p.ctprod! !== nothing
+    increase_nctprod(p)
+    p.ctprod!(res, v, α, β)
+    return nothing
+  end
+  tprod! = p.tprod!
   increment_tprod = true
-  if p.tprod === nothing
+  if p.tprod! === nothing
     if issymmetric(p)
       increment_tprod = false
-      tprod = p.prod
+      tprod! = p.prod!
     else
       throw(LinearOperatorException("unable to infer conjugate transpose operator"))
     end
@@ -109,23 +113,29 @@ function *(op::AdjointLinearOperator{T, S}, v::AbstractVector{U}) where {T, S, U
   else
     increase_nprod(p)
   end
-  return conj.(tprod(conj.(v)))::typeof(v).name.wrapper{promote_type(T, U), typeof(v).parameters[2]}
+  tprod!(res, v, α, β)
+  res .= conj.(res)
+  return nothing
 end
 
-function *(op::TransposeLinearOperator{T, S}, v::AbstractVector{U}) where {T, S, U}
+function mul!(res::AbstractVector, op::TransposeLinearOperator{T, S}, v::AbstractVector, α, β) where {T, S}
   p = op.parent
-  length(v) == size(p, 1) || throw(LinearOperatorException("shape mismatch"))
-  issymmetric(p) && return p * v
-  if p.tprod !== nothing
+  (length(v) == size(p, 1) && length(res) == size(p, 2)) || throw(LinearOperatorException("shape mismatch"))
+  if issymmetric(p) 
+    mul!(res, p, v, α, β) 
+    return nothing
+  end
+  if p.tprod! !== nothing
     increase_ntprod(p)
-    return p.tprod(v)::typeof(v).name.wrapper{promote_type(T, U), typeof(v).parameters[2]}
+    p.tprod!(res, v, α, β)
+    return nothing
   end
   increment_ctprod = true
-  ctprod = p.ctprod
-  if p.ctprod === nothing
+  ctprod! = p.ctprod!
+  if p.ctprod! === nothing
     if ishermitian(p)
       increment_ctprod = false
-      ctprod = p.prod
+      ctprod! = p.prod!
     else
       throw(LinearOperatorException("unable to infer transpose operator"))
     end
@@ -135,14 +145,16 @@ function *(op::TransposeLinearOperator{T, S}, v::AbstractVector{U}) where {T, S,
   else
     increase_nprod(p)
   end
-  return conj.(
-    ctprod(conj.(v)),
-  )::typeof(v).name.wrapper{promote_type(T, U), typeof(v).parameters[2]}
+  ctprod!(res, conj.(v), α, β)
+  res .= conj.(res)
+  return nothing
 end
 
-function *(op::ConjugateLinearOperator{T, S}, v::AbstractVector{U}) where {T, S, U}
+function mul!(res::AbstractVector, op::ConjugateLinearOperator{T, S}, v::AbstractVector, α, β) where {T, S}
   p = op.parent
-  return conj.(p * conj.(v))::typeof(v).name.wrapper{promote_type(T, U), typeof(v).parameters[2]}
+  mul!(res, p, conj.(v), α, β)
+  res .= conj.(res)
+  return nothing
 end
 
 -(op::AdjointLinearOperator) = adjoint(-op.parent)

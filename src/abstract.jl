@@ -16,7 +16,7 @@ mutable struct LinearOperatorException <: Exception
 end
 
 # when indexing, Colon() is treated separately
-const LinearOperatorIndexType = Union{UnitRange{Int}, StepRange{Int, Int}, AbstractVector{Int}}
+const LinearOperatorIndexType{I} = Union{UnitRange{I}, StepRange{I, I}, AbstractVector{I}} where {I<:Integer}
 
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
@@ -35,28 +35,44 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-mutable struct LinearOperator{T} <: AbstractLinearOperator{T}
-  nrow::Int
-  ncol::Int
+mutable struct LinearOperator{T, S, I<:Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
+  nrow::I
+  ncol::I
   symmetric::Bool
   hermitian::Bool
-  prod    # apply the operator to a vector
-  tprod   # apply the transpose operator to a vector
-  ctprod  # apply the transpose conjugate operator to a vector
-  nprod::Int
-  ntprod::Int
-  nctprod::Int
+  prod!::F
+  tprod!::Ft
+  ctprod!::Fct
+  Mv::S # storage vector for prod!
+  Mtu::S # storage vector for tprod!
+  Maw::S # storage vector for ctprod!
+  nprod::I
+  ntprod::I
+  nctprod::I
 end
 
+
+LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool, 
+                  prod!::F, tprod!::Ft, ctprod!::Fct, 
+                  Mv::S, Mtu::S, Maw::S,
+                  nprod::I, ntprod::I, nctprod::I
+                  ) where {T,S,I<:Integer,F,Ft,Fct} = LinearOperator{T,S,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, 
+                                                                                     prod!, tprod!, ctprod!,
+                                                                                     Mv, Mtu, Maw, 
+                                                                                     nprod, ntprod, nctprod)
+
 LinearOperator{T}(
-  nrow::Int,
-  ncol::Int,
+  nrow::I,
+  ncol::I,
   symmetric::Bool,
   hermitian::Bool,
-  prod,
-  tprod,
-  ctprod,
-) where {T} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, 0, 0, 0)
+  prod!,
+  tprod!,
+  ctprod!,
+  Mv::S,
+  Mtu::S,
+  Maw::S
+) where {T,S,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, Mv, Mtu, Maw, 0, 0, 0)
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod
@@ -90,7 +106,7 @@ size(op::AbstractLinearOperator) = (op.nrow, op.ncol)
 
 Return the size of a linear operator along dimension `d`.
 """
-function size(op::AbstractLinearOperator, d::Int)
+function size(op::AbstractLinearOperator, d::Integer)
   nrow, ncol = size(op)
   if d == 1
     return nrow

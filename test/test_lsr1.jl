@@ -88,8 +88,9 @@ function test_lsr1()
       push!(B, s, y)
     end
     x = rand(n)
-    B * x  # warmup
-    nallocs = @allocated B * x
+    res = similar(x)
+    mul!(res, B, x)  # warmup
+    nallocs = @allocated mul!(res, B, x) 
     @test nallocs == 0
     nallocs = @allocated diag!(B, x)
     @test nallocs == 0

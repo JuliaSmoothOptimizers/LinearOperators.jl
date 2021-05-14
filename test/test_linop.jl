@@ -10,7 +10,7 @@ function test_linop()
       LinearOperator(A1')',
       transpose(LinearOperator(transpose(A1))),
       conj(LinearOperator(conj(A1))),
-      PreallocatedLinearOperator(A1),
+      # PreallocatedLinearOperator(A1),
     )
       show(op)
 
@@ -62,82 +62,82 @@ function test_linop()
       end
     end
 
-    @testset "Preallocated LinearOperator(Matrix)" begin
-      A2 = simple_matrix(Float64, nrow, ncol)
-      for A in (A1, A2)
-        T = eltype(A)
-        Mv = zeros(T, nrow)
-        Mtu = zeros(T, ncol)
-        Maw = zeros(T, ncol)
-        op = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
-        v = simple_vector(T, ncol)
-        u = simple_vector(T, nrow)
-        @test norm(op * v - A * v) <= rtol * norm(A)
-        @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
-        @test norm(op' * u - A' * u) <= rtol * norm(A)
+    # @testset "Preallocated LinearOperator(Matrix)" begin
+    #   A2 = simple_matrix(Float64, nrow, ncol)
+    #   for A in (A1, A2)
+    #     T = eltype(A)
+    #     Mv = zeros(T, nrow)
+    #     Mtu = zeros(T, ncol)
+    #     Maw = zeros(T, ncol)
+    #     op = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
+    #     v = simple_vector(T, ncol)
+    #     u = simple_vector(T, nrow)
+    #     @test norm(op * v - A * v) <= rtol * norm(A)
+    #     @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
+    #     @test norm(op' * u - A' * u) <= rtol * norm(A)
 
-        al = @allocated op * v
-        @test al == 0
+    #     al = @allocated op * v
+    #     @test al == 0
 
-        op = PreallocatedLinearOperator(A)
-        v = simple_vector(T, ncol)
-        u = simple_vector(T, nrow)
-        @test norm(op * v - A * v) <= rtol * norm(A)
-        @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
-        @test norm(op' * u - A' * u) <= rtol * norm(A)
-      end
+    #     op = PreallocatedLinearOperator(A)
+    #     v = simple_vector(T, ncol)
+    #     u = simple_vector(T, nrow)
+    #     @test norm(op * v - A * v) <= rtol * norm(A)
+    #     @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
+    #     @test norm(op' * u - A' * u) <= rtol * norm(A)
+    #   end
 
-      for B in (simple_matrix(Float64, nrow, nrow), simple_sparse_matrix(Float64, nrow, nrow))
-        for A in (SymTridiagonal(Symmetric(B)), Symmetric(B))
-          v = simple_vector(Float64, nrow)
+    #   for B in (simple_matrix(Float64, nrow, nrow), simple_sparse_matrix(Float64, nrow, nrow))
+    #     for A in (SymTridiagonal(Symmetric(B)), Symmetric(B))
+    #       v = simple_vector(Float64, nrow)
 
-          Mv = zeros(nrow)
-          op = PreallocatedLinearOperator(Mv, A)
-          @test norm(op * v - A * v) <= rtol * norm(A)
-          @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-          @test norm(op' * v - A' * v) <= rtol * norm(A)
+    #       Mv = zeros(nrow)
+    #       op = PreallocatedLinearOperator(Mv, A)
+    #       @test norm(op * v - A * v) <= rtol * norm(A)
+    #       @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+    #       @test norm(op' * v - A' * v) <= rtol * norm(A)
 
-          op = PreallocatedLinearOperator(A)
-          @test norm(op * v - A * v) <= rtol * norm(A)
-          @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-          @test norm(op' * v - A' * v) <= rtol * norm(A)
-        end
-      end
+    #       op = PreallocatedLinearOperator(A)
+    #       @test norm(op * v - A * v) <= rtol * norm(A)
+    #       @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+    #       @test norm(op' * v - A' * v) <= rtol * norm(A)
+    #     end
+    #   end
 
-      v = simple_vector(Float64, nrow)
+    #   v = simple_vector(Float64, nrow)
 
-      A = simple_matrix(ComplexF64, nrow, nrow)
-      # Symmetric and Hermitian - actually a Real matrix, but with Complex type.
-      # This tests a specific condition located in PreallocatedLinearOperators.jl
-      # when eltype(A) is not Real but A is symmetric and hermitian.
-      A = A + A'
-      A = A + transpose(A)
-      op = PreallocatedLinearOperator(A, symmetric = true, hermitian = true)
-      @test norm(op * v - A * v) <= rtol * norm(A)
-      @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-      @test norm(op' * v - A' * v) <= rtol * norm(A)
+    #   A = simple_matrix(ComplexF64, nrow, nrow)
+    #   # Symmetric and Hermitian - actually a Real matrix, but with Complex type.
+    #   # This tests a specific condition located in PreallocatedLinearOperators.jl
+    #   # when eltype(A) is not Real but A is symmetric and hermitian.
+    #   A = A + A'
+    #   A = A + transpose(A)
+    #   op = PreallocatedLinearOperator(A, symmetric = true, hermitian = true)
+    #   @test norm(op * v - A * v) <= rtol * norm(A)
+    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
 
-      A = simple_matrix(ComplexF64, nrow, nrow)
-      A = A + A' # Hermitian
-      op = PreallocatedLinearOperator(A, symmetric = false, hermitian = true)
-      @test norm(op * v - A * v) <= rtol * norm(A)
-      @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-      @test norm(op' * v - A' * v) <= rtol * norm(A)
+    #   A = simple_matrix(ComplexF64, nrow, nrow)
+    #   A = A + A' # Hermitian
+    #   op = PreallocatedLinearOperator(A, symmetric = false, hermitian = true)
+    #   @test norm(op * v - A * v) <= rtol * norm(A)
+    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
 
-      A = simple_matrix(ComplexF64, nrow, nrow)
-      A = A + transpose(A) # Symmetric
-      op = PreallocatedLinearOperator(A, symmetric = true, hermitian = false)
-      @test norm(op * v - A * v) <= rtol * norm(A)
-      @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-      @test norm(op' * v - A' * v) <= rtol * norm(A)
+    #   A = simple_matrix(ComplexF64, nrow, nrow)
+    #   A = A + transpose(A) # Symmetric
+    #   op = PreallocatedLinearOperator(A, symmetric = true, hermitian = false)
+    #   @test norm(op * v - A * v) <= rtol * norm(A)
+    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
 
-      A = simple_matrix(ComplexF64, nrow, nrow)
-      A = Hermitian(A)
-      op = PreallocatedLinearOperator(A)
-      @test norm(op * v - A * v) <= rtol * norm(A)
-      @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-      @test norm(op' * v - A' * v) <= rtol * norm(A)
-    end
+    #   A = simple_matrix(ComplexF64, nrow, nrow)
+    #   A = Hermitian(A)
+    #   op = PreallocatedLinearOperator(A)
+    #   @test norm(op * v - A * v) <= rtol * norm(A)
+    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
+    # end
 
     @testset "Basic arithmetic operations" begin
       B1 = simple_matrix(ComplexF64, nrow, ncol)
@@ -358,7 +358,10 @@ function test_linop()
       A = simple_matrix(ComplexF64, nrow, nrow)
       v = simple_vector(ComplexF64, nrow)
 
-      op = LinearOperator(nrow, nrow, false, false, v -> A * v, v -> transpose(A) * v, nothing)
+      op = LinearOperator(nrow, nrow, false, false, 
+        (res, v, α, β) -> mul!(res, A, v, α, β), 
+        (res, v, α, β) -> mul!(res, transpose(A), v, α, β), 
+        nothing)
       @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
       @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
       @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
@@ -366,7 +369,10 @@ function test_linop()
       @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
 
-      op = LinearOperator(nrow, nrow, false, false, v -> A * v, nothing, v -> adjoint(A) * v)
+      op = LinearOperator(nrow, nrow, false, false, 
+        (res, v, α, β) -> mul!(res, A, v, α, β), 
+        nothing, 
+        (res, v, α, β) -> mul!(res, adjoint(A), v, α, β))
       @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
       @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
       @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
@@ -458,7 +464,10 @@ function test_linop()
   end
 
   @testset ExtendedTestSet "Inference" begin
-    op = LinearOperator(5, 3, false, false, p -> ones(5) + im * ones(5))
+    function test_func(res)
+      res .= 1.0 .+ im * 1.0
+    end
+    op = LinearOperator(5, 3, false, false, (res, p, α, β) -> test_func(res))
     @test eltype(op) == ComplexF64
     v = rand(5)
     @test_throws LinearOperatorException transpose(op) * v  # cannot be inferred
@@ -480,14 +489,20 @@ function test_linop()
     # Adjoint of a symmetric non-hermitian
     A = simple_matrix(ComplexF64, 3, 3)
     A = A + transpose(A)
-    op = LinearOperator(3, 3, true, false, v -> A * v)
+    op = LinearOperator(3, 3, true, false, (res, v, α, β) -> mul!(res, A, v))
     v = rand(3)
     @test op' * v ≈ A' * v
   end
 
   @testset ExtendedTestSet "Type specific operator" begin
-    prod = v -> [v[1] + v[2]; v[2]]
-    ctprod = v -> [v[1]; v[1] + v[2]]
+    function prod(res, v, α, β) 
+      res[1] = v[1] + v[2] 
+      res[2] = v[2]
+    end
+    function ctprod(res, v, α, β) 
+      res[1] = v[1] 
+      res[2] = v[1] + v[2]
+    end
     op = LinearOperator(2, 2, false, false, prod, nothing, ctprod)
     @test eltype(op) == Complex{Float64}
     for T in (Complex{Float64}, Complex{Float32}, BigFloat, Float64, Float32, Float16, Int32)
@@ -499,15 +514,21 @@ function test_linop()
     end
 
     A = [im 1.0; 0.0 1.0]
-    prod = v -> A * v
-    tprod = u -> transpose(A) * u
-    ctprod = w -> A' * w
-    opC = LinearOperator(2, 2, false, false, prod, tprod, ctprod)
+    function prod!(res, v, α, β) 
+      mul!(res, A, v)
+    end
+    function tprod!(res, u, α, β)
+      mul!(res, transpose(A), u)
+    end
+    function ctprod!(res, w, α, β)
+      mul!(res, A', w)
+    end
+    opC = LinearOperator(2, 2, false, false, prod!, tprod!, ctprod!)
     v = simple_vector(ComplexF64, 2)
     @test A == Matrix(opC)
-    opF = LinearOperator(Float64, 2, 2, false, false, prod, tprod, ctprod) # The type is a lie
+    opF = LinearOperator(Float64, 2, 2, false, false, prod!, tprod!, ctprod!) # The type is a lie
     @test eltype(opF) == Float64
-    @test_throws TypeError Matrix(opF)
+    @test_throws InexactError Matrix(opF) # changed here TypeError to InexactError
   end
 
   # Issue #80
