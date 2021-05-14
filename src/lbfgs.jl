@@ -94,13 +94,12 @@ function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = true, kwargs...)
 
-  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, αm, βm)
+  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, αm, βm::T) where T
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
 
     q = data.Ax # tmp vector
     q .= x
-    # q .= αm .* x
 
     for i = 1:(data.mem)
       k = mod(data.insert - i - 1, data.mem) + 1
@@ -150,7 +149,7 @@ function LBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = false, kwargs...)
 
-  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, α, β)
+  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, α, β::T) where T
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
 

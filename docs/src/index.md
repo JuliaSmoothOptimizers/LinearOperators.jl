@@ -20,7 +20,6 @@ Pkg.add("LinearOperators")
 Operator                     | Description
 -----------------------------|------------
 `LinearOperator`             | Base class. Useful to define operators from functions
-`PreallocatedLinearOperator` | Define operators with preallocation for efficient use of memory
 `TimedLinearOperator`        | Linear operator instrumented with timers from [`TimerOutputs`](https://github.com/KristofferC/TimerOutputs.jl)
 `BlockDiagonalOperator`      | Block-diagonal linear operator
 `opEye`                      | Identity operator
