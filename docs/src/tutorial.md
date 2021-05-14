@@ -35,18 +35,52 @@ norm(A \ v - op * v) / norm(v)
 ```
 In this example, the Cholesky factor is computed only once and can be used many times transparently.
 
+## mul!
+
+It is often useful to reuse the memory used by the operator. 
+For that use, we can use `mul!` as if we were using matrices.
+We may wait to reuse the vectors preallocated by the operator in order to save memory
+
+```@example ex2
+using LinearOperators, LinearAlgebra # hide
+m, n = 50, 30
+A = rand(m, n) + im * rand(m, n)
+op = LinearOperator(A)
+v = rand(n)
+al = @allocated mul!(op.Mv, op, v) # op * v, store result in op.Mv
+println("Allocation of LinearOperator mul! product = $al")
+v = rand(n)
+α, β = 2.0, 3.0
+al = @allocated mul!(op.Mv, op, v, α, β) # α * op * v + β * op.Mv, store result in op.Mv 
+println("Allocation of LinearOperator mul! product = $al")
+```
+
+You can also provide the preallocated vectors.
+```@example ex2
+Mv  = Array{ComplexF64}(undef, m)
+Mtu = Array{ComplexF64}(undef, n)
+Maw = Array{ComplexF64}(undef, n)
+op  = LinearOperator(Mv, Mtu, Maw, A)
+```
+
 ## Using functions
 
-Operators may be defined from functions. In the example below, the transposed
-isn't defined, but it may be inferred from the conjugate transposed. Missing
-operations are represented as `nothing`.
+Operators may be defined from functions. They have to be based on the 5-arguments `mul!` function.
+In the example below, the transposed isn't defined, but it may be inferred from the conjugate transposed. 
+Missing operations are represented as `nothing`.
 
 ```@example ex1
 using FFTW
+function mulfft!(res, v, α, β)
+  res .= α .* fft(v) .+ β .* res
+end
+function mulifft!(res, w, α, β)
+  res .= α .* ifft(w) .+ β .* res
+end
 dft = LinearOperator(10, 10, false, false,
-                     v -> fft(v),
+                     (res, v, α, β) -> mulfft!(res, v, α, β),
                      nothing,       # will be inferred
-                     w -> ifft(w))
+                     (res, w, α, β) -> mulifft!(res, w, α, β))
 x = rand(10)
 y = dft * x
 norm(dft' * y - x)  # DFT is an orthogonal operator
@@ -59,22 +93,27 @@ By default a linear operator defined by functions and that is neither symmetric
 nor hermitian will have element type `Complex128`.
 This behavior may be overridden by specifying the type explicitly, e.g.,
 ```@example ex1
+function customfunc(res, v, α, β)
+  res .= [v[1] + v[2]; v[2]] .+ β .* res
+end
+function tcustomfunc(res, w, α, β)
+  res .= [w[1]; w[1] + w[2]] .+ β .* res
+end
 op = LinearOperator(Float64, 10, 10, false, false,
-                    v -> [v[1] + v[2]; v[2]],
+                    (res, v, α, β) -> customfunc(res, v, α, β),
                     nothing,
-                    w -> [w[1]; w[1] + w[2]])
+                    (res, w, α, β) -> tcustomfunc(res, w, α, β))
 ```
 Make sure that the type passed to `LinearOperator` is correct, otherwise errors may occur.
 ```@example ex1
 using LinearOperators, FFTW # hide
 dft = LinearOperator(Float64, 10, 10, false, false,
-                     v -> fft(v),
+                     (res, v, α, β) -> mulfft!(res, v, α, β),
                      nothing,
-                     w -> ifft(w))
+                     (res, w, α, β) -> mulifft!(res, w, α, β))
 v = rand(10)
 println("eltype(dft)         = $(eltype(dft))")
 println("eltype(v)           = $(eltype(v))")
-println("eltype(dft.prod(v)) = $(eltype(dft.prod(v)))")
 # dft * v     # ERROR: expected Vector{Float64}
 # Matrix(dft) # ERROR: tried to create a Matrix of Float64
 ``` 
@@ -145,48 +184,4 @@ opA[:,1] * ones(1)
 ```
 ```@example ex1
 opA[1,1] * ones(1)
-```
-
-## Preallocated Operators
-
-Operators created from matrices are very practical, however, it is often useful to reuse
-the memory used by the operator. For that use, we can use
-`PreallocatedLinearOperator(A)` to create an operator that reuses the memory.
-
-```@example ex2
-using LinearOperators # hide
-m, n = 50, 30
-A = rand(m, n) + im * rand(m, n)
-op1 = PreallocatedLinearOperator(A)
-op2 = LinearOperator(A)
-v = rand(n)
-al = @allocated op1 * v
-println("Allocation of PreallocatedLinearOperator product = $al")
-v = rand(n)
-al = @allocated op2 * v
-println("Allocation of LinearOperator product = $al")
-```
-Notice the memory overwrite:
-```@example ex2
-Av = op1 * v
-w = rand(n)
-Aw = op1 * w
-Aw === Av
-```
-which doesn't happen on `LinearOperator`.
-```@example ex2
-Av = op2 * v
-w = rand(n)
-Aw = op2 * w
-Aw === Av
-```
-
-You can also provide the memory to be used.
-```@example ex2
-Mv  = Array{ComplexF64}(undef, m)
-Mtu = Array{ComplexF64}(undef, n)
-Maw = Array{ComplexF64}(undef, n)
-op  = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
-v, u, w = rand(n), rand(m), rand(m)
-(Mv === op * v, Mtu === transpose(op) * u, Maw === adjoint(op) * w)
 ```
