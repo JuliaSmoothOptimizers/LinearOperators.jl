@@ -89,6 +89,31 @@ function test_linop()
       @test(norm(A4 * v4 - op4 * v4) <= rtol * norm(v4))
     end
 
+    @testset "Constructor with specified structure" begin
+      v = simple_vector(Float64, nrow)
+      A = simple_matrix(ComplexF64, nrow, nrow)
+      A = A + A'
+      A = A + transpose(A)
+      op = LinearOperator(A, symmetric = true, hermitian = true)
+      @test norm(op * v - A * v) <= rtol * norm(A)
+      @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+      @test norm(op' * v - A' * v) <= rtol * norm(A)
+
+      A = simple_matrix(ComplexF64, nrow, nrow)
+      A = A + A' # Hermitian
+      op = LinearOperator(A, symmetric = false, hermitian = true)
+      @test norm(op * v - A * v) <= rtol * norm(A)
+      @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+      @test norm(op' * v - A' * v) <= rtol * norm(A)
+
+      A = simple_matrix(ComplexF64, nrow, nrow)
+      A = A + transpose(A) # Symmetric
+      op = LinearOperator(A, symmetric = true, hermitian = false)
+      @test norm(op * v - A * v) <= rtol * norm(A)
+      @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
+      @test norm(op' * v - A' * v) <= rtol * norm(A)
+    end
+
     @testset "Basic arithmetic operations" begin
       B1 = simple_matrix(ComplexF64, nrow, ncol)
 
@@ -128,13 +153,13 @@ function test_linop()
       @test(norm((2.12345 .- A1) - Matrix(opC)) <= rtol * norm(2.12345 .- A1))
     end
 
-    @testset "Operator * Operator" begin
+    @testset "Operator × Operator" begin
       A4 = simple_matrix(ComplexF64, ncol, ncol)
       B4 = simple_matrix(ComplexF64, ncol, ncol)
-      for A in (A4, transpose(A4), adjoint(A4), conj(A4)) 
-        for B in (B4, transpose(B4), adjoint(B4), conj(B4))
-          C = A * B
-          opC = LinearOperator(A) * LinearOperator(B)
+      for Ai in (A4, transpose(A4), adjoint(A4), conj(A4)) 
+        for Bi in (B4, transpose(B4), adjoint(B4), conj(B4))
+          C = Ai * Bi
+          opC = LinearOperator(Ai) * LinearOperator(Bi)
           v = simple_vector(ComplexF64, ncol)
           @test(norm(opC * v - C * v) <= rtol * norm(v))
           u = simple_vector(ComplexF64, ncol)
@@ -600,11 +625,15 @@ function test_linop()
   @testset ExtendedTestSet "Timers" begin
     op = LinearOperator(rand(3, 4) + im * rand(3, 4))
     top = TimedLinearOperator(op)
+    show(top)
     nprods = 5
     ntprods = 4
     nctprods = 7
     for _ = 1:nprods
       op * rand(4)
+    end
+    for _ = 1:nprods
+      conj(op) * rand(4)
     end
     for _ = 1:ntprods
       transpose(op) * rand(3)
