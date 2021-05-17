@@ -10,7 +10,6 @@ function test_linop()
       LinearOperator(A1')',
       transpose(LinearOperator(transpose(A1))),
       conj(LinearOperator(conj(A1))),
-      # PreallocatedLinearOperator(A1),
     )
       show(op)
 
@@ -60,84 +59,35 @@ function test_linop()
         @test(norm(transpose(A) * u - transpose(op) * u) <= rtol * norm(u))
         @test(norm(A' * u - op' * u) <= rtol * norm(u))
       end
+
+      A3 = Hermitian(A2' * A2)
+      op3 = LinearOperator(A3)
+      nrow3, ncol3 = size(A3)
+      @test(op3.nrow == op3.ncol == nrow3)
+      v3 = simple_vector(ComplexF64, ncol3)
+      @test(norm(A3 * v3 - op3 * v3) <= rtol * norm(v3))
+
+      A3 = Symmetric(A2' * A2)
+      op3 = LinearOperator(A3)
+      nrow3, ncol3 = size(A3)
+      @test(op3.nrow == op3.ncol == nrow3)
+      v3 = simple_vector(ComplexF64, ncol3)
+      @test(norm(A3 * v3 - op3 * v3) <= rtol * norm(v3))
+
+      A3 = Symmetric(abs.(A2' * A2))
+      nrow3, ncol3 = size(A3)
+      op3 = LinearOperator(zeros(eltype(A3), ncol3), A3)
+      @test(op3.nrow == op3.ncol == nrow3)
+      v3 = simple_vector(Float64, ncol3)
+      @test(norm(A3 * v3 - op3 * v3) <= rtol * norm(v3))
+
+      A4 = SymTridiagonal(A3)
+      op4 = LinearOperator(A4)
+      nrow4, ncol4 = size(A4)
+      @test(op4.nrow == op4.ncol == nrow4)
+      v4 = simple_vector(ComplexF64, ncol4)
+      @test(norm(A4 * v4 - op4 * v4) <= rtol * norm(v4))
     end
-
-    # @testset "Preallocated LinearOperator(Matrix)" begin
-    #   A2 = simple_matrix(Float64, nrow, ncol)
-    #   for A in (A1, A2)
-    #     T = eltype(A)
-    #     Mv = zeros(T, nrow)
-    #     Mtu = zeros(T, ncol)
-    #     Maw = zeros(T, ncol)
-    #     op = PreallocatedLinearOperator(Mv, Mtu, Maw, A)
-    #     v = simple_vector(T, ncol)
-    #     u = simple_vector(T, nrow)
-    #     @test norm(op * v - A * v) <= rtol * norm(A)
-    #     @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
-    #     @test norm(op' * u - A' * u) <= rtol * norm(A)
-
-    #     al = @allocated op * v
-    #     @test al == 0
-
-    #     op = PreallocatedLinearOperator(A)
-    #     v = simple_vector(T, ncol)
-    #     u = simple_vector(T, nrow)
-    #     @test norm(op * v - A * v) <= rtol * norm(A)
-    #     @test norm(transpose(op) * u - transpose(A) * u) <= rtol * norm(A)
-    #     @test norm(op' * u - A' * u) <= rtol * norm(A)
-    #   end
-
-    #   for B in (simple_matrix(Float64, nrow, nrow), simple_sparse_matrix(Float64, nrow, nrow))
-    #     for A in (SymTridiagonal(Symmetric(B)), Symmetric(B))
-    #       v = simple_vector(Float64, nrow)
-
-    #       Mv = zeros(nrow)
-    #       op = PreallocatedLinearOperator(Mv, A)
-    #       @test norm(op * v - A * v) <= rtol * norm(A)
-    #       @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-    #       @test norm(op' * v - A' * v) <= rtol * norm(A)
-
-    #       op = PreallocatedLinearOperator(A)
-    #       @test norm(op * v - A * v) <= rtol * norm(A)
-    #       @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-    #       @test norm(op' * v - A' * v) <= rtol * norm(A)
-    #     end
-    #   end
-
-    #   v = simple_vector(Float64, nrow)
-
-    #   A = simple_matrix(ComplexF64, nrow, nrow)
-    #   # Symmetric and Hermitian - actually a Real matrix, but with Complex type.
-    #   # This tests a specific condition located in PreallocatedLinearOperators.jl
-    #   # when eltype(A) is not Real but A is symmetric and hermitian.
-    #   A = A + A'
-    #   A = A + transpose(A)
-    #   op = PreallocatedLinearOperator(A, symmetric = true, hermitian = true)
-    #   @test norm(op * v - A * v) <= rtol * norm(A)
-    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
-
-    #   A = simple_matrix(ComplexF64, nrow, nrow)
-    #   A = A + A' # Hermitian
-    #   op = PreallocatedLinearOperator(A, symmetric = false, hermitian = true)
-    #   @test norm(op * v - A * v) <= rtol * norm(A)
-    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
-
-    #   A = simple_matrix(ComplexF64, nrow, nrow)
-    #   A = A + transpose(A) # Symmetric
-    #   op = PreallocatedLinearOperator(A, symmetric = true, hermitian = false)
-    #   @test norm(op * v - A * v) <= rtol * norm(A)
-    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
-
-    #   A = simple_matrix(ComplexF64, nrow, nrow)
-    #   A = Hermitian(A)
-    #   op = PreallocatedLinearOperator(A)
-    #   @test norm(op * v - A * v) <= rtol * norm(A)
-    #   @test norm(transpose(op) * v - transpose(A) * v) <= rtol * norm(A)
-    #   @test norm(op' * v - A' * v) <= rtol * norm(A)
-    # end
 
     @testset "Basic arithmetic operations" begin
       B1 = simple_matrix(ComplexF64, nrow, ncol)
@@ -291,6 +241,10 @@ function test_linop()
       @test(norm(D * u - v .* u) <= ϵ * norm(u))
       @test(norm(transpose(D) * u - v .* u) <= ϵ * norm(u))
       @test(norm(D' * u - conj(v) .* u) <= ϵ * norm(u))
+      res = simple_vector(ComplexF64, nrow)
+      res2 = v .* u .* 2.0 + 2.0 .* res
+      mul!(res, D, u, 2.0, 2.0)
+      @test(norm(res - res2) <= ϵ * norm(u))
     end
 
     @testset "Rectangular diagonal" begin
