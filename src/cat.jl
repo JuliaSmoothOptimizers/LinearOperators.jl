@@ -10,16 +10,10 @@ function hcat_prod!(res::AbstractVector, A::AbstractLinearOperator{T}, B::Abstra
   mul!(res, B, view(v, (Ancol+1): nV), α, one(T))
 end
 
-function hcat_tprod!(res::AbstractVector, A::AbstractLinearOperator{T}, B::AbstractLinearOperator{T},
-                     Ancol::I, nV::I, u::AbstractVector, α, β) where {T,I<:Integer}
-  mul!(view(res, 1:Ancol), transpose(A), u, α, β)
-  mul!(view(res, (Ancol+1): nV), transpose(B), u, α, β)
-end
-
 function hcat_ctprod!(res::AbstractVector, A::AbstractLinearOperator{T}, B::AbstractLinearOperator{T},
-                      Ancol::I, nV::I, w::AbstractVector, α, β) where {T,I<:Integer}
-  mul!(view(res, 1:Ancol), adjoint(A), w, α, β)
-  mul!(view(res, (Ancol+1): nV), adjoint(B), w, α, β)
+                     Ancol::I, nV::I, u::AbstractVector, α, β) where {T,I<:Integer}
+  mul!(view(res, 1:Ancol), A, u, α, β)
+  mul!(view(res, (Ancol+1): nV), B, u, α, β)
 end
                      
 function hcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
@@ -34,8 +28,8 @@ function hcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   MawAB = Vector{S}(undef, ncol)
 
   prod = @closure (res, v, α, β) -> hcat_prod!(res, A, B, Ancol, Ancol+Bncol, v, α, β)
-  tprod = @closure (res, u, α, β) -> hcat_tprod!(res, A, B, Ancol, Ancol+Bncol, u, α, β)
-  ctprod = @closure (res, w, α, β) -> hcat_ctprod!(res, A, B, Ancol, Ancol+Bncol, w, α, β)
+  tprod = @closure (res, u, α, β) -> hcat_ctprod!(res, transpose(A), transpose(B), Ancol, Ancol+Bncol, u, α, β)
+  ctprod = @closure (res, w, α, β) -> hcat_ctprod!(res, adjoint(A), adjoint(B), Ancol, Ancol+Bncol, w, α, β)
   LinearOperator{S}(nrow, ncol, false, false, prod, tprod, ctprod, MvAB, MtuAB, MawAB)
 end
 
@@ -57,16 +51,10 @@ function vcat_prod!(res::AbstractVector, A::AbstractLinearOperator{T}, B::Abstra
   mul!(view(res, (Anrow+1): nV), B, u, α, β)
 end
 
-function vcat_tprod!(res::AbstractVector, A::AbstractLinearOperator{T}, B::AbstractLinearOperator{T}, 
-                     Anrow::I, nV::I, v::AbstractVector, α, β) where {T,I<:Integer}
-  mul!(res, transpose(A), view(v, 1:Anrow), α, β)
-  mul!(res, transpose(B), view(v, (Anrow+1): nV), α, one(T))
-end
-
 function vcat_ctprod!(res::AbstractVector, A::AbstractLinearOperator{T}, B::AbstractLinearOperator{T}, 
                      Anrow::I, nV::I, v::AbstractVector, α, β) where {T,I<:Integer}
-  mul!(res, adjoint(A), view(v, 1:Anrow), α, β)
-  mul!(res, adjoint(B), view(v, (Anrow+1): nV), α, one(T))
+  mul!(res, A, view(v, 1:Anrow), α, β)
+  mul!(res, B, view(v, (Anrow+1): nV), α, one(T))
 end
 
 function vcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
@@ -81,8 +69,8 @@ function vcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   MawAB = Vector{S}(undef, ncol)
 
   prod! = @closure (res, v, α, β) -> vcat_prod!(res, A, B, Anrow, Anrow+Bnrow, v, α, β)
-  tprod! = @closure (res, u, α, β) -> vcat_tprod!(res, A, B, Anrow, Anrow+Bnrow, u, α, β)
-  ctprod! = @closure (res, w, α, β) -> vcat_ctprod!(res, A, B, Anrow, Anrow+Bnrow, w, α, β)
+  tprod! = @closure (res, u, α, β) -> vcat_ctprod!(res, transpose(A), transpose(B), Anrow, Anrow+Bnrow, u, α, β)
+  ctprod! = @closure (res, w, α, β) -> vcat_ctprod!(res, adjoint(A), adjoint(B), Anrow, Anrow+Bnrow, w, α, β)
   return LinearOperator{S}(nrow, ncol, false, false, prod!, tprod!, ctprod!, MvAB, MtuAB, MawAB)
 end
 

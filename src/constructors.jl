@@ -70,6 +70,7 @@ end
 
 """
     LinearOperator(M)
+
 Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
@@ -84,6 +85,7 @@ end
 
 """
     LinearOperator(M)
+
 Constructs a linear operator from a symmetric matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
@@ -98,6 +100,7 @@ end
 
 """
     LinearOperator(M)
+    
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
 """
