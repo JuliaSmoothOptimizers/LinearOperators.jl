@@ -35,16 +35,10 @@ function prod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::Abstrac
   mul!(res, op1, vtmp, α, β)
 end
 
-function tprod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
-                   utmp::AbstractVector, u::AbstractVector, α, β)
-  mul!(utmp, transpose(op1), u)
-  mul!(res, transpose(op2), utmp, α, β)
-end
-
 function ctprod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
                     wtmp::AbstractVector, w::AbstractVector, α, β)
-  mul!(wtmp, adjoint(op1), w)
-  mul!(res, adjoint(op2), wtmp, α, β)
+  mul!(wtmp, op1, w)
+  mul!(res, op2, wtmp, α, β)
 end
 
 ## Operator times operator.
@@ -74,8 +68,8 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
     wtmp = op1.Maw
   end
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
-  tprod! = @closure (res, u, α, β) -> tprod_op!(res, op1, op2, utmp, u, α, β)
-  ctprod! = @closure (res, w, α, β) -> ctprod_op!(res, op1, op2, wtmp, w, α, β)
+  tprod! = @closure (res, u, α, β) -> ctprod_op!(res, transpose(op1), transpose(op2), utmp, u, α, β)
+  ctprod! = @closure (res, w, α, β) -> ctprod_op!(res, adjoint(op1), adjoint(op2), wtmp, w, α, β)
   Mv = Vector{T}(undef, m1)
   Mtu = Vector{T}(undef, n2)
   Maw = Vector{T}(undef, n2)

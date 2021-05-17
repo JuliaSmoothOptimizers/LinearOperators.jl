@@ -13,13 +13,6 @@ v = rand(5)
 """
 struct opEye <: AbstractLinearOperator{Any} end
 
-lmul!(op :: opEye, x::AbstractArray{T, 1}) where {T} = nothing 
-rmul!(x::AbstractArray{T, 1}, op :: opEye) where {T} = nothing 
-lmul!(op :: opEye, A::AbstractArray{T, 2}) where {T} = nothing 
-rmul!(A::AbstractArray{T, 2}, op :: opEye) where {T} = nothing 
-lmul!(op :: opEye, T::AbstractLinearOperator) = nothing 
-rmul!(T::AbstractLinearOperator, op :: opEye) = nothing 
-
 *(::opEye, x::AbstractArray{T, 1} where {T}) = x
 *(x::AbstractArray{T, 1} where {T}, ::opEye) = x
 *(::opEye, A::AbstractArray{T, 2} where {T}) = A

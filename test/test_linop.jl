@@ -126,6 +126,22 @@ function test_linop()
 
       opC = 2.12345 - LinearOperator(A1)
       @test(norm((2.12345 .- A1) - Matrix(opC)) <= rtol * norm(2.12345 .- A1))
+    end
+
+    @testset "Operator * Operator" begin
+      A4 = simple_matrix(ComplexF64, ncol, ncol)
+      B4 = simple_matrix(ComplexF64, ncol, ncol)
+      for A in (A4, transpose(A4), adjoint(A4), conj(A4)) 
+        for B in (B4, transpose(B4), adjoint(B4), conj(B4))
+          C = A * B
+          opC = LinearOperator(A) * LinearOperator(B)
+          v = simple_vector(ComplexF64, ncol)
+          @test(norm(opC * v - C * v) <= rtol * norm(v))
+          u = simple_vector(ComplexF64, ncol)
+          @test(norm(transpose(opC) * u - transpose(C) * u) <= rtol * norm(u))
+          @test(norm(opC' * u - C' * u) <= rtol * norm(u))
+        end
+      end
 
       C = A1 * B2
       opC = LinearOperator(A1) * LinearOperator(B2)
@@ -165,8 +181,10 @@ function test_linop()
   @testset ExtendedTestSet "Basic operators" begin
     @testset "Identity" begin
       opI = opEye(nrow)
+      opI2 = opEye(nrow, nrow) 
       v = simple_vector(ComplexF64, nrow)
       @test(abs(norm(opI * v - v)) <= ϵ * norm(v))
+      @test(abs(norm(opI2 * v - v)) <= ϵ * norm(v))
       @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v))
       @test(abs(norm(opI' * v - v)) <= ϵ * norm(v))
       @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)))
@@ -193,6 +211,7 @@ function test_linop()
 
     @testset "Identity (non-convertible to matrix)" begin
       op = opEye()
+      show(op)
 
       v = simple_vector(Float64, 5)
       w = op * v
@@ -368,6 +387,11 @@ function test_linop()
         @test (P * Z) * w == w
         @test (Z * P) * v == vz
       end
+
+      A = rand(n, n)
+      opA = LinearOperator(A)
+      v = simple_vector(Float64, 2)
+      @test norm(A[[3,4], [5,6]] * v - opA[[3,4], [5,6]] * v) ≤ rtol * norm(v)
     end
   end
 
