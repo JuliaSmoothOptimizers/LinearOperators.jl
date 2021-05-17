@@ -39,7 +39,7 @@ In this example, the Cholesky factor is computed only once and can be used many 
 
 It is often useful to reuse the memory used by the operator. 
 For that use, we can use `mul!` as if we were using matrices.
-We may wait to reuse the vectors preallocated by the operator in order to save memory
+We may want to reuse the vectors preallocated by the operator in order to save memory
 
 ```@example ex2
 using LinearOperators, LinearAlgebra # hide
@@ -47,20 +47,22 @@ m, n = 50, 30
 A = rand(m, n) + im * rand(m, n)
 op = LinearOperator(A)
 v = rand(n)
-al = @allocated mul!(op.Mv, op, v) # op * v, store result in op.Mv
+res = zeros(eltype(A), m)
+al = @allocated mul!(res, op, v) # op * v, store result in res
 println("Allocation of LinearOperator mul! product = $al")
 v = rand(n)
 α, β = 2.0, 3.0
-al = @allocated mul!(op.Mv, op, v, α, β) # α * op * v + β * op.Mv, store result in op.Mv 
+al = @allocated mul!(res, op, v, α, β) # α * op * v + β * res, store result in res
 println("Allocation of LinearOperator mul! product = $al")
 ```
 
-You can also provide the preallocated vectors.
+You can also provide the preallocated vectors, and reuse them to store the result of the product.
 ```@example ex2
 Mv  = Array{ComplexF64}(undef, m)
 Mtu = Array{ComplexF64}(undef, n)
 Maw = Array{ComplexF64}(undef, n)
 op  = LinearOperator(Mv, Mtu, Maw, A)
+mul!(op.Mv, op, v);
 ```
 
 ## Using functions
@@ -78,9 +80,9 @@ function mulifft!(res, w, α, β)
   res .= α .* ifft(w) .+ β .* res
 end
 dft = LinearOperator(10, 10, false, false,
-                     (res, v, α, β) -> mulfft!(res, v, α, β),
+                     mulfft!,
                      nothing,       # will be inferred
-                     (res, w, α, β) -> mulifft!(res, w, α, β))
+                     mulifft!)
 x = rand(10)
 y = dft * x
 norm(dft' * y - x)  # DFT is an orthogonal operator
@@ -100,17 +102,17 @@ function tcustomfunc(res, w, α, β)
   res .= [w[1]; w[1] + w[2]] .+ β .* res
 end
 op = LinearOperator(Float64, 10, 10, false, false,
-                    (res, v, α, β) -> customfunc(res, v, α, β),
+                    customfunc,
                     nothing,
-                    (res, w, α, β) -> tcustomfunc(res, w, α, β))
+                    tcustomfunc)
 ```
 Make sure that the type passed to `LinearOperator` is correct, otherwise errors may occur.
 ```@example ex1
 using LinearOperators, FFTW # hide
 dft = LinearOperator(Float64, 10, 10, false, false,
-                     (res, v, α, β) -> mulfft!(res, v, α, β),
+                     mulfft!,
                      nothing,
-                     (res, w, α, β) -> mulifft!(res, w, α, β))
+                     mulifft!)
 v = rand(10)
 println("eltype(dft)         = $(eltype(dft))")
 println("eltype(v)           = $(eltype(v))")
