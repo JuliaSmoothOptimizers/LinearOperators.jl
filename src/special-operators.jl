@@ -264,45 +264,36 @@ function BlockDiagonalOperator(Mv::AbstractVector{S}, Mtu::AbstractVector{S}, Ma
   T = promote_eltypeof(ops...)
 
   function prod!(y, x, α, β)
-    # y = zeros(T, nrow)
     k = 0
     j = 0
     for op ∈ ops
       m, n = size(op)
-      # y[(k + 1):(k + m)] .= op * x[(j + 1):(j + n)] 
       @views mul!(y[(k + 1):(k + m)] , op, x[(j + 1):(j + n)], α, β)
       k += m
       j += n
     end
-    # y
   end
 
   function tprod!(y, x, α, β)
-    # y = zeros(T, ncol)
     k = 0
     j = 0
     for op ∈ ops
       m, n = size(op)
-      # y[(k + 1):(k + n)] .= transpose(op) * x[(j + 1):(j + m)]
       @views mul!(y[(k + 1):(k + n)], transpose(op), x[(j + 1):(j + m)], α, β)
       k += n
       j += m
     end
-    # y
   end
 
   function ctprod!(y, x, α, β)
-    # y = zeros(T, ncol)
     k = 0
     j = 0
     for op ∈ ops
       m, n = size(op)
-      # y[(k + 1):(k + n)] .= op' * x[(j + 1):(j + m)]
       @views mul!(y[(k + 1):(k + n)], adjoint(op), x[(j + 1):(j + m)], α, β)
       k += n
       j += m
     end
-    # y
   end
 
   symm = all((issymmetric(op) for op ∈ ops))
