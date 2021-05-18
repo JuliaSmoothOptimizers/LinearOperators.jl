@@ -38,8 +38,8 @@ In this example, the Cholesky factor is computed only once and can be used many 
 ## mul!
 
 It is often useful to reuse the memory used by the operator. 
-For that use, we can use `mul!` as if we were using matrices.
-We may want to reuse the vectors preallocated by the operator in order to save memory
+For that reason, we can use `mul!` on operators as if we were using matrices.
+One way is to use preallocated vectors:
 
 ```@example ex2
 using LinearOperators, LinearAlgebra # hide
@@ -56,13 +56,13 @@ al = @allocated mul!(res, op, v, α, β) # α * op * v + β * res, store result 
 println("Allocation of LinearOperator mul! product = $al")
 ```
 
-You can also provide the preallocated vectors, and reuse them to store the result of the product.
+You can also provide preallocated vectors to operators, and reuse them to store operator-vector products:
 ```@example ex2
 Mv  = Array{ComplexF64}(undef, m)
 Mtu = Array{ComplexF64}(undef, n)
 Maw = Array{ComplexF64}(undef, n)
 op  = LinearOperator(Mv, Mtu, Maw, A)
-mul!(op.Mv, op, v);
+mul!(op.Mv, op, v)
 ```
 
 ## Using functions
@@ -95,16 +95,18 @@ By default a linear operator defined by functions and that is neither symmetric
 nor hermitian will have element type `Complex128`.
 This behavior may be overridden by specifying the type explicitly, e.g.,
 ```@example ex1
-function customfunc(res, v, α, β)
-  res .= [v[1] + v[2]; v[2]] .+ β .* res
+function customfunc!(res, v, α, β)
+  res[1] = (v[1] + v[2]) * α + res[1] * β
+  res[2] = v[2] * α + res[2] * β
 end
-function tcustomfunc(res, w, α, β)
-  res .= [w[1]; w[1] + w[2]] .+ β .* res
+function tcustomfunc!(res, w, α, β)
+  res[1] = w[1] * α + res[1] * β
+  res[2] =  (w[1] + w[2]) * α + res[2] * β
 end
 op = LinearOperator(Float64, 10, 10, false, false,
-                    customfunc,
+                    customfunc!,
                     nothing,
-                    tcustomfunc)
+                    tcustomfunc!)
 ```
 Make sure that the type passed to `LinearOperator` is correct, otherwise errors may occur.
 ```@example ex1

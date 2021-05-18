@@ -90,13 +90,11 @@ function mul!(res::AbstractVector, op::AdjointLinearOperator{T, S}, v::AbstractV
   p = op.parent
   (length(v) == size(p, 1) && length(res) == size(p, 2)) || throw(LinearOperatorException("shape mismatch"))
   if ishermitian(p)
-    mul!(res, p, v, α, β) 
-    return nothing
+    return mul!(res, p, v, α, β) 
   end
   if p.ctprod! !== nothing
     increase_nctprod(p)
-    p.ctprod!(res, v, α, β)
-    return nothing
+    return p.ctprod!(res, v, α, β)
   end
   tprod! = p.tprod!
   increment_tprod = true
@@ -115,20 +113,17 @@ function mul!(res::AbstractVector, op::AdjointLinearOperator{T, S}, v::AbstractV
   end
   tprod!(res, v, α, β)
   res .= conj.(res)
-  return nothing
 end
 
 function mul!(res::AbstractVector, op::TransposeLinearOperator{T, S}, v::AbstractVector, α, β) where {T, S}
   p = op.parent
   (length(v) == size(p, 1) && length(res) == size(p, 2)) || throw(LinearOperatorException("shape mismatch"))
   if issymmetric(p) 
-    mul!(res, p, v, α, β) 
-    return nothing
+    return mul!(res, p, v, α, β) 
   end
   if p.tprod! !== nothing
     increase_ntprod(p)
-    p.tprod!(res, v, α, β)
-    return nothing
+    return p.tprod!(res, v, α, β)
   end
   increment_ctprod = true
   ctprod! = p.ctprod!
@@ -147,14 +142,12 @@ function mul!(res::AbstractVector, op::TransposeLinearOperator{T, S}, v::Abstrac
   end
   ctprod!(res, conj.(v), α, β)
   res .= conj.(res)
-  return nothing
 end
 
 function mul!(res::AbstractVector, op::ConjugateLinearOperator{T, S}, v::AbstractVector, α, β) where {T, S}
   p = op.parent
   mul!(res, p, conj.(v), α, β)
   res .= conj.(res)
-  return nothing
 end
 
 -(op::AdjointLinearOperator) = adjoint(-op.parent)
