@@ -13,7 +13,7 @@ end
 # Apply an operator to a vector.
 function *(op::AbstractLinearOperator{T}, v::AbstractVector{S}) where {T, S}
   nrow, ncol = size(op)
-  res = Vector{promote_type(T, S)}(undef, nrow)
+  res = similar(v, promote_type(T, S), nrow)
   res .= 0 # in case v has some NaN
   mul!(res, op, v)
   return res
@@ -70,9 +70,9 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
   tprod! = @closure (res, u, α, β) -> ctprod_op!(res, transpose(op1), transpose(op2), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> ctprod_op!(res, adjoint(op1), adjoint(op2), wtmp, w, α, β)
-  Mv = Vector{T}(undef, m1)
-  Mtu = Vector{T}(undef, n2)
-  Maw = Vector{T}(undef, n2)
+  Mv = similar(vtmp, T, m1)
+  Mtu = similar(Mv, T, n2)
+  Maw = similar(Mv, T, n2)
   LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
 end
 
@@ -112,9 +112,14 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   ctprod! = @closure (res, w, α, β) -> sum_prod!(res, adjoint(op1), adjoint(op2), w, α, β)
   symm = (symmetric(op1) && symmetric(op2))
   herm = (hermitian(op1) && hermitian(op2))
-  Mv = Vector{S}(undef, m1)
-  Mtu = symm ? Mv : Vector{S}(undef, n1)
-  Maw = herm ? Mv : Vector{S}(undef, n1)
+  if typeof(op1) <: AdjointLinearOperator || typeof(op1) <: TransposeLinearOperator || typeof(op1) <: ConjugateLinearOperator
+    vtmp = op1.parent.Mv 
+  else
+    vtmp = op1.Mv
+  end
+  Mv = similar(vtmp, S, m1)
+  Mtu = symm ? Mv : similar(Mv, S, n1)
+  Maw = herm ? Mv : similar(Mv, S, n1)
   return LinearOperator{S}(
     m1,
     n1,

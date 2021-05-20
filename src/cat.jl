@@ -23,9 +23,14 @@ function hcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   Ancol, Bncol = size(A, 2), size(B, 2)
   ncol = Ancol + Bncol
   S = promote_type(eltype(A), eltype(B))
-  MvAB = res = Vector{S}(undef, nrow)
-  MtuAB = res = Vector{S}(undef, nrow)
-  MawAB = Vector{S}(undef, ncol)
+  if typeof(A) <: AdjointLinearOperator || typeof(A) <: TransposeLinearOperator || typeof(A) <: ConjugateLinearOperator
+    vtmp = A.parent.Mv 
+  else
+    vtmp = A.Mv
+  end
+  MvAB = similar(vtmp, S, nrow)
+  MtuAB = similar(MvAB, S, ncol)
+  MawAB = similar(MvAB, S, ncol)
 
   prod = @closure (res, v, α, β) -> hcat_prod!(res, A, B, Ancol, Ancol+Bncol, v, α, β)
   tprod = @closure (res, u, α, β) -> hcat_ctprod!(res, transpose(A), transpose(B), Ancol, Ancol+Bncol, u, α, β)
@@ -64,9 +69,14 @@ function vcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   nrow = Anrow + Bnrow
   ncol = size(A, 2)
   S = promote_type(eltype(A), eltype(B))
-  MvAB = Vector{S}(undef, nrow)
-  MtuAB = Vector{S}(undef, ncol)
-  MawAB = Vector{S}(undef, ncol)
+  if typeof(A) <: AdjointLinearOperator || typeof(A) <: TransposeLinearOperator || typeof(A) <: ConjugateLinearOperator
+    vtmp = A.parent.Mv 
+  else
+    vtmp = A.Mv
+  end
+  MvAB = similar(vtmp, S, nrow)
+  MtuAB = similar(MvAB, S, ncol)
+  MawAB = similar(MvAB, S, ncol)
 
   prod! = @closure (res, v, α, β) -> vcat_prod!(res, A, B, Anrow, Anrow+Bnrow, v, α, β)
   tprod! = @closure (res, u, α, β) -> vcat_ctprod!(res, transpose(A), transpose(B), Anrow, Anrow+Bnrow, u, α, β)
