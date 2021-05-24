@@ -112,40 +112,23 @@ function LinearOperator(M::Hermitian{T}; storagetype = Vector{T}, kwargs...) whe
   LinearOperator(Mv, Mtu, Mv, M, symmetric = symmetric, hermitian = true)
 end
 
-# the only advantage of this constructor is optional args
-# use LinearOperator{Float64} if you mean real instead of complex
 """
-    LinearOperator(nrow, ncol, symmetric, hermitian, prod,
-                    [tprod=nothing,
-                    ctprod=nothing])
-Construct a linear operator from functions.
-"""
-function LinearOperator(
-  nrow::I,
-  ncol::I,
-  symmetric::Bool,
-  hermitian::Bool,
-  prod,
-  tprod = nothing,
-  ctprod = nothing,
-) where {I<:Integer}
-  T = hermitian ? (symmetric ? Float64 : ComplexF64) : ComplexF64
-  Mv = Vector{T}(undef, nrow)
-  Mtu = symmetric ? Mv : Vector{T}(undef, ncol)
-  Maw = hermitian ? Mv : Vector{T}(undef, ncol)
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, Mv, Mtu, Maw)
-end
-
-"""
-    LinearOperator(type, nrow, ncol, symmetric, hermitian, prod,
-                    [tprod=nothing,
-                    ctprod=nothing])
+    LinearOperator(type, nrow, ncol, symmetric, hermitian, prod!,
+                    [tprod!=nothing,
+                    ctprod!=nothing])
+                    
 Construct a linear operator from functions where the type is specified as the first argument.
 Notice that the linear operator does not enforce the type, so using a wrong type can
 result in errors. For instance,
 ```
 A = [im 1.0; 0.0 1.0] # Complex matrix
-op = LinearOperator(Float64, 2, 2, false, false, v->A*v, u->transpose(A)*u, w->A'*w)
+function mulOp!(res, M, v, α, β)
+  mul!(res, M, v, α, β)
+end
+op = LinearOperator(Float64, 2, 2, false, false, 
+                    (res, v, α, β) -> mulOp!(res, A, v, α, β), 
+                    (res, u, α, β) -> mulOp!(res, transpose(A), u, α, β), 
+                    (res, w, α, β) -> mulOp!(res, A', w, α, β))
 Matrix(op) # InexactError
 ```
 The error is caused because `Matrix(op)` tries to create a Float64 matrix with the
@@ -157,12 +140,12 @@ function LinearOperator(
   ncol::I,
   symmetric::Bool,
   hermitian::Bool,
-  prod,
-  tprod = nothing,
-  ctprod = nothing,
+  prod!,
+  tprod! = nothing,
+  ctprod! = nothing,
 ) where {T, I<:Integer}
   Mv = zeros(T, nrow)
   Mtu = symmetric ? Mv : Vector{T}(undef, ncol)
   Maw = hermitian ? Mv : Vector{T}(undef, ncol)
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod, tprod, ctprod, Mv, Mtu, Maw)
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
 end
