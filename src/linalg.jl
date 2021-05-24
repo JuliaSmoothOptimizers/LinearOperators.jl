@@ -1,10 +1,10 @@
 export opInverse, opCholesky, opLDL, opHouseholder, opHermitian 
 
-function mulFact(res, F, v, α, β)
+function mulFact!(res, F, v, α, β)
   res .= α .* (F \ v) .+ β .* res 
 end
 
-function tmulFact(res, F, u, α, β)
+function tmulFact!(res, F, u, α, β)
   res .= α .* conj.(F \ conj.(u)) .+ β .* res 
 end
 
@@ -19,10 +19,10 @@ This Operator is not in-place when using `mul!`.
 """
 function opInverse(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, Maw::AbstractVector{T}, M::AbstractMatrix{T}; 
                    symm = false, herm = false) where {T}
-  prod = @closure (res, v, α, β) -> mulFact(res, M, v, α, β)
-  tprod = @closure (res, u, α, β) -> mulFact(res, transpose(M), u, α, β)
-  ctprod = @closure (res, w, α, β) -> mulFact(res, adjoint(M), w, α, β)
-  LinearOperator{T}(size(M, 2), size(M, 1), symm, herm, prod, tprod, ctprod, Mv, Mtu, Maw)
+  prod! = @closure (res, v, α, β) -> mulFact!(res, M, v, α, β)
+  tprod! = @closure (res, u, α, β) -> mulFact!(res, transpose(M), u, α, β)
+  ctprod! = @closure (res, w, α, β) -> mulFact!(res, adjoint(M), w, α, β)
+  LinearOperator{T}(size(M, 2), size(M, 1), symm, herm, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
 end
 
 function opInverse(M::AbstractMatrix{T}; symm = false, herm = false) where {T}
@@ -51,11 +51,11 @@ function opCholesky(Mv::AbstractVector{T}, M::AbstractMatrix; check::Bool = fals
     check_positive_definite(M) || throw(LinearOperatorException("matrix is not positive definite"))
   end
   LL = cholesky(M)
-  prod = @closure (res, v, α, β) -> mulFact(res, LL, v, α, β)
-  tprod = @closure (res, u, α, β) -> tmulFact(res, LL, u, α, β)  # M.' = conj(M)
-  ctprod = @closure (res, w, α, β) -> mulFact(res, LL, w, α, β)
+  prod! = @closure (res, v, α, β) -> mulFact!(res, LL, v, α, β)
+  tprod! = @closure (res, u, α, β) -> tmulFact!(res, LL, u, α, β)  # M.' = conj(M)
+  ctprod! = @closure (res, w, α, β) -> mulFact!(res, LL, w, α, β)
   S = eltype(LL)
-  LinearOperator{S}(m, m, isreal(M), true, prod, tprod, ctprod, Mv, Mv, Mv)
+  LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!, Mv, Mv, Mv)
   #TODO: use iterative refinement.
 end
 
@@ -76,11 +76,11 @@ function opLDL(Mv::AbstractVector{T}, M::AbstractMatrix; check::Bool = false) wh
     check_hermitian(M) || throw(LinearOperatorException("matrix is not Hermitian"))
   end
   LDL = ldlt(M)
-  prod = @closure (res, v, α, β) -> mulFact(res, LDL, v, α, β)
-  tprod = @closure (res, u, α, β) -> tmulFact(res, LDL, u, α, β)  # M.' = conj(M)
-  ctprod = @closure (res, w, α, β) -> mulFact(res, LDL, w, α, β)
+  prod! = @closure (res, v, α, β) -> mulFact!(res, LDL, v, α, β)
+  tprod! = @closure (res, u, α, β) -> tmulFact!(res, LDL, u, α, β)  # M.' = conj(M)
+  ctprod! = @closure (res, w, α, β) -> mulFact!(res, LDL, w, α, β)
   S = eltype(LDL)
-  return LinearOperator{S}(m, m, isreal(M), true, prod, tprod, ctprod, Mv, Mv, Mv)
+  return LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!, Mv, Mv, Mv)
   #TODO: use iterative refinement.
 end
 
@@ -109,7 +109,7 @@ function opHouseholder(h::AbstractVector{T}) where {T}
   return opHouseholder(Mv, Mtu, h)
 end
 
-function mulHermitian(res, d, L, v,  α, β)
+function mulHermitian!(res, d, L, v,  α, β)
   res .= α .* (d .* v .+ L * v .+ (v' * L)')[:] .+ β .* res
 end
 
@@ -124,8 +124,8 @@ function opHermitian(Mv::AbstractVector{T}, d::AbstractVector{S}, A::AbstractMat
   m == n == length(d) || throw(LinearOperatorException("shape mismatch"))
   L = tril(A, -1)
   U = promote_type(S, T)
-  prod = @closure (res, v, α, β) -> mulHermitian(res, d, L, v, α, β)
-  LinearOperator{U}(m, m, isreal(A), true, prod, nothing, nothing, Mv, Mv, Mv)
+  prod! = @closure (res, v, α, β) -> mulHermitian!(res, d, L, v, α, β)
+  LinearOperator{U}(m, m, isreal(A), true, prod!, nothing, nothing, Mv, Mv, Mv)
 end
 
 opHermitian(d::AbstractVector{S}, A::AbstractMatrix{T}) where {S, T} = opHermitian(zeros(T, size(A, 1)), d, A)

@@ -79,7 +79,7 @@ end
 function mulifft!(res, w, α, β)
   res .= α .* ifft(w) .+ β .* res
 end
-dft = LinearOperator(10, 10, false, false,
+dft = LinearOperator(ComplexF64, 10, 10, false, false,
                      mulfft!,
                      nothing,       # will be inferred
                      mulifft!)
@@ -91,9 +91,8 @@ norm(dft' * y - x)  # DFT is an orthogonal operator
 transpose(dft) * y
 ```
 
-By default a linear operator defined by functions and that is neither symmetric
-nor hermitian will have element type `Complex128`.
-This behavior may be overridden by specifying the type explicitly, e.g.,
+Another example:
+
 ```@example ex1
 function customfunc!(res, v, α, β)
   res[1] = (v[1] + v[2]) * α + res[1] * β

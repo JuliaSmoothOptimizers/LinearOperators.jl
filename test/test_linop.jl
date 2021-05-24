@@ -356,7 +356,7 @@ function test_linop()
       A = simple_matrix(ComplexF64, nrow, nrow)
       v = simple_vector(ComplexF64, nrow)
 
-      op = LinearOperator(nrow, nrow, false, false, 
+      op = LinearOperator(ComplexF64, nrow, nrow, false, false, 
         (res, v, α, β) -> mul!(res, A, v, α, β), 
         (res, v, α, β) -> mul!(res, transpose(A), v, α, β), 
         nothing)
@@ -367,7 +367,7 @@ function test_linop()
       @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
 
-      op = LinearOperator(nrow, nrow, false, false, 
+      op = LinearOperator(ComplexF64, nrow, nrow, false, false, 
         (res, v, α, β) -> mul!(res, A, v, α, β), 
         nothing, 
         (res, v, α, β) -> mul!(res, adjoint(A), v, α, β))
@@ -470,7 +470,7 @@ function test_linop()
     function test_func(res)
       res .= 1.0 .+ im * 1.0
     end
-    op = LinearOperator(5, 3, false, false, (res, p, α, β) -> test_func(res))
+    op = LinearOperator(ComplexF64, 5, 3, false, false, (res, p, α, β) -> test_func(res))
     @test eltype(op) == ComplexF64
     v = rand(5)
     @test_throws LinearOperatorException transpose(op) * v  # cannot be inferred
@@ -492,24 +492,22 @@ function test_linop()
     # Adjoint of a symmetric non-hermitian
     A = simple_matrix(ComplexF64, 3, 3)
     A = A + transpose(A)
-    op = LinearOperator(3, 3, true, false, (res, v, α, β) -> mul!(res, A, v))
+    op = LinearOperator(ComplexF64, 3, 3, true, false, (res, v, α, β) -> mul!(res, A, v))
     v = rand(3)
     @test op' * v ≈ A' * v
   end
 
   @testset ExtendedTestSet "Type specific operator" begin
-    function prod(res, v, α, β) 
+    function prod!(res, v, α, β) 
       res[1] = v[1] + v[2] 
       res[2] = v[2]
     end
-    function ctprod(res, v, α, β) 
+    function ctprod!(res, v, α, β) 
       res[1] = v[1] 
       res[2] = v[1] + v[2]
     end
-    op = LinearOperator(2, 2, false, false, prod, nothing, ctprod)
-    @test eltype(op) == Complex{Float64}
     for T in (Complex{Float64}, Complex{Float32}, BigFloat, Float64, Float32, Float16, Int32)
-      op = LinearOperator(T, 2, 2, false, false, prod, nothing, ctprod)
+      op = LinearOperator(T, 2, 2, false, false, prod!, nothing, ctprod!)
       w = ones(T, 2)
       @test eltype(op) == T
       @test op * w == T[2; 1]
@@ -517,19 +515,19 @@ function test_linop()
     end
 
     A = [im 1.0; 0.0 1.0]
-    function prod!(res, v, α, β) 
+    function prod2!(res, v, α, β) 
       mul!(res, A, v)
     end
-    function tprod!(res, u, α, β)
+    function tprod2!(res, u, α, β)
       mul!(res, transpose(A), u)
     end
-    function ctprod!(res, w, α, β)
+    function ctprod2!(res, w, α, β)
       mul!(res, A', w)
     end
-    opC = LinearOperator(2, 2, false, false, prod!, tprod!, ctprod!)
+    opC = LinearOperator(ComplexF64, 2, 2, false, false, prod2!, tprod2!, ctprod2!)
     v = simple_vector(ComplexF64, 2)
     @test A == Matrix(opC)
-    opF = LinearOperator(Float64, 2, 2, false, false, prod!, tprod!, ctprod!) # The type is a lie
+    opF = LinearOperator(Float64, 2, 2, false, false, prod2!, tprod2!, ctprod2!) # The type is a lie
     @test eltype(opF) == Float64
     @test_throws InexactError Matrix(opF) # changed here TypeError to InexactError
   end
