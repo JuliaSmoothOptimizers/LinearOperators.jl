@@ -53,22 +53,27 @@ opEye(n::Int) = opEye(Float64, n)
 
 # TODO: not type stable
 """
+    opEye(Mv, Mtu, nrow, ncol)
     opEye(T, nrow, ncol)
     opEye(nrow, ncol)
 
 Rectangular identity operator of size `nrow`x`ncol` and of data type `T`
 (defaults to `Float64`).
 """
-function opEye(Mv::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
+function opEye(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
   length(Mv) == nrow || throw(LinearOperatorException("shape mismatch"))
   if nrow == ncol
-    return opEye(T, nrow)
+    return opEye(Mv)
   end
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, min(nrow, ncol))
-  return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!, Mv, Mv, Mv)
+  return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!, Mv, Mtu, Mtu)
 end
 
-opEye(T::DataType, nrow::I, ncol::I) where {I<:Integer} =  opEye(zeros(T, nrow), nrow, ncol)
+function opEye(T::DataType, nrow::I, ncol::I) where {I<:Integer}
+  Mv = zeros(T, nrow)
+  Mtu = (nrow == ncol) ? Mv : zeros(T, ncol)
+  return opEye(Mv, Mtu, nrow, ncol)
+end
 opEye(nrow::I, ncol::I) where {I<:Integer} = opEye(Float64, nrow, ncol)
 
 function mulOpOnes!(res, v, α, β::T) where T
@@ -80,43 +85,53 @@ function mulOpOnes!(res, v, α, β::T) where T
 end
 
 """
-    opOnes(Mv, nrow, ncol)
+    opOnes(Mv, Mtu, nrow, ncol)
     opOnes(T, nrow, ncol)
     opOnes(nrow, ncol)
 
 Operator of all ones of size `nrow`-by-`ncol` of data type `T` (defaults to
-`Float64`) and storage vector Mv.
+`Float64`) and storage vector `Mv` and `Mtu`.
 """
-function opOnes(Mv::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
+function opOnes(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
   length(Mv) == nrow || throw(LinearOperatorException("shape mismatch"))
   prod! = @closure (res, v, α, β) -> mulOpOnes!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, Mv, Mv, Mv)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, Mv, Mtu, Mtu)
 end
 
-opOnes(T::DataType, nrow::I, ncol::I) where {I<:Integer} = opOnes(zeros(T, nrow), nrow, ncol)
+function opOnes(T::DataType, nrow::I, ncol::I) where {I<:Integer}
+  Mv = zeros(T, nrow)
+  Mtu = (nrow == ncol) ? Mv : zeros(T, ncol)
+  return opOnes(Mv, Mtu, nrow, ncol)
+end
 opOnes(nrow::I, ncol::I) where {I<:Integer} = opOnes(Float64, nrow, ncol)
 
 function mulOpZeros!(res, v, α, β::T) where T
-  if β != zero(T)
+  if β == zero(T)
+    res .= 0
+  else
     res .*= β
   end 
 end
 
 """
-    opZeros(Mv, nrow, ncol)
+    opZeros(Mv, Mtu, nrow, ncol)
     opZeros(T, nrow, ncol)
     opZeros(nrow, ncol)
 
 Zero operator of size `nrow`-by-`ncol`, of data type `T` (defaults to
-`Float64`) and storage vector Mv.
+`Float64`) and storage vectors `Mv` and `Mtu`.
 """
-function opZeros(Mv::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
+function opZeros(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
   length(Mv) == nrow || throw(LinearOperatorException("shape mismatch"))
   prod! = @closure (res, v, α, β) -> mulOpZeros!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, Mv, Mv, Mv)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, Mv, Mtu, Mtu)
 end
 
-opZeros(T::DataType, nrow::I, ncol::I) where {I<:Integer} = opZeros(zeros(T, nrow), nrow, ncol)
+function opZeros(T::DataType, nrow::I, ncol::I) where {I<:Integer}
+  Mv = zeros(T, nrow)
+  Mtu = (nrow == ncol) ? Mv : zeros(T, ncol)
+  return opZeros(Mv, Mtu, nrow, ncol)
+end
 opZeros(nrow::I, ncol::I) where {I<:Integer} = opZeros(Float64, nrow, ncol)
 
 function mulSquareOpDiagonal!(res, d, v, α, β::T) where T
