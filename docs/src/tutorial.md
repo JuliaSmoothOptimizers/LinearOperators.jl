@@ -70,14 +70,24 @@ mul!(op.Mv, op, v)
 Operators may be defined from functions. They have to be based on the 5-arguments `mul!` function.
 In the example below, the transposed isn't defined, but it may be inferred from the conjugate transposed. 
 Missing operations are represented as `nothing`.
+You will have deal with cases where `β == 0` and `β != 0` separately because `*` will allocate a `res` vector that
+may contain `NaN` values, and `0 * NaN == NaN`.
 
 ```@example ex1
 using FFTW
-function mulfft!(res, v, α, β)
-  res .= α .* fft(v) .+ β .* res
+function mulfft!(res, v, α, β::T) where T
+  if β == zero(T)
+    res .= α .* fft(v)
+  else
+    res .= α .* fft(v) .+ β .* res
+  end
 end
-function mulifft!(res, w, α, β)
-  res .= α .* ifft(w) .+ β .* res
+function mulifft!(res, w, α, β::T) where T
+  if β == zero(T)
+    res .= α .* ifft(w)
+  else
+    res .= α .* ifft(w) .+ β .* res
+  end
 end
 dft = LinearOperator(ComplexF64, 10, 10, false, false,
                      mulfft!,
@@ -94,13 +104,23 @@ transpose(dft) * y
 Another example:
 
 ```@example ex1
-function customfunc!(res, v, α, β)
-  res[1] = (v[1] + v[2]) * α + res[1] * β
-  res[2] = v[2] * α + res[2] * β
+function customfunc!(res, v, α, β::T) where T
+  if β == zero(T)
+    res[1] = (v[1] + v[2]) * α
+    res[2] = v[2] * α
+  else
+    res[1] = (v[1] + v[2]) * α + res[1] * β
+    res[2] = v[2] * α + res[2] * β
+  end
 end
-function tcustomfunc!(res, w, α, β)
-  res[1] = w[1] * α + res[1] * β
-  res[2] =  (w[1] + w[2]) * α + res[2] * β
+function tcustomfunc!(res, w, α, β::T) where T
+  if β == zero(T)
+    res[1] = w[1] * α
+    res[2] =  (w[1] + w[2]) * α
+  else
+    res[1] = w[1] * α + res[1] * β
+    res[2] =  (w[1] + w[2]) * α + res[2] * β
+  end
 end
 op = LinearOperator(Float64, 10, 10, false, false,
                     customfunc!,

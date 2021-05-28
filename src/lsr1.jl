@@ -76,10 +76,14 @@ omitted, then `Float64` is used.
 function LSR1Operator(T::DataType, n::I; kwargs...) where {I<:Integer}
   lsr1_data = LSR1Data(T, n; kwargs...)
 
-  function lsr1_multiply(q::AbstractVector, data::LSR1Data, x::AbstractArray, α, β)
+  function lsr1_multiply(q::AbstractVector, data::LSR1Data, x::AbstractArray, α, β :: T2) where T2
     # Multiply operator with a vector.
 
-    q .= α .* x ./ data.scaling_factor .+ β .* q
+    if β == zero(T2)
+      q .= α .* x ./ data.scaling_factor 
+    else
+      q .= α .* x ./ data.scaling_factor .+ β .* q
+    end
 
     for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
