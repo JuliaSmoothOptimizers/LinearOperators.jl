@@ -26,12 +26,12 @@ function show(io::IO, op::opEye)
 end
 
 function mulOpEye!(res, v, α, β::T, n_min) where T
-  if β != zero(T)
-    res[1:n_min] .= @views α .* v[1:n_min] .+ β .* res[1:n_min]
-    res[n_min+1:end] .= β
-  else
+  if β == zero(T)
     res[1:n_min] .= @views α .* v[1:n_min]
     res[n_min+1:end] .= 0 
+  else
+    res[1:n_min] .= @views α .* v[1:n_min] .+ β .* res[1:n_min]
+    res[n_min+1:end] .= β
   end
 end
 
@@ -72,10 +72,10 @@ opEye(T::DataType, nrow::I, ncol::I) where {I<:Integer} =  opEye(zeros(T, nrow),
 opEye(nrow::I, ncol::I) where {I<:Integer} = opEye(Float64, nrow, ncol)
 
 function mulOpOnes!(res, v, α, β::T) where T
-  if β != zero(T)
-    res .= (α * sum(v)) .+ β .* res
-  else
+  if β == zero(T)
     res .= (α * sum(v))
+  else
+    res .= (α * sum(v)) .+ β .* res
   end
 end
 
@@ -120,10 +120,10 @@ opZeros(T::DataType, nrow::I, ncol::I) where {I<:Integer} = opZeros(zeros(T, nro
 opZeros(nrow::I, ncol::I) where {I<:Integer} = opZeros(Float64, nrow, ncol)
 
 function mulSquareOpDiagonal!(res, d, v, α, β::T) where T
-  if β != zero(T)
-    res .= α .* d .* v .+ β .* res 
-  else
-    res .= α .* d .* v 
+  if β == zero(T)
+    res .= α .* d .* v
+  else 
+    res .= α .* d .* v .+ β .* res
   end
 end
 
@@ -147,8 +147,12 @@ function opDiagonal(d::AbstractVector{T}) where {T}
 end
 
 #TODO: not type stable
-function mulOpDiagonal!(res, d, v, α, β, n_min)
-  res[1:n_min] .= @views α .* d[1:n_min] .* v[1:n_min] .+ β .* res[1:n_min]
+function mulOpDiagonal!(res, d, v, α, β::T, n_min) where T
+  if β == zero(T)
+    res[1:n_min] .= @views α .* d[1:n_min] .* v[1:n_min]
+  else
+    res[1:n_min] .= @views α .* d[1:n_min] .* v[1:n_min] .+ β .* res[1:n_min]
+  end
   res[n_min+1:end] .= 0
 end
 """

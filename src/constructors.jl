@@ -133,6 +133,23 @@ Matrix(op) # InexactError
 ```
 The error is caused because `Matrix(op)` tries to create a Float64 matrix with the
 contents of the complex matrix `A`.
+
+You will have to be carefull because using `*` may generate a vector that contains `NaN` values.
+This can also append if you use the 3-args `mul!` function with a preallocated vector such as 
+`Vector{Float64}(undef, n)`.
+To fix this issue you will have to deal with the cases `β == 0` and `β != 0` separately:
+```
+d1 = [2.0; 3.0]
+function mulSquareOpDiagonal!(res, d, v, α, β::T) where T
+  if β == zero(T)
+    res .= α .* d .* v
+  else 
+    res .= α .* d .* v .+ β .* res
+  end
+end
+op = LinearOperator(Float64, 2, 2, true, true, 
+                    (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β))
+```
 """
 function LinearOperator(
   ::Type{T},

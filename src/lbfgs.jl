@@ -94,7 +94,7 @@ function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = true, kwargs...)
 
-  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, αm, βm::T) where T
+  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, αm, βm::T2) where T2
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
 
@@ -124,10 +124,10 @@ function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
         end
       end
     end
-    if βm != zero(T)
-      res .= αm .* q .+ βm .* res
-    else
+    if βm == zero(T2)
       res .= αm .* q
+    else
+      res .= αm .* q .+ βm .* res
     end
   end
 
@@ -149,7 +149,7 @@ function LBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = false, kwargs...)
 
-  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, α, β::T) where T
+  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, α, β::T2) where T2
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
 
@@ -169,10 +169,10 @@ function LBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
         end
       end
     end
-    if β != zero(T)
-      res .= α .* q .+ β .* res
-    else
+    if β == zero(T2)
       res .= α .* q
+    else
+      res .= α .* q .+ β .* res
     end
   end
 

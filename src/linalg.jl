@@ -1,11 +1,19 @@
 export opInverse, opCholesky, opLDL, opHouseholder, opHermitian 
 
-function mulFact!(res, F, v, α, β)
-  res .= α .* (F \ v) .+ β .* res 
+function mulFact!(res, F, v, α, β :: T) where T
+  if β == zero(T)
+    res .= α .* (F \ v)
+  else
+    res .= α .* (F \ v) .+ β .* res
+  end
 end
 
-function tmulFact!(res, F, u, α, β)
-  res .= α .* conj.(F \ conj.(u)) .+ β .* res 
+function tmulFact!(res, F, u, α, β :: T) where T
+  if β == zero(T)
+    res .= α .* conj.(F \ conj.(u))
+  else
+    res .= α .* conj.(F \ conj.(u)) .+ β .* res
+  end
 end
 
 """
@@ -86,8 +94,12 @@ end
 
 opLDL(M::AbstractMatrix; check::Bool = false) = opLDL(zeros(size(M,1)), M; check = check)
 
-function mulHouseholder!(res, h, v, α, β)
-  res .= α .* (v .- 2 * dot(h, v) .* h) .+ β .* res
+function mulHouseholder!(res, h, v, α, β :: T) where T
+  if β == zero(T)
+    res .= α .* (v .- 2 * dot(h, v) .* h)
+  else
+    res .= α .* (v .- 2 * dot(h, v) .* h) .+ β .* res
+  end
 end
 
 """
@@ -109,8 +121,12 @@ function opHouseholder(h::AbstractVector{T}) where {T}
   return opHouseholder(Mv, Mtu, h)
 end
 
-function mulHermitian!(res, d, L, v,  α, β)
-  res .= α .* (d .* v .+ L * v .+ (v' * L)')[:] .+ β .* res
+function mulHermitian!(res, d, L, v,  α, β :: T) where T
+  if β == zero(T)
+    res .= α .* (d .* v .+ L * v .+ (v' * L)')[:]
+  else
+    res .= α .* (d .* v .+ L * v .+ (v' * L)')[:] .+ β .* res
+  end
 end
 
 """

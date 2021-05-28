@@ -11,20 +11,32 @@ function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
   m, n = size(A)
   p, q = size(B)
   T = promote_type(eltype(A), eltype(B))
-  function prod!(res, x, α, β)
+  function prod!(res, x, α, β::T2) where T2
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), q, n)
-    res .= Matrix(B * X * transpose(A))[:]
+    if β == zero(T2)
+      res .= Matrix(B * X * transpose(A))[:]
+    else
+      res .= Matrix(B * X * transpose(A))[:] .+ β .* res
+    end
   end
-  function tprod!(res, x, α, β)
+  function tprod!(res, x, α, β::T2) where T2
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), p, m)
-    res .= Matrix(transpose(B) * X * A)[:]
+    if β == zero(T2)
+      res .= Matrix(transpose(B) * X * A)[:]
+    else
+      res .= Matrix(transpose(B) * X * A)[:] .+ β .* res
+    end
   end
-  function ctprod!(res, x, α, β)
+  function ctprod!(res, x, α, β::T2) where T2
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), p, m)
-    res .= Matrix(B' * X * conj(A))[:]
+    if β == zero(T2)
+      res .= Matrix(B' * X * conj(A))[:]
+    else
+      res .= Matrix(B' * X * conj(A))[:] .+ β .* res
+    end
   end
   symm = issymmetric(A) && issymmetric(B)
   herm = ishermitian(A) && ishermitian(B)
