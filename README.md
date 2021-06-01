@@ -60,7 +60,7 @@ Function           | Description
 `check_hermitian`  | Cheap check that `A = A'`
 `check_positive_definite` | Cheap check that an operator is positive (semi-)definite
 `diag`             | Extract the diagonal of an operator
-`full`             | Convert an abstract operator to a dense array
+`Matrix`           | Convert an abstract operator to a dense array
 `hermitian`        | Determine whether the operator is Hermitian
 `push!`            | For L-BFGS or L-SR1 operators, push a new pair {s,y}
 `reset!`           | For L-BFGS or L-SR1 operators, reset the data
