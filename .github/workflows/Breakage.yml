@@ -58,7 +58,7 @@ jobs:
             git clone --branch LinearOperators https://github.com/$URL
           else
             git clone https://github.com/$URL
-          end
+          fi
           export PKG=$(echo $URL | cut -f2 -d/)
           cd $PKG
           if [ $VERSION == "stable" ]; then
