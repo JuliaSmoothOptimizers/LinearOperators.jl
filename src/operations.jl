@@ -6,7 +6,7 @@ function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVec
   op.prod!(res, v, α, β)
 end
 
-function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector) where T
+function mul!(res::AbstractVector, op::AbstractLinearOperator, v::AbstractVector{T}) where T
   mul!(res, op, v, one(T), zero(T))
 end
 
@@ -25,7 +25,7 @@ function -(op::AbstractLinearOperator{T}) where T
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, -α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, -α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, -α, β)
-  LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod!, tprod!, ctprod!, op.Mv, op.Mtu, op.Maw)
+  LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod!, tprod!, ctprod!)
 end
 
 function prod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
@@ -49,30 +49,13 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
     throw(LinearOperatorException("shape mismatch"))
   end
   #tmp vector for products
-  if typeof(op2) <: AdjointLinearOperator || typeof(op2) <: TransposeLinearOperator 
-    vtmp = op2.parent.Mtu 
-  elseif typeof(op2) <: ConjugateLinearOperator
-    vtmp = op2.parent.Mv
-  else
-    vtmp = op2.Mv
-  end
-  if typeof(op1) <: AdjointLinearOperator || typeof(op1) <: TransposeLinearOperator 
-    utmp = op1.parent.Mv 
-    wtmp = op1.parent.Mv 
-  elseif typeof(op1) <: ConjugateLinearOperator
-    utmp = op1.parent.Mtu
-    wtmp = op1.parent.Maw 
-  else
-    utmp = op1.Mtu 
-    wtmp = op1.Maw
-  end
+  vtmp = zeros(T, m2)
+  utmp = zeros(T, n1)
+  wtmp = zeros(T, n1)
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
   tprod! = @closure (res, u, α, β) -> ctprod_op!(res, transpose(op1), transpose(op2), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> ctprod_op!(res, adjoint(op1), adjoint(op2), wtmp, w, α, β)
-  Mv = similar(vtmp, T, m1)
-  Mtu = similar(Mv, T, n2)
-  Maw = similar(Mv, T, n2)
-  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
+  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!)
 end
 
 ## Matrix times operator.
@@ -85,7 +68,7 @@ function *(op::AbstractLinearOperator, x::Number)
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, x * α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, x * α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, x' * α, β)
-  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod!, tprod!, ctprod!, op.Mv, op.Mtu, op.Maw)
+  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod!, tprod!, ctprod!)
 end
 
 function *(x::Number, op::AbstractLinearOperator)
@@ -111,26 +94,7 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   ctprod! = @closure (res, w, α, β) -> sum_prod!(res, adjoint(op1), adjoint(op2), w, α, β)
   symm = (symmetric(op1) && symmetric(op2))
   herm = (hermitian(op1) && hermitian(op2))
-  if typeof(op1) <: AdjointLinearOperator || typeof(op1) <: TransposeLinearOperator || typeof(op1) <: ConjugateLinearOperator
-    vtmp = op1.parent.Mv 
-  else
-    vtmp = op1.Mv
-  end
-  Mv = similar(vtmp, S, m1)
-  Mtu = symm ? Mv : similar(Mv, S, n1)
-  Maw = herm ? Mv : similar(Mv, S, n1)
-  return LinearOperator{S}(
-    m1,
-    n1,
-    symm,
-    herm,
-    prod!,
-    tprod!,
-    ctprod!,
-    Mv,
-    Mtu,
-    Maw
-  )
+  return LinearOperator{S}(m1, n1, symm, herm, prod!, tprod!, ctprod!)
 end
 
 # Operator + matrix.

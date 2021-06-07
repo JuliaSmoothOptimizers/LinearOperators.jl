@@ -38,8 +38,8 @@ In this example, the Cholesky factor is computed only once and can be used many 
 ## mul!
 
 It is often useful to reuse the memory used by the operator. 
-For that reason, we can use `mul!` on operators as if we were using matrices.
-One way is to use preallocated vectors:
+For that reason, we can use `mul!` on operators as if we were using matrices
+using preallocated vectors:
 
 ```@example ex2
 using LinearOperators, LinearAlgebra # hide
@@ -48,21 +48,15 @@ A = rand(m, n) + im * rand(m, n)
 op = LinearOperator(A)
 v = rand(n)
 res = zeros(eltype(A), m)
+res2 = copy(res)
+mul!(res2, op, v) # compile 3-args mul!
 al = @allocated mul!(res, op, v) # op * v, store result in res
 println("Allocation of LinearOperator mul! product = $al")
 v = rand(n)
 α, β = 2.0, 3.0
+mul!(res2, op, v, α, β) # compile 5-args mul!
 al = @allocated mul!(res, op, v, α, β) # α * op * v + β * res, store result in res
 println("Allocation of LinearOperator mul! product = $al")
-```
-
-You can also provide preallocated vectors to operators, and reuse them to store operator-vector products:
-```@example ex2
-Mv  = Array{ComplexF64}(undef, m)
-Mtu = Array{ComplexF64}(undef, n)
-Maw = Array{ComplexF64}(undef, n)
-op  = LinearOperator(Mv, Mtu, Maw, A)
-mul!(op.Mv, op, v)
 ```
 
 ## Using functions

@@ -57,41 +57,16 @@ function test_linop()
     @test norm(res-res_true) ≤ sqrt(ϵ)
     mul!(res, opA2, v, α, β)
 
-    # test LinearOperator with preallocated vectors
-    popA1 = LinearOperator(A1)
-    mul!(res, popA1, v, α, β) # compile 
-    popA1.Mv .= rand(nrow)
-    res_true .= popA1.Mv
-    mul!(popA1.Mv, popA1, v, α, β)
-    mul!(res_true, A1, v, α, β)
-    @test norm(popA1.Mv-res_true) ≤ sqrt(ϵ)
-
+    # Matrix * LinearOperator
     (nrow2, ncol2) = (ncol, 7)
-    A2 = rand(nrow2, ncol2)
     v2 = rand(ncol2)
-    popA2 = LinearOperator(A2)
-    popA3 = popA1 * popA2 
-    popA3.Mv .= rand(nrow)
-    res_true .= popA3.Mv
-    mul!(popA3.Mv, popA3, v2, α, β)
-    mul!(res_true, A1*A2, v2, α, β)
-    @test norm(popA3.Mv-res_true) ≤ sqrt(ϵ)
-
-    # Matrix * LinearOperator 
+    A2 = rand(nrow2, ncol2)
     opA3 = opA1 * A2 
-    opA3.Mv .= rand(nrow)
-    res_true .= opA3.Mv
-    mul!(opA3.Mv, opA3, v2, α, β)
+    Mv = rand(nrow)
+    res_true = copy(Mv)
+    mul!(Mv, opA3, v2, α, β)
     mul!(res_true, A1*A2, v2, α, β)
-    @test norm(opA3.Mv-res_true) ≤ sqrt(ϵ)
-
-    
-    # test opEye
-    # opE = opEye(Float64, nrow)
-    # vec, res, res_true = ones(nrow), ones(nrow), ones(nrow)
-    # mul!(res, opE, vec, α, β)
-    # mul!(res_true, I, vec, α, β)
-    # @test norm(res-res_true) ≤ sqrt(ϵ)
+    @test norm(Mv-res_true) ≤ sqrt(ϵ)
   end
 end
 

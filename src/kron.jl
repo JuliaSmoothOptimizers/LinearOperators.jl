@@ -41,10 +41,7 @@ function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
   symm = issymmetric(A) && issymmetric(B)
   herm = ishermitian(A) && ishermitian(B)
   nrow, ncol = m * p, n * q
-  Mv = Vector{T}(undef, nrow)
-  Mtu = symm ? Mv : Vector{T}(undef, ncol)
-  Maw = herm ? Mv : Vector{T}(undef, ncol)
-  return LinearOperator{T}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
+  return LinearOperator{T}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!)
 end
 
 kron(A::AbstractMatrix, B::AbstractLinearOperator) = kron(LinearOperator(A), B)
