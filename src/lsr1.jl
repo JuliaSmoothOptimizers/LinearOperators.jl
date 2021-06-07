@@ -33,7 +33,7 @@ end
 LSR1Data(n::I; kwargs...) where {I<:Integer} = LSR1Data(Float64, n; kwargs...)
 
 "A type for limited-memory SR1 approximations."
-mutable struct LSR1Operator{T,S,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{T}
+mutable struct LSR1Operator{T,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{T}
   nrow::I
   ncol::I
   symmetric::Bool
@@ -41,9 +41,6 @@ mutable struct LSR1Operator{T,S,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{T
   prod!::F     # apply the operator to a vector
   tprod!::Ft    # apply the transpose operator to a vector
   ctprod!::Fct   # apply the transpose conjugate operator to a vector
-  Mv::S # storage vector for prod!
-  Mtu::S # storage vector for tprod!
-  Maw::S # storage vector for ctprod!
   inverse::Bool
   data::LSR1Data{T,I}
   nprod::I
@@ -59,13 +56,10 @@ LSR1Operator{T}(
   prod!::F,
   tprod!::Ft,
   ctprod!::Fct,
-  Mv::S,
-  Mtu::S,
-  Maw::S,
   inverse::Bool,
   data::LSR1Data{T,I},
-) where {T,S,I<:Integer,F,Ft,Fct} =
-  LSR1Operator{T,S,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, Mv, Mtu, Maw, inverse, data, 0, 0, 0)
+) where {T,I<:Integer,F,Ft,Fct} =
+  LSR1Operator{T,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, inverse, data, 0, 0, 0)
 
 """
     LSR1Operator(T, n; [mem=5, scaling=false)
@@ -97,8 +91,7 @@ function LSR1Operator(T::DataType, n::I; kwargs...) where {I<:Integer}
   end
 
   prod! = @closure (res, x, α, β) -> lsr1_multiply(res, lsr1_data, x, α, β)
-  Mv = lsr1_data.Ax
-  return LSR1Operator{T}(n, n, true, true, prod!, nothing, nothing, Mv, Mv, Mv, false, lsr1_data)
+  return LSR1Operator{T}(n, n, true, true, prod!, nothing, nothing, false, lsr1_data)
 end
 
 LSR1Operator(n::I; kwargs...) where {I<:Integer} = LSR1Operator(Float64, n; kwargs...)

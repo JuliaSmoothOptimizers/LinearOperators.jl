@@ -36,44 +36,34 @@ function mulOpEye!(res, v, α, β::T, n_min) where T
 end
 
 """
-    opEye(Mv)
     opEye(T, n)
     opEye(n)
 
-Identity operator of order `n` and of data type `T` (defaults to `Float64`) with preallocated vector `Mv`.
+Identity operator of order `n` and of data type `T` (defaults to `Float64`).
 """
-function opEye(Mv::AbstractVector{T}) where T
-  n = length(Mv)
+function opEye(T::DataType, n::Int)
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, n)
-  LinearOperator{T}(n, n, true, true, prod!, prod!, prod!, Mv, Mv, Mv)
+  LinearOperator{T}(n, n, true, true, prod!, prod!, prod!)
 end
 
-opEye(T::DataType, n::Int) = opEye(zeros(T, n))
 opEye(n::Int) = opEye(Float64, n)
 
 # TODO: not type stable
 """
-    opEye(Mv, Mtu, nrow, ncol)
     opEye(T, nrow, ncol)
     opEye(nrow, ncol)
 
 Rectangular identity operator of size `nrow`x`ncol` and of data type `T`
 (defaults to `Float64`).
 """
-function opEye(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
-  length(Mv) == nrow || throw(LinearOperatorException("shape mismatch"))
+function opEye(T::DataType, nrow::I, ncol::I) where {I<:Integer}
   if nrow == ncol
-    return opEye(Mv)
+    return opEye(T, nrow)
   end
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, min(nrow, ncol))
-  return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!, Mv, Mtu, Mtu)
+  return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!)
 end
 
-function opEye(T::DataType, nrow::I, ncol::I) where {I<:Integer}
-  Mv = zeros(T, nrow)
-  Mtu = (nrow == ncol) ? Mv : zeros(T, ncol)
-  return opEye(Mv, Mtu, nrow, ncol)
-end
 opEye(nrow::I, ncol::I) where {I<:Integer} = opEye(Float64, nrow, ncol)
 
 function mulOpOnes!(res, v, α, β::T) where T
@@ -85,24 +75,17 @@ function mulOpOnes!(res, v, α, β::T) where T
 end
 
 """
-    opOnes(Mv, Mtu, nrow, ncol)
     opOnes(T, nrow, ncol)
     opOnes(nrow, ncol)
 
 Operator of all ones of size `nrow`-by-`ncol` of data type `T` (defaults to
-`Float64`) and storage vector `Mv` and `Mtu`.
+`Float64`).
 """
-function opOnes(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
-  length(Mv) == nrow || throw(LinearOperatorException("shape mismatch"))
+function opOnes(T::DataType, nrow::I, ncol::I) where {I<:Integer}
   prod! = @closure (res, v, α, β) -> mulOpOnes!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, Mv, Mtu, Mtu)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
 end
 
-function opOnes(T::DataType, nrow::I, ncol::I) where {I<:Integer}
-  Mv = zeros(T, nrow)
-  Mtu = (nrow == ncol) ? Mv : zeros(T, ncol)
-  return opOnes(Mv, Mtu, nrow, ncol)
-end
 opOnes(nrow::I, ncol::I) where {I<:Integer} = opOnes(Float64, nrow, ncol)
 
 function mulOpZeros!(res, v, α, β::T) where T
@@ -114,24 +97,17 @@ function mulOpZeros!(res, v, α, β::T) where T
 end
 
 """
-    opZeros(Mv, Mtu, nrow, ncol)
     opZeros(T, nrow, ncol)
     opZeros(nrow, ncol)
 
 Zero operator of size `nrow`-by-`ncol`, of data type `T` (defaults to
-`Float64`) and storage vectors `Mv` and `Mtu`.
+`Float64`).
 """
-function opZeros(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, nrow::I, ncol::I) where {T,I<:Integer}
-  length(Mv) == nrow || throw(LinearOperatorException("shape mismatch"))
+function opZeros(T::DataType, nrow::I, ncol::I) where {I<:Integer}
   prod! = @closure (res, v, α, β) -> mulOpZeros!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, Mv, Mtu, Mtu)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
 end
 
-function opZeros(T::DataType, nrow::I, ncol::I) where {I<:Integer}
-  Mv = zeros(T, nrow)
-  Mtu = (nrow == ncol) ? Mv : zeros(T, ncol)
-  return opZeros(Mv, Mtu, nrow, ncol)
-end
 opZeros(nrow::I, ncol::I) where {I<:Integer} = opZeros(Float64, nrow, ncol)
 
 function mulSquareOpDiagonal!(res, d, v, α, β::T) where T
@@ -143,22 +119,14 @@ function mulSquareOpDiagonal!(res, d, v, α, β::T) where T
 end
 
 """
-    opDiagonal(Mv, Maw, d)
     opDiagonal(d)
 
-Diagonal operator with the vector `d` on its main diagonal and storage vectors `Mv` and `Maw`.
+Diagonal operator with the vector `d` on its main diagonal.
 """
-function opDiagonal(Mv::AbstractVector{T}, Maw::AbstractVector{T}, d::AbstractVector{T}) where {T}
+function opDiagonal(d::AbstractVector{T}) where {T}
   prod! = @closure (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   ctprod! = @closure (res, w, α, β) -> mulSquareOpDiagonal!(res, conj.(d), w, α, β)
-  LinearOperator{T}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!, Mv, Mv, Maw)
-end
-
-function opDiagonal(d::AbstractVector{T}) where {T}
-  nrow = length(d)
-  Mv = zeros(T, nrow)
-  Maw = isreal(d) ? Mv : zeros(T, nrow) 
-  return opDiagonal(Mv, Maw, d)
+  LinearOperator{T}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!)
 end
 
 #TODO: not type stable
@@ -171,27 +139,18 @@ function mulOpDiagonal!(res, d, v, α, β::T, n_min) where T
   res[n_min+1:end] .= 0
 end
 """
-    opDiagonal(Mv, Mtu, Maw, nrow, ncol, d)
     opDiagonal(nrow, ncol, d)
 
 Rectangular diagonal operator of size `nrow`-by-`ncol` with the vector `d` on
 its main diagonal and storage vectors `Mv`, `Mtu`, `Maw`.
 """
-function opDiagonal(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, Maw::AbstractVector{T}, 
-                    nrow::I, ncol::I, d::AbstractVector{T}) where {T,I<:Integer}
+function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T,I<:Integer}
   nrow == ncol <= length(d) && (return opDiagonal(d[1:nrow]))
   n_min = min(nrow, ncol)
   prod! = @closure (res, v, α, β) -> mulOpDiagonal!(res, d, v, α, β, n_min)
   tprod! = @closure (res, u, α, β) -> mulOpDiagonal!(res, d, u, α, β, n_min)
   ctprod! = @closure (res, w, α, β) -> mulOpDiagonal!(res, conj.(d), w, α, β, n_min)
-  LinearOperator{T}(nrow, ncol, false, false, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
-end
-
-function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T,I<:Integer}
-  Mv = zeros(T, nrow)
-  Mtu = zeros(T, ncol)
-  Maw = isreal(d) ? Mtu : zeros(T, ncol) 
-  return opDiagonal(Mv, Mtu, Maw, nrow, ncol, d)
+  LinearOperator{T}(nrow, ncol, false, false, prod!, tprod!, ctprod!)
 end
 
 function mulRestrict!(res, I, v, α, β)
@@ -204,7 +163,6 @@ function multRestrict!(res, I, u, α, β)
 end
   
 """
-    Z = opRestriction(Mv, Mtu, I, ncol)
     Z = opRestriction(I, ncol)
     Z = opRestriction(:, ncol)
 
@@ -215,15 +173,13 @@ The operation `Z * v` is equivalent to `v[I]`. `I` can be `:`.
 
 Alias for `opRestriction([k], ncol)`.
 """
-function opRestriction(Mv::AbstractVector{T}, Mtu::AbstractVector{T}, Idx::LinearOperatorIndexType{I}, ncol::I) where {T,I<:Integer}
+function opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I) where {T,I<:Integer}
   all(1 .≤ Idx .≤ ncol) || throw(LinearOperatorException("indices should be between 1 and $ncol"))
   nrow = length(Idx)
   prod! = @closure (res, v, α, β) -> mulRestrict!(res, Idx, v, α, β)
   tprod! = @closure (res, u, α, β) -> multRestrict!(res, Idx, u, α, β)
-  return LinearOperator{I}(nrow, ncol, false, false, prod!, tprod!, tprod!, Mv, Mtu, Mtu)
+  return LinearOperator{I}(nrow, ncol, false, false, prod!, tprod!, tprod!)
 end
-
-opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I) where {I<:Integer} = opRestriction(zeros(length(Idx)), zeros(ncol), Idx, ncol)
 
 opRestriction(::Colon, ncol::I) where {I<:Integer} = opEye(I, ncol)
 
@@ -263,7 +219,6 @@ end
 eltypeof(op::AbstractLinearOperator) = eltype(op)  # need this for promote_eltypeof
 
 """
-    BlockDiagonalOperator(Mv, Mtu, Maw, M1, M2, ..., Mn)
     BlockDiagonalOperator(M1, M2, ..., Mn)
 
 Creates a block-diagonal linear operator:
@@ -273,7 +228,7 @@ Creates a block-diagonal linear operator:
     [       ...    ]
     [           Mn ]
 """
-function BlockDiagonalOperator(Mv::AbstractVector{S}, Mtu::AbstractVector{S}, Maw::AbstractVector{S}, ops...) where {S}
+function BlockDiagonalOperator(ops...) where {S}
   nrow = ncol = 0
   for op ∈ ops
     m, n = size(op)
@@ -317,21 +272,5 @@ function BlockDiagonalOperator(Mv::AbstractVector{S}, Mtu::AbstractVector{S}, Ma
 
   symm = all((issymmetric(op) for op ∈ ops))
   herm = all((ishermitian(op) for op ∈ ops))
-  LinearOperator{T}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!, Mv, Mtu, Maw)
-end
-
-function BlockDiagonalOperator(ops...)
-  nrow = ncol = 0
-  for op ∈ ops
-    m, n = size(op)
-    nrow += m
-    ncol += n
-  end
-  T = promote_eltypeof(ops...)
-  symm = all((issymmetric(op) for op ∈ ops))
-  herm = all((ishermitian(op) for op ∈ ops))
-  Mv = zeros(T, nrow)
-  Mtu = symm ? Mv : zeros(T, ncol)
-  Maw = herm ? Mv : zeros(T, ncol)
-  return BlockDiagonalOperator(Mv, Mtu, Maw, ops...)
+  LinearOperator{T}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!)
 end

@@ -74,13 +74,6 @@ function test_linop()
       v3 = simple_vector(ComplexF64, ncol3)
       @test(norm(A3 * v3 - op3 * v3) <= rtol * norm(v3))
 
-      A3 = Symmetric(abs.(A2' * A2))
-      nrow3, ncol3 = size(A3)
-      op3 = LinearOperator(zeros(eltype(A3), ncol3), A3)
-      @test(op3.nrow == op3.ncol == nrow3)
-      v3 = simple_vector(Float64, ncol3)
-      @test(norm(A3 * v3 - op3 * v3) <= rtol * norm(v3))
-
       A4 = SymTridiagonal(A3)
       op4 = LinearOperator(A4)
       nrow4, ncol4 = size(A4)

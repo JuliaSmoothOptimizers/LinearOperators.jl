@@ -49,7 +49,7 @@ end
 LBFGSData(n::I; kwargs...) where {I<:Integer} = LBFGSData(Float64, n; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-mutable struct LBFGSOperator{T,S,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{T}
+mutable struct LBFGSOperator{T,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{T}
   nrow::I
   ncol::I
   symmetric::Bool
@@ -57,9 +57,6 @@ mutable struct LBFGSOperator{T,S,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{
   prod!::F    # apply the operator to a vector
   tprod!::Ft    # apply the transpose operator to a vector
   ctprod!::Fct   # apply the transpose conjugate operator to a vector
-  Mv::S # storage vector for prod!
-  Mtu::S # storage vector for tprod!
-  Maw::S # storage vector for ctprod!
   inverse::Bool
   data::LBFGSData{T,I}
   nprod::I
@@ -75,13 +72,10 @@ LBFGSOperator{T}(
   prod!::F,
   tprod!::Ft,
   ctprod!::Fct,
-  Mv::S,
-  Mtu::S,
-  Maw::S,
   inverse::Bool,
   data::LBFGSData{T,I},
-) where {T,S,I<:Integer,F,Ft,Fct} =
-  LBFGSOperator{T,S,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, Mv, Mtu, Maw, inverse, data, 0, 0, 0)
+) where {T,I<:Integer,F,Ft,Fct} =
+  LBFGSOperator{T,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, inverse, data, 0, 0, 0)
 
 """
     InverseLBFGSOperator(T, n, [mem=5; scaling=true])
@@ -132,8 +126,7 @@ function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
   end
 
   prod! = @closure (res, x, α, β) -> lbfgs_multiply(res, lbfgs_data, x, α, β)
-  Mv = similar(lbfgs_data.Ax)
-  return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, Mv, Mv, Mv, true, lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, true, lbfgs_data)
 end
 
 InverseLBFGSOperator(n::Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
@@ -177,8 +170,7 @@ function LBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
   end
 
   prod! = @closure (res, x, α, β) -> lbfgs_multiply(res, lbfgs_data, x, α, β)
-  Mv = similar(lbfgs_data.Ax)
-  return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, Mv, Mv, Mv, false, lbfgs_data)
+  return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, false, lbfgs_data)
 end
 
 LBFGSOperator(n::I; kwargs...) where {I<:Integer} = LBFGSOperator(Float64, n; kwargs...)
