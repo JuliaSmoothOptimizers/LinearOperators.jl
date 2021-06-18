@@ -23,7 +23,7 @@ end
 Construct a linear operator from a symmetric real square matrix `M`.
 """
 LinearOperator(
-  M::Union{SymTridiagonal{T}, Symmetric{T}},
+  M::Symmetric{T},
   ) where {T <: Real} = LinearOperator(M, symmetric = true, hermitian = true)
 
 """
