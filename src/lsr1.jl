@@ -82,9 +82,9 @@ function LSR1Operator(T::DataType, n::I; kwargs...) where {I<:Integer}
     for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
-        ax = dot(data.a[k], x) / data.as[k]
+        ax = α * dot(data.a[k], x) / data.as[k]
         for j ∈ eachindex(q)
-          q[j] += α * ax * data.a[k][j]
+          q[j] += ax * data.a[k][j]
         end
       end
     end
