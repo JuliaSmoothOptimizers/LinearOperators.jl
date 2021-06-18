@@ -101,7 +101,7 @@ end
 +(M::AbstractMatrix, op::AbstractLinearOperator) = LinearOperator(M) + op
 +(op::AbstractLinearOperator, M::AbstractMatrix) = op + LinearOperator(M)
 
-# # Operator .+ scalar.
+# Operator .+ scalar.
 +(op::AbstractLinearOperator, x::Number) = op + x * opOnes(op.nrow, op.ncol)
 +(x::Number, op::AbstractLinearOperator) = x * opOnes(op.nrow, op.ncol) + op
 
@@ -112,6 +112,6 @@ end
 -(M::AbstractMatrix, op::AbstractLinearOperator) = LinearOperator(M) - op
 -(op::AbstractLinearOperator, M::AbstractMatrix) = op - LinearOperator(M)
 
-# # Operator - scalar.
+# Operator - scalar.
 -(op::AbstractLinearOperator, x::Number) = op + (-x)
 -(x::Number, op::AbstractLinearOperator) = x + (-op)
