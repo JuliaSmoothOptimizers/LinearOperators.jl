@@ -129,7 +129,6 @@ function opDiagonal(d::AbstractVector{T}) where {T}
   LinearOperator{T}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!)
 end
 
-#TODO: not type stable
 function mulOpDiagonal!(res, d, v, α, β::T, n_min) where T
   if β == zero(T)
     res[1:n_min] .= @views α .* d[1:n_min] .* v[1:n_min]
@@ -142,7 +141,7 @@ end
     opDiagonal(nrow, ncol, d)
 
 Rectangular diagonal operator of size `nrow`-by-`ncol` with the vector `d` on
-its main diagonal and storage vectors `Mv`, `Mtu`, `Maw`.
+its main diagonal.
 """
 function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T,I<:Integer}
   nrow == ncol <= length(d) && (return opDiagonal(d[1:nrow]))
@@ -166,7 +165,7 @@ end
     Z = opRestriction(I, ncol)
     Z = opRestriction(:, ncol)
 
-Creates a LinearOperator restricting a `ncol`-sized vector to indices `I` with storage Vectors `Mv`, `Mtu`.
+Creates a LinearOperator restricting a `ncol`-sized vector to indices `I`.
 The operation `Z * v` is equivalent to `v[I]`. `I` can be `:`.
 
     Z = opRestriction(k, ncol)

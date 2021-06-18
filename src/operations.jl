@@ -34,12 +34,6 @@ function prod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::Abstrac
   mul!(res, op1, vtmp, α, β)
 end
 
-function ctprod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
-                    wtmp::AbstractVector, w::AbstractVector, α, β)
-  mul!(wtmp, op1, w)
-  mul!(res, op2, wtmp, α, β)
-end
-
 ## Operator times operator.
 function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   T = promote_type(eltype(op1), eltype(op2))
@@ -53,8 +47,8 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   utmp = zeros(T, n1)
   wtmp = zeros(T, n1)
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
-  tprod! = @closure (res, u, α, β) -> ctprod_op!(res, transpose(op1), transpose(op2), utmp, u, α, β)
-  ctprod! = @closure (res, w, α, β) -> ctprod_op!(res, adjoint(op1), adjoint(op2), wtmp, w, α, β)
+  tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
+  ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
   LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!)
 end
 
