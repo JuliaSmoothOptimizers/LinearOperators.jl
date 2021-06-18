@@ -64,7 +64,7 @@ println("Allocation of LinearOperator mul! product = $al")
 Operators may be defined from functions. They have to be based on the 5-arguments `mul!` function.
 In the example below, the transposed isn't defined, but it may be inferred from the conjugate transposed. 
 Missing operations are represented as `nothing`.
-You will have deal with cases where `β == 0` and `β != 0` separately because `*` will allocate a `res` vector that
+You will have deal with cases where `β == 0` and `β != 0` separately because `*` will allocate an uninitialized `res` vector that
 may contain `NaN` values, and `0 * NaN == NaN`.
 
 ```@example ex1
@@ -89,7 +89,7 @@ dft = LinearOperator(ComplexF64, 10, 10, false, false,
                      mulifft!)
 x = rand(10)
 y = dft * x
-norm(dft' * y - x)  # DFT is an orthogonal operator
+norm(dft' * y - x)  # DFT is a unitary operator
 ```
 ```@example ex1
 transpose(dft) * y
