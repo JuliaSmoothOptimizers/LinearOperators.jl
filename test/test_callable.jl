@@ -1,7 +1,11 @@
 struct Flip end
 
-function (::Flip)(res, x, α, β)
-  res .= (-α) .* x .+ β .* res
+function (::Flip)(res, x, α, β::T) where {T}
+  if β == zero(T)
+    res .= (-α) .* x
+  else
+    res .= (-α) .* x .+ β .* res
+  end
 end
 
 function test_callable()
