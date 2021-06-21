@@ -7,12 +7,13 @@ The costly operation is deferred until multiplied with a vector.
 
 ## Compatibility
 
-Julia 0.6 and up.
+Julia 1.3 and up.
 
 ## How to Install
 
 ```julia
-Pkg.add("LinearOperators")
+pkg> add LinearOperators
+pkg> test LinearOperators
 ```
 
 ## Operators Available
