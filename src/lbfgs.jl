@@ -89,6 +89,8 @@ LBFGSOperator{T}(
   0,
 )
 
+has_args5(op::LBFGSOperator) = true
+
 """
     InverseLBFGSOperator(T, n, [mem=5; scaling=true])
     InverseLBFGSOperator(n, [mem=5; scaling=true])
