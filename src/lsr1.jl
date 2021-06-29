@@ -79,6 +79,8 @@ LSR1Operator{T}(
   0,
 )
 
+has_args5(op::LSR1Operator) = true
+
 """
     LSR1Operator(T, n; [mem=5, scaling=false)
     LSR1Operator(n; [mem=5, scaling=false)
