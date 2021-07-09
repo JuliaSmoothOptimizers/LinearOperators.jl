@@ -8,18 +8,18 @@
 [docs-stable-url]: https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/stable
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-purple.svg
 [docs-dev-url]: https://JuliaSmoothOptimizers.github.io/LinearOperators.jl/dev
-[build-gh-img]: https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/workflows/CI/badge.svg?branch=master
+[build-gh-img]: https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/workflows/CI/badge.svg?branch=main
 [build-gh-url]: https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/actions
 [build-cirrus-img]: https://img.shields.io/cirrus/github/JuliaSmoothOptimizers/LinearOperators.jl?logo=Cirrus%20CI
 [build-cirrus-url]: https://cirrus-ci.com/github/JuliaSmoothOptimizers/LinearOperators.jl
-[codecov-img]: https://codecov.io/gh/JuliaSmoothOptimizers/LinearOperators.jl/branch/master/graph/badge.svg
+[codecov-img]: https://codecov.io/gh/JuliaSmoothOptimizers/LinearOperators.jl/branch/main/graph/badge.svg
 [codecov-url]: https://app.codecov.io/gh/JuliaSmoothOptimizers/LinearOperators.jl
 [doi-img]: https://zenodo.org/badge/20136006.svg
 [doi-url]: https://zenodo.org/badge/latestdoi/20136006
 
 ## How to Cite
 
-If you use LinearOperators.jl in your work, please cite using the format given in [`CITATION.bib`](https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/blob/master/CITATION.bib).
+If you use LinearOperators.jl in your work, please cite using the format given in [`CITATION.bib`](https://github.com/JuliaSmoothOptimizers/LinearOperators.jl/blob/main/CITATION.bib).
 
 ## Philosophy
 
