@@ -204,6 +204,28 @@ function test_lbfgs()
     @test nallocs == 0
   end
 
+  @testset "push! errors" begin
+    n = 100
+    mem = 20
+    B = LBFGSOperator(n, mem = mem)
+    H = InverseLBFGSOperator(n, mem = mem)
+    BD = LBFGSOperator(n, mem = mem, damped = true)
+    HD = InverseLBFGSOperator(n, mem = mem, damped = true)
+    s = ones(n)
+    y = ones(n)
+    g = ones(n)
+    Bs = zeros(n)
+    @test_throws ErrorException push!(B, s, y, Bs)
+    @test_throws ErrorException push!(H, s, y, Bs)
+    @test_throws ErrorException push!(HD, s, y, Bs)
+    @test_throws ErrorException push!(B, s, y, 1.0, g)
+    @test_throws ErrorException push!(BD, s, y, 1.0, g)
+    @test_throws ErrorException push!(H, s, y, 1.0, g)
+    @test_throws ErrorException push!(B, s, y, 1.0, g, Bs)
+    @test_throws ErrorException push!(BD, s, y, 1.0, g, Bs)
+    @test_throws ErrorException push!(H, s, y, 1.0, g, Bs)
+  end
+
   @testset "LBFGS eigenvalues" begin
     n = 100
     mem = 20
