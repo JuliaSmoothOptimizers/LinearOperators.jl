@@ -175,42 +175,7 @@ end
 
 LBFGSOperator(n::I; kwargs...) where {I<:Integer} = LBFGSOperator(Float64, n; kwargs...)
 
-"""
-    push!(op, s, y)
-    push!(op, s, y, α, g)
-Push a new {s,y} pair into a L-BFGS operator.
-The second calling sequence is used in inverse LBFGS updating in conjunction with damping,
-where α is the most recent steplength and g the gradient used when solving `d=-Hg`.
-In forward updating with damping, it is not necessary to supply α and g.
-"""
-function push!(op::LBFGSOperator, s::Vector, y::Vector, α::Real = 1.0, g::Vector = eltype(y)[])
-  ys = dot(y, s)
-  σ₂ = op.data.σ₂
-  σ₃ = op.data.σ₃
-
-  if op.data.damped
-    # Powell's damped update strategy
-    Bs = op.inverse ? (-α * g) : (op * s)
-    sBs = dot(s, Bs)
-    damp = false
-    if ys < (1 - σ₂) * sBs
-      θ = σ₂ * sBs / (sBs - ys)
-      damp = true
-    elseif ys > (1 + σ₃) * sBs
-      θ = σ₃ * sBs / (ys - sBs)
-      damp = true
-    end
-    if damp
-      y = θ * y + (1 - θ) * Bs  # damped y
-      ys = θ * ys + (1 - θ) * sBs
-    end
-  else
-    if ys <= eps(eltype(op))
-      # op.counters.rejects +=1
-      return op
-    end
-  end
-
+function push_common!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, ys::T) where {T,I,F1,F2,F3}
   # op.counters.updates += 1
   data = op.data
   insert = data.insert
@@ -243,6 +208,96 @@ function push!(op::LBFGSOperator, s::Vector, y::Vector, α::Real = 1.0, g::Vecto
 
   op.data.insert = mod(insert, data.mem) + 1
   return op
+end
+
+"""
+    push!(op, s, y)
+    push!(op, s, y, Bs)
+    push!(op, s, y, α, g)
+    push!(op, s, y, α, g, Bs)
+
+Push a new {s,y} pair into a L-BFGS operator.
+The second calling sequence is used for forward updating damping, using the preallocated vector `Bs`.
+If the operator is damped, the first call will create `Bs` and call the second call.
+The third and fourth calling sequences are used in inverse LBFGS updating in conjunction with damping,
+where α is the most recent steplength and g the gradient used when solving `d=-Hg`.
+"""
+function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}) where {T,I,F1,F2,F3}
+  if op.data.damped
+    return push!(op, s, y, similar(s))
+  end
+  ys = dot(y, s)
+  σ₂ = op.data.σ₂
+  σ₃ = op.data.σ₃
+
+  if ys <= eps(eltype(op))
+    # op.counters.rejects +=1
+    return op
+  end
+
+  push_common!(op, s, y, ys)
+end
+
+function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, Bs::Vector{T}) where {T,I,F1,F2,F3}
+  if !op.data.damped
+    error("This push! should be used for damped operators")
+  elseif op.inverse
+    error("This function be used for forward operators. Use push!(op, s, y, α, g, Bs) instead.")
+  end
+  ys = dot(y, s)
+  σ₂ = op.data.σ₂
+  σ₃ = op.data.σ₃
+
+  # Powell's damped update strategy
+  mul!(Bs, op, s, one(T), zero(T))
+  sBs = dot(s, Bs)
+  damp = false
+  if ys < (1 - σ₂) * sBs
+    θ = σ₂ * sBs / (sBs - ys)
+    damp = true
+  elseif ys > (1 + σ₃) * sBs
+    θ = σ₃ * sBs / (ys - sBs)
+    damp = true
+  end
+  if damp
+    @. y = θ * y + (1 - θ) * Bs  # damped y
+    ys = θ * ys + (1 - θ) * sBs
+  end
+
+  push_common!(op, s, y, ys)
+end
+
+function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, α::T, g::Vector{T}, Bs::Vector{T}) where {T,I,F1,F2,F3}
+  if !op.data.damped
+    error("This push! should be used for damped operators")
+  elseif !op.inverse
+    error("This function be used for inverse operators. Use push!(op, s, y, Bs) instead.")
+  end
+  ys = dot(y, s)
+  σ₂ = op.data.σ₂
+  σ₃ = op.data.σ₃
+
+  # Powell's damped update strategy
+  @. Bs = -α * g
+  sBs = dot(s, Bs)
+  damp = false
+  if ys < (1 - σ₂) * sBs
+    θ = σ₂ * sBs / (sBs - ys)
+    damp = true
+  elseif ys > (1 + σ₃) * sBs
+    θ = σ₃ * sBs / (ys - sBs)
+    damp = true
+  end
+  if damp
+    @. y = θ * y + (1 - θ) * Bs  # damped y
+    ys = θ * ys + (1 - θ) * sBs
+  end
+
+  push_common!(op, s, y, ys)
+end
+
+function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, α::T, g::Vector{T}) where {T,I,F1,F2,F3}
+  push!(op, s, y, α, g, similar(g))
 end
 
 """

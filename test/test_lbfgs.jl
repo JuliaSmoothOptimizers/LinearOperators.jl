@@ -169,13 +169,19 @@ function test_lbfgs()
     mem = 20
     B = LBFGSOperator(n, mem = mem)
     H = InverseLBFGSOperator(n, mem = mem)
+    BD = LBFGSOperator(n, mem = mem, damped = true)
+    HD = InverseLBFGSOperator(n, mem = mem, damped = true)
     for _ = 1:2:n
       s = rand(n)
       y = rand(n)
       push!(B, s, y)
       push!(H, s, y)
+      g = rand(n)
+      push!(BD, s, y)
+      push!(HD, s, y, 1.0, g)
     end
     x = rand(n)
+    y = rand(n)
     res = similar(x)
     mul!(res, B, x)  # warmup
     nallocs = @allocated mul!(res, B, x)
@@ -185,15 +191,16 @@ function test_lbfgs()
     @test nallocs == 0
     nallocs = @allocated diag!(B, x)
     @test nallocs == 0
-    y = rand(n)
-    z = Float64[]
+
     nallocs = @allocated push!(B, x, y)
-    @test nallocs == 80
-    nallocs = @allocated push!(H, x, y)
-    @test nallocs == 80
-    nallocs = @allocated push!(B, x, y, 0.0, z)
     @test nallocs == 0
-    nallocs = @allocated push!(H, x, y, 0.0, z)
+    nallocs = @allocated push!(H, x, y)
+    @test nallocs == 0
+
+    tmp = zeros(n)
+    nallocs = @allocated push!(BD, x, y, tmp)
+    @test nallocs == 0
+    nallocs = @allocated push!(HD, x, y, 1.0, x, tmp)
     @test nallocs == 0
   end
 
