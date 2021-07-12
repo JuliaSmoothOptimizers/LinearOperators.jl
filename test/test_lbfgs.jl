@@ -185,6 +185,16 @@ function test_lbfgs()
     @test nallocs == 0
     nallocs = @allocated diag!(B, x)
     @test nallocs == 0
+    y = rand(n)
+    z = Float64[]
+    nallocs = @allocated push!(B, x, y)
+    @test nallocs == 80
+    nallocs = @allocated push!(H, x, y)
+    @test nallocs == 80
+    nallocs = @allocated push!(B, x, y, 0.0, z)
+    @test nallocs == 0
+    nallocs = @allocated push!(H, x, y, 0.0, z)
+    @test nallocs == 0
   end
 
   @testset "LBFGS eigenvalues" begin

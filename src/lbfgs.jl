@@ -222,21 +222,21 @@ function push!(op::LBFGSOperator, s::Vector, y::Vector, α::Real = 1.0, g::Vecto
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    data.b[insert] .= y / sqrt(ys)
+    @. data.b[insert] = y / sqrt(ys)
 
     for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
-        data.a[k] .= data.s[k] / data.scaling_factor  # B₀ = I / γ.
+        @. data.a[k] = data.s[k] / data.scaling_factor  # B₀ = I / γ.
 
         for j = 1:(i - 1)
           l = mod(insert + j - 1, data.mem) + 1
           if data.ys[l] != 0
-            data.a[k] .+= dot(data.b[l], data.s[k]) * data.b[l]
-            data.a[k] .-= dot(data.a[l], data.s[k]) * data.a[l]
+            data.a[k] .+= dot(data.b[l], data.s[k]) .* data.b[l]
+            data.a[k] .-= dot(data.a[l], data.s[k]) .* data.a[l]
           end
         end
-        data.a[k] /= sqrt(dot(data.s[k], data.a[k]))
+        data.a[k] ./= sqrt(dot(data.s[k], data.a[k]))
       end
     end
   end
