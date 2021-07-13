@@ -5,11 +5,7 @@ Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
 """
-function LinearOperator(
-  M::AbstractMatrix{T};
-  symmetric = false,
-  hermitian = false,
-) where {T}
+function LinearOperator(M::AbstractMatrix{T}; symmetric = false, hermitian = false) where {T}
   nrow, ncol = size(M)
   prod! = @closure (res, v, α, β) -> mul!(res, M, v, α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(M), u, α, β)
@@ -17,14 +13,13 @@ function LinearOperator(
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
 end
 
-  """
+"""
   LinearOperator(Mv, M :: Symmetric{<:Real})
 
 Construct a linear operator from a symmetric real square matrix `M`.
 """
-LinearOperator(
-  M::Symmetric{T},
-  ) where {T <: Real} = LinearOperator(M, symmetric = true, hermitian = true)
+LinearOperator(M::Symmetric{T}) where {T <: Real} =
+  LinearOperator(M, symmetric = true, hermitian = true)
 
 """
     LinearOperator(M)
@@ -97,6 +92,6 @@ function LinearOperator(
   prod!,
   tprod! = nothing,
   ctprod! = nothing,
-) where {T, I<:Integer}
+) where {T, I <: Integer}
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
 end

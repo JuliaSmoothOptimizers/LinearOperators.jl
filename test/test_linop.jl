@@ -149,7 +149,7 @@ function test_linop()
     @testset "Operator × Operator" begin
       A4 = simple_matrix(ComplexF64, ncol, ncol)
       B4 = simple_matrix(ComplexF64, ncol, ncol)
-      for Ai in (A4, transpose(A4), adjoint(A4), conj(A4)) 
+      for Ai in (A4, transpose(A4), adjoint(A4), conj(A4))
         for Bi in (B4, transpose(B4), adjoint(B4), conj(B4))
           C = Ai * Bi
           opC = LinearOperator(Ai) * LinearOperator(Bi)
@@ -199,7 +199,7 @@ function test_linop()
   @testset ExtendedTestSet "Basic operators" begin
     @testset "Identity" begin
       opI = opEye(nrow)
-      opI2 = opEye(nrow, nrow) 
+      opI2 = opEye(nrow, nrow)
       v = simple_vector(ComplexF64, nrow)
       @test(abs(norm(opI * v - v)) <= ϵ * norm(v))
       @test(abs(norm(opI2 * v - v)) <= ϵ * norm(v))
@@ -349,10 +349,16 @@ function test_linop()
       A = simple_matrix(ComplexF64, nrow, nrow)
       v = simple_vector(ComplexF64, nrow)
 
-      op = LinearOperator(ComplexF64, nrow, nrow, false, false, 
-        (res, v, α, β) -> mul!(res, A, v, α, β), 
-        (res, v, α, β) -> mul!(res, transpose(A), v, α, β), 
-        nothing)
+      op = LinearOperator(
+        ComplexF64,
+        nrow,
+        nrow,
+        false,
+        false,
+        (res, v, α, β) -> mul!(res, A, v, α, β),
+        (res, v, α, β) -> mul!(res, transpose(A), v, α, β),
+        nothing,
+      )
       @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
       @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
       @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
@@ -360,10 +366,16 @@ function test_linop()
       @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
 
-      op = LinearOperator(ComplexF64, nrow, nrow, false, false, 
-        (res, v, α, β) -> mul!(res, A, v, α, β), 
-        nothing, 
-        (res, v, α, β) -> mul!(res, adjoint(A), v, α, β))
+      op = LinearOperator(
+        ComplexF64,
+        nrow,
+        nrow,
+        false,
+        false,
+        (res, v, α, β) -> mul!(res, A, v, α, β),
+        nothing,
+        (res, v, α, β) -> mul!(res, adjoint(A), v, α, β),
+      )
       @test(norm(transpose(A) * v - transpose(op) * v) <= rtol * norm(v))
       @test(norm(adjoint(A) * v - adjoint(op) * v) <= rtol * norm(v))
       @test(norm(A * v - transpose(transpose(op)) * v) <= rtol * norm(v))
@@ -409,7 +421,7 @@ function test_linop()
       A = rand(n, n)
       opA = LinearOperator(A)
       v = simple_vector(Float64, 2)
-      @test norm(A[[3,4], [5,6]] * v - opA[[3,4], [5,6]] * v) ≤ rtol * norm(v)
+      @test norm(A[[3, 4], [5, 6]] * v - opA[[3, 4], [5, 6]] * v) ≤ rtol * norm(v)
     end
   end
 
@@ -491,12 +503,12 @@ function test_linop()
   end
 
   @testset ExtendedTestSet "Type specific operator" begin
-    function prod!(res, v, α, β) 
-      res[1] = v[1] + v[2] 
+    function prod!(res, v, α, β)
+      res[1] = v[1] + v[2]
       res[2] = v[2]
     end
-    function ctprod!(res, v, α, β) 
-      res[1] = v[1] 
+    function ctprod!(res, v, α, β)
+      res[1] = v[1]
       res[2] = v[1] + v[2]
     end
     for T in (Complex{Float64}, Complex{Float32}, BigFloat, Float64, Float32, Float16, Int32)
@@ -508,7 +520,7 @@ function test_linop()
     end
 
     A = [im 1.0; 0.0 1.0]
-    function prod2!(res, v, α, β) 
+    function prod2!(res, v, α, β)
       mul!(res, A, v)
     end
     function tprod2!(res, u, α, β)

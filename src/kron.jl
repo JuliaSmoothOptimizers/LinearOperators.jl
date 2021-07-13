@@ -11,7 +11,7 @@ function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
   m, n = size(A)
   p, q = size(B)
   T = promote_type(eltype(A), eltype(B))
-  function prod!(res, x, α, β::T2) where T2
+  function prod!(res, x, α, β::T2) where {T2}
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), q, n)
     if β == zero(T2)
@@ -20,7 +20,7 @@ function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
       res .= Matrix(B * X * transpose(A))[:] .+ β .* res
     end
   end
-  function tprod!(res, x, α, β::T2) where T2
+  function tprod!(res, x, α, β::T2) where {T2}
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), p, m)
     if β == zero(T2)
@@ -29,7 +29,7 @@ function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
       res .= Matrix(transpose(B) * X * A)[:] .+ β .* res
     end
   end
-  function ctprod!(res, x, α, β::T2) where T2
+  function ctprod!(res, x, α, β::T2) where {T2}
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), p, m)
     if β == zero(T2)

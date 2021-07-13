@@ -25,13 +25,13 @@ function show(io::IO, op::opEye)
   println(io, "Identity operator")
 end
 
-function mulOpEye!(res, v, α, β::T, n_min) where T
+function mulOpEye!(res, v, α, β::T, n_min) where {T}
   if β == zero(T)
     res[1:n_min] .= @views α .* v[1:n_min]
-    res[n_min+1:end] .= 0 
+    res[(n_min + 1):end] .= 0
   else
     res[1:n_min] .= @views α .* v[1:n_min] .+ β .* res[1:n_min]
-    res[n_min+1:end] .= β
+    res[(n_min + 1):end] .= β
   end
 end
 
@@ -56,7 +56,7 @@ opEye(n::Int) = opEye(Float64, n)
 Rectangular identity operator of size `nrow`x`ncol` and of data type `T`
 (defaults to `Float64`).
 """
-function opEye(T::DataType, nrow::I, ncol::I) where {I<:Integer}
+function opEye(T::DataType, nrow::I, ncol::I) where {I <: Integer}
   if nrow == ncol
     return opEye(T, nrow)
   end
@@ -64,9 +64,9 @@ function opEye(T::DataType, nrow::I, ncol::I) where {I<:Integer}
   return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!)
 end
 
-opEye(nrow::I, ncol::I) where {I<:Integer} = opEye(Float64, nrow, ncol)
+opEye(nrow::I, ncol::I) where {I <: Integer} = opEye(Float64, nrow, ncol)
 
-function mulOpOnes!(res, v, α, β::T) where T
+function mulOpOnes!(res, v, α, β::T) where {T}
   if β == zero(T)
     res .= (α * sum(v))
   else
@@ -81,19 +81,19 @@ end
 Operator of all ones of size `nrow`-by-`ncol` of data type `T` (defaults to
 `Float64`).
 """
-function opOnes(T::DataType, nrow::I, ncol::I) where {I<:Integer}
+function opOnes(T::DataType, nrow::I, ncol::I) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpOnes!(res, v, α, β)
   LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
 end
 
-opOnes(nrow::I, ncol::I) where {I<:Integer} = opOnes(Float64, nrow, ncol)
+opOnes(nrow::I, ncol::I) where {I <: Integer} = opOnes(Float64, nrow, ncol)
 
-function mulOpZeros!(res, v, α, β::T) where T
+function mulOpZeros!(res, v, α, β::T) where {T}
   if β == zero(T)
     res .= 0
   else
     res .*= β
-  end 
+  end
 end
 
 """
@@ -103,17 +103,17 @@ end
 Zero operator of size `nrow`-by-`ncol`, of data type `T` (defaults to
 `Float64`).
 """
-function opZeros(T::DataType, nrow::I, ncol::I) where {I<:Integer}
+function opZeros(T::DataType, nrow::I, ncol::I) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpZeros!(res, v, α, β)
   LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
 end
 
-opZeros(nrow::I, ncol::I) where {I<:Integer} = opZeros(Float64, nrow, ncol)
+opZeros(nrow::I, ncol::I) where {I <: Integer} = opZeros(Float64, nrow, ncol)
 
-function mulSquareOpDiagonal!(res, d, v, α, β::T) where T
+function mulSquareOpDiagonal!(res, d, v, α, β::T) where {T}
   if β == zero(T)
     res .= α .* d .* v
-  else 
+  else
     res .= α .* d .* v .+ β .* res
   end
 end
@@ -129,13 +129,13 @@ function opDiagonal(d::AbstractVector{T}) where {T}
   LinearOperator{T}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!)
 end
 
-function mulOpDiagonal!(res, d, v, α, β::T, n_min) where T
+function mulOpDiagonal!(res, d, v, α, β::T, n_min) where {T}
   if β == zero(T)
     res[1:n_min] .= @views α .* d[1:n_min] .* v[1:n_min]
   else
     res[1:n_min] .= @views α .* d[1:n_min] .* v[1:n_min] .+ β .* res[1:n_min]
   end
-  res[n_min+1:end] .= 0
+  res[(n_min + 1):end] .= 0
 end
 """
     opDiagonal(nrow, ncol, d)
@@ -143,7 +143,7 @@ end
 Rectangular diagonal operator of size `nrow`-by-`ncol` with the vector `d` on
 its main diagonal.
 """
-function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T,I<:Integer}
+function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T, I <: Integer}
   nrow == ncol <= length(d) && (return opDiagonal(d[1:nrow]))
   n_min = min(nrow, ncol)
   prod! = @closure (res, v, α, β) -> mulOpDiagonal!(res, d, v, α, β, n_min)
@@ -160,7 +160,7 @@ function multRestrict!(res, I, u, α, β)
   res .= 0
   res[I] = u
 end
-  
+
 """
     Z = opRestriction(I, ncol)
     Z = opRestriction(:, ncol)
@@ -172,7 +172,7 @@ The operation `Z * v` is equivalent to `v[I]`. `I` can be `:`.
 
 Alias for `opRestriction([k], ncol)`.
 """
-function opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I) where {T,I<:Integer}
+function opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I) where {T, I <: Integer}
   all(1 .≤ Idx .≤ ncol) || throw(LinearOperatorException("indices should be between 1 and $ncol"))
   nrow = length(Idx)
   prod! = @closure (res, v, α, β) -> mulRestrict!(res, Idx, v, α, β)
@@ -180,9 +180,9 @@ function opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I) where {T,I<:Int
   return LinearOperator{I}(nrow, ncol, false, false, prod!, tprod!, tprod!)
 end
 
-opRestriction(::Colon, ncol::I) where {I<:Integer} = opEye(I, ncol)
+opRestriction(::Colon, ncol::I) where {I <: Integer} = opEye(I, ncol)
 
-opRestriction(k::I, ncol::I) where {I<:Integer} = opRestriction([k], ncol)
+opRestriction(k::I, ncol::I) where {I <: Integer} = opRestriction([k], ncol)
 
 """
     Z = opExtension(I, ncol)
@@ -197,11 +197,12 @@ The operation `w = Z * v` is equivalent to `w = zeros(ncol); w[I] = v`.
 
 Alias for `opExtension([k], ncol)`.
 """
-opExtension(Idx::LinearOperatorIndexType{I}, ncol::I) where {I<:Integer} = opRestriction(Idx, ncol)'
+opExtension(Idx::LinearOperatorIndexType{I}, ncol::I) where {I <: Integer} =
+  opRestriction(Idx, ncol)'
 
-opExtension(::Colon, ncol::I) where {I<:Integer} = opEye(I, ncol)
+opExtension(::Colon, ncol::I) where {I <: Integer} = opEye(I, ncol)
 
-opExtension(k::I, ncol::I) where {I<:Integer} = opExtension([k], ncol)
+opExtension(k::I, ncol::I) where {I <: Integer} = opExtension([k], ncol)
 
 # indexing for linear operators
 import Base.getindex
@@ -209,7 +210,7 @@ function getindex(
   op::AbstractLinearOperator,
   rows::Union{LinearOperatorIndexType{I}, I, Colon},
   cols::Union{LinearOperatorIndexType{I}, I, Colon},
-) where {I<:Integer}
+) where {I <: Integer}
   R = opRestriction(rows, size(op, 1))
   E = opExtension(cols, size(op, 2))
   return R * op * E
@@ -241,7 +242,7 @@ function BlockDiagonalOperator(ops...) where {S}
     j = 0
     for op ∈ ops
       m, n = size(op)
-      @views mul!(y[(k + 1):(k + m)] , op, x[(j + 1):(j + n)], α, β)
+      @views mul!(y[(k + 1):(k + m)], op, x[(j + 1):(j + n)], α, β)
       k += m
       j += n
     end
