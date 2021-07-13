@@ -1,6 +1,6 @@
-export opInverse, opCholesky, opLDL, opHouseholder, opHermitian 
+export opInverse, opCholesky, opLDL, opHouseholder, opHermitian
 
-function mulFact!(res, F, v, α, β :: T) where T
+function mulFact!(res, F, v, α, β::T) where {T}
   if β == zero(T)
     res .= α .* (F \ v)
   else
@@ -8,7 +8,7 @@ function mulFact!(res, F, v, α, β :: T) where T
   end
 end
 
-function tmulFact!(res, F, u, α, β :: T) where T
+function tmulFact!(res, F, u, α, β::T) where {T}
   if β == zero(T)
     res .= α .* conj.(F \ conj.(u))
   else
@@ -79,7 +79,7 @@ function opLDL(M::AbstractMatrix; check::Bool = false) where {T}
   #TODO: use iterative refinement.
 end
 
-function mulHouseholder!(res, h, v, α, β :: T) where T
+function mulHouseholder!(res, h, v, α, β::T) where {T}
   if β == zero(T)
     res .= α .* (v .- 2 * dot(h, v) .* h)
   else
@@ -99,7 +99,7 @@ function opHouseholder(h::AbstractVector{T}) where {T}
   LinearOperator{T}(n, n, isreal(h), true, prod!, nothing, prod!)
 end
 
-function mulHermitian!(res, d, L, v,  α, β :: T) where T
+function mulHermitian!(res, d, L, v, α, β::T) where {T}
   if β == zero(T)
     res .= α .* (d .* v .+ L * v .+ (v' * L)')[:]
   else
