@@ -10,9 +10,13 @@ mutable struct TimedLinearOperator{T, F, Ft, Fct} <: AbstractLinearOperator{T}
   ctprod!::Fct
 end
 
-TimedLinearOperator{T}(timer::TimerOutput, op::AbstractLinearOperator{T}, 
-                       prod!::F, tprod!::Ft, ctprod!::Fct
-                       ) where {T,F,Ft,Fct} = TimedLinearOperator{T,F,Ft,Fct}(timer, op, prod!, tprod!, ctprod!)
+TimedLinearOperator{T}(
+  timer::TimerOutput,
+  op::AbstractLinearOperator{T},
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+) where {T, F, Ft, Fct} = TimedLinearOperator{T, F, Ft, Fct}(timer, op, prod!, tprod!, ctprod!)
 
 """
     TimedLinearOperator(op)

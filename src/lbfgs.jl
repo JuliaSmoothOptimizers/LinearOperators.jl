@@ -1,7 +1,7 @@
 export LBFGSOperator, InverseLBFGSOperator, diag, diag!
 
 "A data type to hold information relative to LBFGS operators."
-mutable struct LBFGSData{T,I<:Integer}
+mutable struct LBFGSData{T, I <: Integer}
   mem::I
   scaling::Bool
   scaling_factor::T
@@ -27,8 +27,8 @@ function LBFGSData(
   inverse::Bool = true,
   σ₂::Float64 = 0.99,
   σ₃::Float64 = 10.0,
-) where {I<:Integer}
-  LBFGSData{T,I}(
+) where {I <: Integer}
+  LBFGSData{T, I}(
     max(mem, 1),
     scaling,
     convert(T, 1),
@@ -46,10 +46,10 @@ function LBFGSData(
   )
 end
 
-LBFGSData(n::I; kwargs...) where {I<:Integer} = LBFGSData(Float64, n; kwargs...)
+LBFGSData(n::I; kwargs...) where {I <: Integer} = LBFGSData(Float64, n; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-mutable struct LBFGSOperator{T,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{T}
+mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
   nrow::I
   ncol::I
   symmetric::Bool
@@ -58,7 +58,7 @@ mutable struct LBFGSOperator{T,I<:Integer,F,Ft,Fct} <: AbstractLinearOperator{T}
   tprod!::Ft    # apply the transpose operator to a vector
   ctprod!::Fct   # apply the transpose conjugate operator to a vector
   inverse::Bool
-  data::LBFGSData{T,I}
+  data::LBFGSData{T, I}
   nprod::I
   ntprod::I
   nctprod::I
@@ -73,9 +73,21 @@ LBFGSOperator{T}(
   tprod!::Ft,
   ctprod!::Fct,
   inverse::Bool,
-  data::LBFGSData{T,I},
-) where {T,I<:Integer,F,Ft,Fct} =
-  LBFGSOperator{T,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, inverse, data, 0, 0, 0)
+  data::LBFGSData{T, I},
+) where {T, I <: Integer, F, Ft, Fct} = LBFGSOperator{T, I, F, Ft, Fct}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!,
+  inverse,
+  data,
+  0,
+  0,
+  0,
+)
 
 """
     InverseLBFGSOperator(T, n, [mem=5; scaling=true])
@@ -83,12 +95,18 @@ LBFGSOperator{T}(
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
+function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I <: Integer}
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = true, kwargs...)
 
-  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, αm, βm::T2) where T2
+  function lbfgs_multiply(
+    res::AbstractVector,
+    data::LBFGSData,
+    x::AbstractArray,
+    αm,
+    βm::T2,
+  ) where {T2}
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.4, p. 178.
 
@@ -137,12 +155,18 @@ InverseLBFGSOperator(n::Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwarg
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function LBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
+function LBFGSOperator(T::DataType, n::I; kwargs...) where {I <: Integer}
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = false, kwargs...)
 
-  function lbfgs_multiply(res::AbstractVector, data::LBFGSData, x::AbstractArray, α, β::T2) where T2
+  function lbfgs_multiply(
+    res::AbstractVector,
+    data::LBFGSData,
+    x::AbstractArray,
+    α,
+    β::T2,
+  ) where {T2}
     # Multiply operator with a vector.
     # See, e.g., Nocedal & Wright, 2nd ed., Procedure 7.6, p. 184.
 
@@ -173,9 +197,14 @@ function LBFGSOperator(T::DataType, n::I; kwargs...) where {I<:Integer}
   return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, false, lbfgs_data)
 end
 
-LBFGSOperator(n::I; kwargs...) where {I<:Integer} = LBFGSOperator(Float64, n; kwargs...)
+LBFGSOperator(n::I; kwargs...) where {I <: Integer} = LBFGSOperator(Float64, n; kwargs...)
 
-function push_common!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, ys::T) where {T,I,F1,F2,F3}
+function push_common!(
+  op::LBFGSOperator{T, I, F1, F2, F3},
+  s::Vector{T},
+  y::Vector{T},
+  ys::T,
+) where {T, I, F1, F2, F3}
   # op.counters.updates += 1
   data = op.data
   insert = data.insert
@@ -222,7 +251,11 @@ If the operator is damped, the first call will create `Bs` and call the second c
 The third and fourth calling sequences are used in inverse LBFGS updating in conjunction with damping,
 where α is the most recent steplength and g the gradient used when solving `d=-Hg`.
 """
-function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}) where {T,I,F1,F2,F3}
+function push!(
+  op::LBFGSOperator{T, I, F1, F2, F3},
+  s::Vector{T},
+  y::Vector{T},
+) where {T, I, F1, F2, F3}
   if op.data.damped
     return push!(op, s, y, similar(s))
   end
@@ -238,7 +271,12 @@ function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}) wher
   push_common!(op, s, y, ys)
 end
 
-function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, Bs::Vector{T}) where {T,I,F1,F2,F3}
+function push!(
+  op::LBFGSOperator{T, I, F1, F2, F3},
+  s::Vector{T},
+  y::Vector{T},
+  Bs::Vector{T},
+) where {T, I, F1, F2, F3}
   if !op.data.damped
     error("This push! should be used for damped operators")
   elseif op.inverse
@@ -267,7 +305,14 @@ function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, Bs::
   push_common!(op, s, y, ys)
 end
 
-function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, α::T, g::Vector{T}, Bs::Vector{T}) where {T,I,F1,F2,F3}
+function push!(
+  op::LBFGSOperator{T, I, F1, F2, F3},
+  s::Vector{T},
+  y::Vector{T},
+  α::T,
+  g::Vector{T},
+  Bs::Vector{T},
+) where {T, I, F1, F2, F3}
   if !op.data.damped
     error("This push! should be used for damped operators")
   elseif !op.inverse
@@ -296,7 +341,13 @@ function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, α::
   push_common!(op, s, y, ys)
 end
 
-function push!(op::LBFGSOperator{T,I,F1,F2,F3}, s::Vector{T}, y::Vector{T}, α::T, g::Vector{T}) where {T,I,F1,F2,F3}
+function push!(
+  op::LBFGSOperator{T, I, F1, F2, F3},
+  s::Vector{T},
+  y::Vector{T},
+  α::T,
+  g::Vector{T},
+) where {T, I, F1, F2, F3}
   push!(op, s, y, α, g, similar(g))
 end
 
@@ -334,7 +385,7 @@ end
     reset!(data)
 Resets the given LBFGS data.
 """
-function reset!(data::LBFGSData{T,I}, inverse::Bool) where {T,I<:Integer}
+function reset!(data::LBFGSData{T, I}, inverse::Bool) where {T, I <: Integer}
   for i = 1:(data.mem)
     fill!(data.s[i], 0)
     fill!(data.y[i], 0)

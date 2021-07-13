@@ -18,7 +18,7 @@ function test_callable()
     v = ones(2)
     allocs = @allocated mul!(Mv, op, v)
     @test allocs == 0
-    @test Mv == -ones(2) 
+    @test Mv == -ones(2)
   end
 end
 

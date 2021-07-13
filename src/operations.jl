@@ -1,12 +1,13 @@
 import Base.+, Base.-, Base.*, LinearAlgebra.mul!
 
-function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where T 
-  (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) || throw(LinearOperatorException("shape mismatch"))
+function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where {T}
+  (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) ||
+    throw(LinearOperatorException("shape mismatch"))
   increase_nprod(op)
   op.prod!(res, v, α, β)
 end
 
-function mul!(res::AbstractVector, op::AbstractLinearOperator, v::AbstractVector{T}) where T
+function mul!(res::AbstractVector, op::AbstractLinearOperator, v::AbstractVector{T}) where {T}
   mul!(res, op, v, one(T), zero(T))
 end
 
@@ -21,15 +22,22 @@ end
 # Unary operations.
 +(op::AbstractLinearOperator) = op
 
-function -(op::AbstractLinearOperator{T}) where T
+function -(op::AbstractLinearOperator{T}) where {T}
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, -α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, -α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, -α, β)
   LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod!, tprod!, ctprod!)
 end
 
-function prod_op!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator, 
-                  vtmp::AbstractVector, v::AbstractVector, α, β)
+function prod_op!(
+  res::AbstractVector,
+  op1::AbstractLinearOperator,
+  op2::AbstractLinearOperator,
+  vtmp::AbstractVector,
+  v::AbstractVector,
+  α,
+  β,
+)
   mul!(vtmp, op2, v)
   mul!(res, op1, vtmp, α, β)
 end
@@ -62,7 +70,15 @@ function *(op::AbstractLinearOperator, x::Number)
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, x * α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, x * α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, x' * α, β)
-  LinearOperator{S}(op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), prod!, tprod!, ctprod!)
+  LinearOperator{S}(
+    op.nrow,
+    op.ncol,
+    op.symmetric,
+    op.hermitian && isreal(x),
+    prod!,
+    tprod!,
+    ctprod!,
+  )
 end
 
 function *(x::Number, op::AbstractLinearOperator)
@@ -71,7 +87,14 @@ end
 
 # Operator + operator.
 
-function sum_prod!(res::AbstractVector, op1::AbstractLinearOperator, op2::AbstractLinearOperator{T}, v::AbstractVector, α, β) where T
+function sum_prod!(
+  res::AbstractVector,
+  op1::AbstractLinearOperator,
+  op2::AbstractLinearOperator{T},
+  v::AbstractVector,
+  α,
+  β,
+) where {T}
   mul!(res, op1, v, α, β)
   mul!(res, op2, v, α, one(T))
 end

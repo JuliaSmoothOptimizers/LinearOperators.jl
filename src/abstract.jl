@@ -16,7 +16,8 @@ mutable struct LinearOperatorException <: Exception
 end
 
 # when indexing, Colon() is treated separately
-const LinearOperatorIndexType{I} = Union{UnitRange{I}, StepRange{I, I}, AbstractVector{I}} where {I<:Integer}
+const LinearOperatorIndexType{I} =
+  Union{UnitRange{I}, StepRange{I, I}, AbstractVector{I}} where {I <: Integer}
 
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
@@ -35,7 +36,7 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-mutable struct LinearOperator{T, I<:Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
+mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
   nrow::I
   ncol::I
   symmetric::Bool
@@ -48,13 +49,29 @@ mutable struct LinearOperator{T, I<:Integer, F, Ft, Fct} <: AbstractLinearOperat
   nctprod::I
 end
 
-
-LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool, 
-                  prod!::F, tprod!::Ft, ctprod!::Fct,
-                  nprod::I, ntprod::I, nctprod::I
-                  ) where {T,I<:Integer,F,Ft,Fct} = LinearOperator{T,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, 
-                                                                                     prod!, tprod!, ctprod!,
-                                                                                     nprod, ntprod, nctprod)
+LinearOperator{T}(
+  nrow::I,
+  ncol::I,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+  nprod::I,
+  ntprod::I,
+  nctprod::I,
+) where {T, I <: Integer, F, Ft, Fct} = LinearOperator{T, I, F, Ft, Fct}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!,
+  nprod,
+  ntprod,
+  nctprod,
+)
 
 LinearOperator{T}(
   nrow::I,
@@ -64,7 +81,8 @@ LinearOperator{T}(
   prod!,
   tprod!,
   ctprod!,
-) where {T,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
+) where {T, I <: Integer} =
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod

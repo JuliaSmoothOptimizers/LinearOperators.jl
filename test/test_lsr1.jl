@@ -90,7 +90,7 @@ function test_lsr1()
     x = rand(n)
     res = similar(x)
     mul!(res, B, x)  # warmup
-    nallocs = @allocated mul!(res, B, x) 
+    nallocs = @allocated mul!(res, B, x)
     @test nallocs == 0
     nallocs = @allocated diag!(B, x)
     @test nallocs == 0
