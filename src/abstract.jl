@@ -5,6 +5,7 @@ export AbstractLinearOperator,
   ishermitian,
   symmetric,
   issymmetric,
+  has_args5,
   nprod,
   ntprod,
   nctprod,
@@ -88,8 +89,9 @@ LinearOperator{T}(
   hermitian::Bool,
   prod!,
   tprod!,
-  ctprod!,
-) where {T,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, true)
+  ctprod!;
+  args5::Bool = true,
+) where {T,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, args5)
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod
@@ -99,6 +101,11 @@ increase_nprod(op::AbstractLinearOperator) = (op.nprod += 1)
 increase_ntprod(op::AbstractLinearOperator) = (op.ntprod += 1)
 increase_nctprod(op::AbstractLinearOperator) = (op.nctprod += 1)
 
+"""
+    has_args5(op)
+
+Determine whether the operator can work with the 5-args `mul!`.
+"""
 has_args5(op::LinearOperator) = op.args5
 
 """

@@ -47,7 +47,8 @@ end
 """
     LinearOperator(type, nrow, ncol, symmetric, hermitian, prod!,
                     [tprod!=nothing,
-                    ctprod!=nothing])
+                    ctprod!=nothing],
+                    args5=true)
                     
 Construct a linear operator from functions where the type is specified as the first argument.
 Notice that the linear operator does not enforce the type, so using a wrong type can
@@ -82,6 +83,16 @@ end
 op = LinearOperator(Float64, 2, 2, true, true, 
                     (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β))
 ```
+
+It is possible to create an operator with the 3-args `mul!` using the keyword argument `args5`.
+In this case, the 5-args `mul!` will not work.
+```
+A = rand(2, 2)
+op = LinearOperator(Float64, 2, 2, false, false, 
+                    (res, v) -> mul!(res, A, v),
+                    (res, w) -> mul!(res, A', w),
+                    args5 = false)
+```
 """
 function LinearOperator(
   ::Type{T},
@@ -91,24 +102,16 @@ function LinearOperator(
   hermitian::Bool,
   prod!,
   tprod! = nothing,
-  ctprod! = nothing,
+  ctprod! = nothing;
+  args5::Bool = true,
 ) where {T, I <: Integer}
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
-end
 
-export LinearOperator_args3
-function LinearOperator_args3(
-  ::Type{T},
-  nrow::I,
-  ncol::I,
-  symmetric::Bool,
-  hermitian::Bool,
-  prod!,
-  tprod! = nothing,
-  ctprod! = nothing,
-) where {T, I<:Integer}
-  prod5! = @closure (res, v, α, β) -> prod!(res, v)
-  tprod5! = (tprod! == nothing) ? nothing : @closure (res, u, α, β) -> tprod!(res, u)
-  ctprod5! = (ctprod! == nothing) ? nothing : @closure (res, w, α, β) -> ctprod!(res, w)
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod5!, tprod5!, ctprod5!, 0, 0, 0, false)
+  if !args5
+    prod5! = @closure (res, v, α, β) -> prod!(res, v)
+    tprod5! = (tprod! == nothing) ? nothing : @closure (res, u, α, β) -> tprod!(res, u)
+    ctprod5! = (ctprod! == nothing) ? nothing : @closure (res, w, α, β) -> ctprod!(res, w)
+    return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod5!, tprod5!, ctprod5!, args5 = args5)
+  else
+    return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
+  end
 end
