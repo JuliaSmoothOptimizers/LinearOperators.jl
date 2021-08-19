@@ -57,7 +57,8 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
   tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
-  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!)
+  args5 = (has_args5(op1) && has_args5(op2))
+  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!, args5 = args5)
 end
 
 ## Matrix times operator.
@@ -78,6 +79,7 @@ function *(op::AbstractLinearOperator, x::Number)
     prod!,
     tprod!,
     ctprod!,
+    args5 = has_args5(op),
   )
 end
 

@@ -86,6 +86,9 @@ op = LinearOperator(Float64, 2, 2, true, true,
 
 It is possible to create an operator with the 3-args `mul!` using the keyword argument `args5`.
 In this case, the 5-args `mul!` will not work.
+
+Note: The operations `+` and `-` will not work for 3-args operators, you will have to create a 
+5-args operator to use them.
 ```
 A = rand(2, 2)
 op = LinearOperator(Float64, 2, 2, false, false, 

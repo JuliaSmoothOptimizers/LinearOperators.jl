@@ -18,8 +18,6 @@ TimedLinearOperator{T}(
   ctprod!::Fct,
 ) where {T, F, Ft, Fct} = TimedLinearOperator{T, F, Ft, Fct}(timer, op, prod!, tprod!, ctprod!)
 
-has_args5(op::TimedLinearOperator) = op.op.args5
-
 """
     TimedLinearOperator(op)
 Creates a linear operator instrumented with timers from TimerOutputs.
@@ -43,6 +41,7 @@ for fn ∈ (
   :issymmetric,
   :hermitian,
   :ishermitian,
+  :has_args5,
   :nprod,
   :ntprod,
   :nctprod,
