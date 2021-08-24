@@ -10,9 +10,9 @@ end
 
 function tmulFact!(res, F, u, α, β::T) where {T}
   if β == zero(T)
-    res .= α .* conj.(F \ conj.(u))
+    res .= α .* conj!(F \ conj.(u))
   else
-    res .= α .* conj.(F \ conj.(u)) .+ β .* res
+    res .= α .* conj!(F \ conj.(u)) .+ β .* res
   end
 end
 
@@ -60,7 +60,7 @@ end
 """
     opLDL(M, [check=false])
 
-Inverse of a symmetric matrix as a linear operator using its LDL' factorization
+Inverse of a symmetric matrix as a linear operator using its LDLᵀ factorization
 if it exists. The factorization is computed only once. The optional `check`
 argument will perform a cheap hermicity check.
 """
@@ -90,8 +90,8 @@ end
 """
     opHouseholder(h)
 
-Apply a Householder transformation defined by the vector `h` with storage vectors Mv, Mtu.
-The result is `x -> (I - 2 h h') x`.
+Apply a Householder transformation defined by the vector `h`.
+The result is `x -> (I - 2 h hᵀ) x`.
 """
 function opHouseholder(h::AbstractVector{T}) where {T}
   n = length(h)
