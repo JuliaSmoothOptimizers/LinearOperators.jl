@@ -6,6 +6,7 @@ export AbstractLinearOperator,
   symmetric,
   issymmetric,
   has_args5,
+  isallocated5,
   nprod,
   ntprod,
   nctprod,
@@ -37,7 +38,7 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
+mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct, S} <: AbstractLinearOperator{T}
   nrow::I
   ncol::I
   symmetric::Bool
@@ -49,9 +50,12 @@ mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct} <: AbstractLinearOper
   ntprod::I
   nctprod::I
   args5::Bool
+  Mv5::S
+  Mtu5::S
+  allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
-LinearOperator{T}(
+function LinearOperator{T}(
   nrow::I,
   ncol::I,
   symmetric::Bool,
@@ -62,25 +66,38 @@ LinearOperator{T}(
   nprod::I,
   ntprod::I,
   nctprod::I,
-) where {T, I <: Integer, F, Ft, Fct} = LinearOperator{T, I, F, Ft, Fct}(
-  nrow,
-  ncol,
-  symmetric,
-  hermitian,
-  prod!,
-  tprod!,
-  ctprod!,
-  nprod,
-  ntprod,
-  nctprod,
-)
+) where {T, I <: Integer, F, Ft, Fct}
+  Mv5, Mtu5 = T[], T[]
+  S = typeof(Mv5)
+  return LinearOperator{T, I, F, Ft, Fct, S}(
+    nrow,
+    ncol,
+    symmetric,
+    hermitian,
+    prod!,
+    tprod!,
+    ctprod!,
+    nprod,
+    ntprod,
+    nctprod,
+    Mv5,
+    Mtu5,
+    true,
+  )
+end
 
-LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool, 
+function LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool, 
                   prod!::F, tprod!::Ft, ctprod!::Fct,
                   nprod::I, ntprod::I, nctprod::I, args5::Bool
-                  ) where {T,I<:Integer,F,Ft,Fct} = LinearOperator{T,I,F,Ft,Fct}(nrow, ncol, symmetric, hermitian, 
-                                                                                     prod!, tprod!, ctprod!,
-                                                                                     nprod, ntprod, nctprod, args5)
+                  ) where {T,I<:Integer,F,Ft,Fct}
+                  
+  Mv5, Mtu5 = T[], T[]
+  S = typeof(Mv5)
+  allocated5 = args5 ? true : false
+  return LinearOperator{T,I,F,Ft,Fct,S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!,
+                                         nprod, ntprod, nctprod, args5, Mv5, Mtu5, allocated5)
+
+end
 
 LinearOperator{T}(
   nrow::I,
@@ -107,6 +124,7 @@ increase_nctprod(op::AbstractLinearOperator) = (op.nctprod += 1)
 Determine whether the operator can work with the 5-args `mul!`.
 """
 has_args5(op::LinearOperator) = op.args5
+isallocated5(op::LinearOperator) = op.allocated5
 
 """
   reset!(op)

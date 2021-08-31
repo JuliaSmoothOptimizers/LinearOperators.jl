@@ -64,7 +64,7 @@ size(A::AdjTrans, d::Int) = size(A.parent, 3 - d)
 size(A::ConjugateLinearOperator) = size(A.parent)
 size(A::ConjugateLinearOperator, d::Int) = size(A.parent, d)
 
-for f in [:hermitian, :ishermitian, :symmetric, :issymmetric, :has_args5]
+for f in [:hermitian, :ishermitian, :symmetric, :issymmetric, :has_args5, :isallocated5]
   @eval begin
     $f(A::AdjTrans) = $f(A.parent)
     $f(A::ConjugateLinearOperator) = $f(A.parent)
@@ -86,6 +86,30 @@ function show(io::IO, op::ConjugateLinearOperator)
   show(io, op.parent)
 end
 
+function t3prod!(res, op, v, α, β)
+  if β == 0
+    op.tprod!(res, v)
+    if α != 1
+      res .*= α
+    end
+  else
+    op.tprod!(op.Mtu5, v)
+    res .= α .* op.Mtu5 .+ β .* res
+  end
+end
+
+function ct3prod!(res, op, v, α, β)
+  if β == 0
+    op.ctprod!(res, v)
+    if α != 1
+      res .*= α
+    end
+  else
+    op.ctprod!(op.Mtu5, v)
+    res .= α .* op.Mtu5 .+ β .* res
+  end
+end
+
 function mul!(
   res::AbstractVector,
   op::AdjointLinearOperator{T, S},
@@ -94,6 +118,8 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
+  args5 = has_args5(op)
+  args5 || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (length(v) == size(p, 1) && length(res) == size(p, 2)) ||
     throw(LinearOperatorException("shape mismatch"))
   if ishermitian(p)
@@ -101,7 +127,11 @@ function mul!(
   end
   if p.ctprod! !== nothing
     increase_nctprod(p)
-    return p.ctprod!(res, v, α, β)
+    if args5
+      return p.ctprod!(res, v, α, β)
+    else
+      return ct3prod!(res, p, v, α, β)
+    end
   end
   tprod! = p.tprod!
   increment_tprod = true
@@ -118,7 +148,11 @@ function mul!(
   else
     increase_nprod(p)
   end
-  tprod!(res, v, α, β)
+  if args5
+    tprod!(res, v, α, β)
+  else
+    t3prod!(res, p, v, α, β)
+  end
   res .= conj.(res)
 end
 
@@ -130,6 +164,8 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
+  args5 = has_args5(op)
+  args5 || (α == 1 && β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (length(v) == size(p, 1) && length(res) == size(p, 2)) ||
     throw(LinearOperatorException("shape mismatch"))
   if issymmetric(p)
@@ -137,7 +173,11 @@ function mul!(
   end
   if p.tprod! !== nothing
     increase_ntprod(p)
-    return p.tprod!(res, v, α, β)
+    if args5
+      return p.tprod!(res, v, α, β)
+    else
+      return t3prod!(res, p, v, α, β)
+    end
   end
   increment_ctprod = true
   ctprod! = p.ctprod!
@@ -154,7 +194,11 @@ function mul!(
   else
     increase_nprod(p)
   end
-  ctprod!(res, conj.(v), α, β)
+  if args5
+    ctprod!(res, conj.(v), α, β)
+  else
+    ct3prod!(res, p, conj.(v), α, β)
+  end
   res .= conj.(res)
 end
 

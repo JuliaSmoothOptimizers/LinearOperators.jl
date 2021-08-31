@@ -706,20 +706,68 @@ function test_linop()
   end
 
   @testset ExtendedTestSet "3-args" begin
-    A = rand(10, 10)
-    b = rand(10)
+    for T in [Float64, Complex{Float64}]
+      A = rand(T, 12, 10)
+      b = rand(T, 10)
+      prod! = (res, v) -> mul!(res, A, v)
+      tprod! = (res, v) -> mul!(res, transpose(A), v)
+      ctprod! = (res, v) -> mul!(res, adjoint(A), v)
+      opA = LinearOperator(T, 12, 10, false, false, prod!, tprod!, ctprod!, args5 = false)
+      @test has_args5(opA) == false
+      @test opA * b == A * b
+      res = rand(T, 12)
+      mul!(res, opA, b)
+      @test res == A * b
+      for (α, β) in [(2.0, 3.0), (1.0, 3.0), (2.0, 0.0)]
+        α, β = 2.0, 3.0
+        res2 = copy(res)
+        mul!(res, opA, b, α, β)
+        @test res == α * A * b + β * res2 
+        c, res3 = rand(T, 12), rand(T, 10)
+        mul!(res3, opA', c)
+        @test res3 == A' * c
+      end
+    end
+
+    # test with operators created from other operators
+    T = Float64
+    A1 = rand(T, 12, 10)
+    A2 = rand(T, 12, 10)
+    b = rand(T, 10)
+    prod1! = (res, v) -> mul!(res, A1, v)
+    tprod1! = (res, v) -> mul!(res, transpose(A1), v)
+    prod2! = (res, v) -> mul!(res, A2, v)
+    tprod2! = (res, v) -> mul!(res, transpose(A2), v)
+    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
+    opA2 = LinearOperator(T, 12, 10, false, false, prod2!, tprod2!, args5 = false)
+    opA = opA1 + opA2
+    @test isallocated5(opA1) == isallocated5(opA2) == false
+    @test norm(opA * b - (A1 + A2) * b) ≤ sqrt(eps())
+    α, β = 2.0, 3.0
+    res = rand(T, 12)
+    res2 = copy(res)
+    mul!(res, opA, b, α, β)
+    @test norm(res - (α * (A1 + A2) * b + β * res2)) ≤ sqrt(eps())
+    @test isallocated5(opA1) == isallocated5(opA2) == true
+
+    # test symmetric
+    A0 = rand(T, 10, 10)
+    A = A0 + A0'
+    b = rand(T, 10)
     prod! = (res, v) -> mul!(res, A, v)
-    tprod! = (res, v) -> mul!(res, A', v)
-    opA = LinearOperator(Float64, 10, 10, false, false, prod!, tprod!, args5 = false)
+    tprod! = (res, v) -> mul!(res, transpose(A), v)
+    opA = LinearOperator(T, 10, 10, true, true, prod!, tprod!, args5 = false)
     @test has_args5(opA) == false
-    @test opA * b == A * b
-    res = rand(10)
+    res = rand(T, 10)
     mul!(res, opA, b)
     @test res == A * b
-    α, β = 1.0, 3.0
-    @test_throws LinearOperatorException mul!(res, opA, b, α, β)
-    mul!(res, opA', b)
-    @test res == A' * b
+    α, β = 2.0, 3.0
+    res2 = copy(res)
+    mul!(res, opA, b, α, β)
+    @test res == α * A * b + β * res2 
+    c, res3 = rand(T, 10), rand(T, 10)
+    mul!(res3, opA', c)
+    @test norm(res3 - A' * c) ≤ sqrt(eps())
   end
 end
 

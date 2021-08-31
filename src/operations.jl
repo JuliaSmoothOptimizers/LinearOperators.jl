@@ -1,10 +1,34 @@
 import Base.+, Base.-, Base.*, LinearAlgebra.mul!
 
+function allocate_vectors_args3!(op::AbstractLinearOperator)
+  S = typeof(op.Mv5)
+  op.Mv5 = S(undef, op.nrow)
+  op.Mtu5 = (op.nrow == op.ncol) ? op.Mv5 : S(undef, op.ncol)
+  op.allocated5 = true
+end
+
+function prod3!(res, op, v, α, β)
+  if β == 0
+    op.prod!(res, v)
+    if α != 1
+      res .*= α
+    end
+  else
+    op.prod!(op.Mv5, v)
+    res .= α .* op.Mv5 .+ β .* res
+  end
+end
+
 function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where T
-  has_args5(op) || (α == 1 && β == 0) || throw(LinearOperatorException("5-args product not defined"))
+  args5 = has_args5(op)
+  args5 || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) || throw(LinearOperatorException("shape mismatch"))
   increase_nprod(op)
-  op.prod!(res, v, α, β)
+  if args5
+    op.prod!(res, v, α, β)
+  else
+    prod3!(res, op, v, α, β)
+  end
 end
 
 function mul!(res::AbstractVector, op::AbstractLinearOperator, v::AbstractVector{T}) where {T}
@@ -57,8 +81,7 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
   tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
-  args5 = (has_args5(op1) && has_args5(op2))
-  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!, args5 = args5)
+  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!)
 end
 
 ## Matrix times operator.
@@ -79,7 +102,6 @@ function *(op::AbstractLinearOperator, x::Number)
     prod!,
     tprod!,
     ctprod!,
-    args5 = has_args5(op),
   )
 end
 

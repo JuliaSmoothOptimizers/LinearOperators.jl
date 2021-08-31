@@ -42,6 +42,7 @@ for fn ∈ (
   :hermitian,
   :ishermitian,
   :has_args5,
+  :isallocated5,
   :nprod,
   :ntprod,
   :nctprod,
