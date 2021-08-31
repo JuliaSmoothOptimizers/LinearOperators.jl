@@ -86,30 +86,6 @@ function show(io::IO, op::ConjugateLinearOperator)
   show(io, op.parent)
 end
 
-function t3prod!(res, op, v, α, β)
-  if β == 0
-    op.tprod!(res, v)
-    if α != 1
-      res .*= α
-    end
-  else
-    op.tprod!(op.Mtu5, v)
-    res .= α .* op.Mtu5 .+ β .* res
-  end
-end
-
-function ct3prod!(res, op, v, α, β)
-  if β == 0
-    op.ctprod!(res, v)
-    if α != 1
-      res .*= α
-    end
-  else
-    op.ctprod!(op.Mtu5, v)
-    res .= α .* op.Mtu5 .+ β .* res
-  end
-end
-
 function mul!(
   res::AbstractVector,
   op::AdjointLinearOperator{T, S},
@@ -130,7 +106,7 @@ function mul!(
     if use_p5!
       return p.ctprod!(res, v, α, β)
     else
-      return ct3prod!(res, p, v, α, β)
+      return prod3!(res, p.ctprod!, v, α, β, p.Mtu5)
     end
   end
   tprod! = p.tprod!
@@ -151,7 +127,7 @@ function mul!(
   if use_p5!
     tprod!(res, v, α, β)
   else
-    t3prod!(res, p, v, α, β)
+    prod3!(res, tprod!, v, α, β, p.Mtu5)
   end
   res .= conj.(res)
 end
@@ -176,7 +152,7 @@ function mul!(
     if use_p5!
       return p.tprod!(res, v, α, β)
     else
-      return t3prod!(res, p, v, α, β)
+      return prod3!(res, p.tprod!, v, α, β, p.Mtu5)
     end
   end
   increment_ctprod = true
@@ -197,7 +173,8 @@ function mul!(
   if use_p5!
     ctprod!(res, conj.(v), α, β)
   else
-    ct3prod!(res, p, conj.(v), α, β)
+    p.tprod! == nothing && println("ok")
+    prod3!(res, ctprod!, conj.(v), α, β, p.Mtu5)
   end
   res .= conj.(res)
 end

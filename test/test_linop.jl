@@ -710,8 +710,8 @@ function test_linop()
       A = rand(T, 12, 10)
       b = rand(T, 10)
       prod! = (res, v) -> mul!(res, A, v)
-      tprod! = (res, v) -> mul!(res, transpose(A), v)
-      ctprod! = (res, v) -> mul!(res, adjoint(A), v)
+      tprod! = (T == Float64) ? (res, v) -> mul!(res, transpose(A), v) : nothing
+      ctprod! = (T == Float64) ? nothing : (res, v) -> mul!(res, adjoint(A), v) 
       opA = LinearOperator(T, 12, 10, false, false, prod!, tprod!, ctprod!, args5 = false)
       @test has_args5(opA) == false
       @test opA * b == A * b
@@ -719,13 +719,20 @@ function test_linop()
       mul!(res, opA, b)
       @test res == A * b
       for (α, β) in [(2.0, 3.0), (1.0, 3.0), (2.0, 0.0)]
-        α, β = 2.0, 3.0
         res2 = copy(res)
         mul!(res, opA, b, α, β)
         @test res == α * A * b + β * res2 
         c, res3 = rand(T, 12), rand(T, 10)
-        mul!(res3, opA', c)
-        @test res3 == A' * c
+        res4 = copy(res3)
+        mul!(res3, transpose(opA), c, α, β)
+        if T == Float64 || (T == Complex{Float64} && β == 0)
+          @test norm(α * transpose(A) * c + β * res4 - res3) ≤ sqrt(eps())
+        end
+        @test transpose(A) * c == transpose(opA) * c
+        res4 = copy(res3)
+        mul!(res3, opA', c, α, β)
+        @test norm(α * A' * c + β * res4 - res3) ≤ sqrt(eps())
+        @test A' * c == opA' * c
       end
     end
 
