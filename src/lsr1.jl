@@ -80,7 +80,8 @@ LSR1Operator{T}(
 )
 
 has_args5(op::LSR1Operator) = true
-isallocated5(op::LBFGSOperator) = true
+use_prod5!(op::LSR1Operator) = true
+isallocated5(op::LSR1Operator) = true
 
 """
     LSR1Operator(T, n; [mem=5, scaling=false)

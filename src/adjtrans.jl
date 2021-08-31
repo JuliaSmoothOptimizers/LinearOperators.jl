@@ -64,7 +64,7 @@ size(A::AdjTrans, d::Int) = size(A.parent, 3 - d)
 size(A::ConjugateLinearOperator) = size(A.parent)
 size(A::ConjugateLinearOperator, d::Int) = size(A.parent, d)
 
-for f in [:hermitian, :ishermitian, :symmetric, :issymmetric, :has_args5, :isallocated5]
+for f in [:hermitian, :ishermitian, :symmetric, :issymmetric, :has_args5, :use_prod5!, :isallocated5]
   @eval begin
     $f(A::AdjTrans) = $f(A.parent)
     $f(A::ConjugateLinearOperator) = $f(A.parent)
@@ -118,8 +118,8 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
-  args5 = has_args5(op)
-  args5 || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
+  use_p5! = use_prod5!(p)
+  has_args5(op) || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (length(v) == size(p, 1) && length(res) == size(p, 2)) ||
     throw(LinearOperatorException("shape mismatch"))
   if ishermitian(p)
@@ -127,7 +127,7 @@ function mul!(
   end
   if p.ctprod! !== nothing
     increase_nctprod(p)
-    if args5
+    if use_p5!
       return p.ctprod!(res, v, α, β)
     else
       return ct3prod!(res, p, v, α, β)
@@ -148,7 +148,7 @@ function mul!(
   else
     increase_nprod(p)
   end
-  if args5
+  if use_p5!
     tprod!(res, v, α, β)
   else
     t3prod!(res, p, v, α, β)
@@ -164,8 +164,8 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
-  args5 = has_args5(op)
-  args5 || (α == 1 && β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
+  use_p5! = use_prod5!(p)
+  has_args5(op) || (α == 1 && β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (length(v) == size(p, 1) && length(res) == size(p, 2)) ||
     throw(LinearOperatorException("shape mismatch"))
   if issymmetric(p)
@@ -173,7 +173,7 @@ function mul!(
   end
   if p.tprod! !== nothing
     increase_ntprod(p)
-    if args5
+    if use_p5!
       return p.tprod!(res, v, α, β)
     else
       return t3prod!(res, p, v, α, β)
@@ -194,7 +194,7 @@ function mul!(
   else
     increase_nprod(p)
   end
-  if args5
+  if use_p5!
     ctprod!(res, conj.(v), α, β)
   else
     ct3prod!(res, p, conj.(v), α, β)

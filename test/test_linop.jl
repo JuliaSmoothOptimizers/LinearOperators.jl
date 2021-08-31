@@ -731,24 +731,82 @@ function test_linop()
 
     # test with operators created from other operators
     T = Float64
-    A1 = rand(T, 12, 10)
-    A2 = rand(T, 12, 10)
-    b = rand(T, 10)
+    for operation in [:+, :-, :vcat, :hcat]
+      A1 = rand(T, 12, 10)
+      A2 = rand(T, 12, 10)
+      prod1! = (res, v) -> mul!(res, A1, v)
+      tprod1! = (res, v) -> mul!(res, transpose(A1), v)
+      prod2! = (res, v) -> mul!(res, A2, v)
+      tprod2! = (res, v) -> mul!(res, transpose(A2), v)
+      opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
+      opA2 = LinearOperator(T, 12, 10, false, false, prod2!, tprod2!, args5 = false)
+      opA = eval(operation)(opA1, opA2)
+      b = rand(T, opA.ncol)
+      @test has_args5(opA) == false
+      @test isallocated5(opA1) == isallocated5(opA2) == false
+      @test norm(opA * b - eval(operation)(A1, A2) * b) ≤ sqrt(eps())
+      α, β = 2.0, 3.0
+      res = rand(T, opA.nrow)
+      res2 = copy(res)
+      mul!(res, opA, b, α, β)
+      @test norm(res - (α * eval(operation)(A1, A2) * b + β * res2)) ≤ sqrt(eps())
+      @test isallocated5(opA1) == isallocated5(opA2) == true
+    end
+    # blockdiag
+    A1 = rand(T, 10, 10)
+    A2 = rand(T, 10, 10)  
+    A = [A1 zeros(T, 10, 10);
+         zeros(T, 10, 10) A2]
+    b = rand(T, 20)
     prod1! = (res, v) -> mul!(res, A1, v)
     tprod1! = (res, v) -> mul!(res, transpose(A1), v)
     prod2! = (res, v) -> mul!(res, A2, v)
     tprod2! = (res, v) -> mul!(res, transpose(A2), v)
-    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
-    opA2 = LinearOperator(T, 12, 10, false, false, prod2!, tprod2!, args5 = false)
-    opA = opA1 + opA2
+    opA1 = LinearOperator(T, 10, 10, false, false, prod1!, tprod1!, args5 = false)
+    opA2 = LinearOperator(T, 10, 10, false, false, prod2!, tprod2!, args5 = false)
+    opA = BlockDiagonalOperator(opA1, opA2)
+    @test has_args5(opA) == false
     @test isallocated5(opA1) == isallocated5(opA2) == false
-    @test norm(opA * b - (A1 + A2) * b) ≤ sqrt(eps())
+    @test norm(opA * b - A * b) ≤ sqrt(eps())
+    α, β = 2.0, 3.0
+    res = rand(T, 20)
+    res2 = copy(res)
+    mul!(res, opA, b, α, β)
+    @test norm(res - (α * A * b + β * res2)) ≤ sqrt(eps())
+    @test isallocated5(opA1) == isallocated5(opA2) == true
+    # -op
+    A1 = rand(T, 12, 10)
+    b = rand(T, 10)
+    prod1! = (res, v) -> mul!(res, A1, v)
+    tprod1! = (res, v) -> mul!(res, transpose(A1), v)
+    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
+    opA = -opA1
+    @test has_args5(opA) == false
+    @test isallocated5(opA1) == false
+    @test norm(opA * b + A1 * b) ≤ sqrt(eps())
     α, β = 2.0, 3.0
     res = rand(T, 12)
     res2 = copy(res)
     mul!(res, opA, b, α, β)
-    @test norm(res - (α * (A1 + A2) * b + β * res2)) ≤ sqrt(eps())
-    @test isallocated5(opA1) == isallocated5(opA2) == true
+    @test norm(res - (-α * A1 * b + β * res2)) ≤ sqrt(eps())
+    @test isallocated5(opA1) == true
+    # x * op
+    A1 = rand(T, 12, 10)
+    b = rand(T, 10)
+    prod1! = (res, v) -> mul!(res, A1, v)
+    tprod1! = (res, v) -> mul!(res, transpose(A1), v)
+    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
+    x = 4.0
+    opA = x * opA1
+    @test has_args5(opA) == false
+    @test isallocated5(opA1) == false
+    @test norm(opA * b - x * A1 * b) ≤ sqrt(eps())
+    α, β = 2.0, 3.0
+    res = rand(T, 12)
+    res2 = copy(res)
+    mul!(res, opA, b, α, β)
+    @test norm(res - (α * x * A1 * b + β * res2)) ≤ sqrt(eps())
+    @test isallocated5(opA1) == true
 
     # test symmetric
     A0 = rand(T, 10, 10)

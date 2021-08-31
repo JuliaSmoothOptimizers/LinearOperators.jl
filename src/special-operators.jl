@@ -273,5 +273,5 @@ function BlockDiagonalOperator(ops...) where {S}
   symm = all((issymmetric(op) for op ∈ ops))
   herm = all((ishermitian(op) for op ∈ ops))
   args5 = all((has_args5(op) for op ∈ ops))
-  LinearOperator{T}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5 = args5)
+  CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5)
 end

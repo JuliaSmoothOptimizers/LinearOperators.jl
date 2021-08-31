@@ -44,7 +44,8 @@ function hcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
     hcat_ctprod!(res, transpose(A), transpose(B), Ancol, Ancol + Bncol, u, α, β)
   ctprod! = @closure (res, w, α, β) ->
     hcat_ctprod!(res, adjoint(A), adjoint(B), Ancol, Ancol + Bncol, w, α, β)
-  LinearOperator{S}(nrow, ncol, false, false, prod!, tprod!, ctprod!)
+  args5 = (has_args5(A) && has_args5(B))
+  CompositeLinearOperator(S, nrow, ncol, false, false, prod!, tprod!, ctprod!, args5)
 end
 
 function hcat(ops::AbstractLinearOperator...)
@@ -99,7 +100,8 @@ function vcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
     vcat_ctprod!(res, transpose(A), transpose(B), Anrow, Anrow + Bnrow, u, α, β)
   ctprod! = @closure (res, w, α, β) ->
     vcat_ctprod!(res, adjoint(A), adjoint(B), Anrow, Anrow + Bnrow, w, α, β)
-  return LinearOperator{S}(nrow, ncol, false, false, prod!, tprod!, ctprod!)
+  args5 = (has_args5(A) && has_args5(B))
+  CompositeLinearOperator(S, nrow, ncol, false, false, prod!, tprod!, ctprod!, args5)
 end
 
 function vcat(ops::AbstractLinearOperator...)

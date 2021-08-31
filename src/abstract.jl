@@ -50,6 +50,7 @@ mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct, S} <: AbstractLinearO
   ntprod::I
   nctprod::I
   args5::Bool
+  use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
   Mv5::S
   Mtu5::S
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
@@ -94,8 +95,9 @@ function LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool,
   Mv5, Mtu5 = T[], T[]
   S = typeof(Mv5)
   allocated5 = args5 ? true : false
+  use_prod5! = args5 ? true : false
   return LinearOperator{T,I,F,Ft,Fct,S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!,
-                                         nprod, ntprod, nctprod, args5, Mv5, Mtu5, allocated5)
+                                         nprod, ntprod, nctprod, args5, use_prod5!, Mv5, Mtu5, allocated5)
 
 end
 
@@ -109,6 +111,26 @@ LinearOperator{T}(
   ctprod!;
   args5::Bool = true,
 ) where {T,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, args5)
+
+# create operator from other operators with +, *, vcat,...
+function CompositeLinearOperator(
+  T::DataType,
+  nrow::I,
+  ncol::I,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+  args5::Bool,
+) where {I <: Integer, F, Ft, Fct}
+  Mv5, Mtu5 = T[], T[]
+  S = typeof(Mv5)
+  allocated5 = true
+  use_prod5! = true
+  return LinearOperator{T,I,F,Ft,Fct,S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!,
+                                        0, 0, 0, args5, use_prod5!, Mv5, Mtu5, allocated5)
+end
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod
@@ -124,6 +146,7 @@ increase_nctprod(op::AbstractLinearOperator) = (op.nctprod += 1)
 Determine whether the operator can work with the 5-args `mul!`.
 """
 has_args5(op::LinearOperator) = op.args5
+use_prod5!(op::LinearOperator) = op.use_prod5!
 isallocated5(op::LinearOperator) = op.allocated5
 
 """
