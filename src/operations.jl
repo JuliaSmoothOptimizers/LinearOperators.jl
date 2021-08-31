@@ -7,15 +7,15 @@ function allocate_vectors_args3!(op::AbstractLinearOperator)
   op.allocated5 = true
 end
 
-function prod3!(res, op, v, α, β)
+function prod3!(res, prod!, v, α, β, Mv5)
   if β == 0
-    op.prod!(res, v)
+    prod!(res, v)
     if α != 1
       res .*= α
     end
   else
-    op.prod!(op.Mv5, v)
-    res .= α .* op.Mv5 .+ β .* res
+    prod!(Mv5, v)
+    res .= α .* Mv5 .+ β .* res
   end
 end
 
@@ -27,7 +27,7 @@ function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVec
   if use_p5!
     op.prod!(res, v, α, β)
   else
-    prod3!(res, op, v, α, β)
+    prod3!(res, op.prod!, v, α, β, op.Mv5)
   end
 end
 

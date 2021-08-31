@@ -6,6 +6,7 @@ function test_lsr1()
     n = 10
     mem = 5
     B = LSR1Operator(n, mem = mem, scaling = false)
+    @test isallocated5(B) == true
 
     for t = 1:2
       @test norm(diag(B) - diag(Matrix(B))) <= rtol

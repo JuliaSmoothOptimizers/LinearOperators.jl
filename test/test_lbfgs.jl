@@ -8,6 +8,7 @@ function test_lbfgs()
     mem = 5
     B = LBFGSOperator(n, mem = mem, scaling = false)
     H = InverseLBFGSOperator(n, mem = mem, scaling = false)
+    @test isallocated5(B) == isallocated5(H) == true
 
     for t = 1:2 # Run again after reset!
       @test norm(diag(B) - diag(Matrix(B))) <= rtol

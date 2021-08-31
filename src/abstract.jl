@@ -56,37 +56,6 @@ mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct, S} <: AbstractLinearO
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
-function LinearOperator{T}(
-  nrow::I,
-  ncol::I,
-  symmetric::Bool,
-  hermitian::Bool,
-  prod!::F,
-  tprod!::Ft,
-  ctprod!::Fct,
-  nprod::I,
-  ntprod::I,
-  nctprod::I,
-) where {T, I <: Integer, F, Ft, Fct}
-  Mv5, Mtu5 = T[], T[]
-  S = typeof(Mv5)
-  return LinearOperator{T, I, F, Ft, Fct, S}(
-    nrow,
-    ncol,
-    symmetric,
-    hermitian,
-    prod!,
-    tprod!,
-    ctprod!,
-    nprod,
-    ntprod,
-    nctprod,
-    Mv5,
-    Mtu5,
-    true,
-  )
-end
-
 function LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool, 
                   prod!::F, tprod!::Ft, ctprod!::Fct,
                   nprod::I, ntprod::I, nctprod::I, args5::Bool
