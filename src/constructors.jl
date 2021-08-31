@@ -85,10 +85,8 @@ op = LinearOperator(Float64, 2, 2, true, true,
 ```
 
 It is possible to create an operator with the 3-args `mul!` using the keyword argument `args5`.
-In this case, the 5-args `mul!` will not work.
+In this case, using the 5-args `mul!` will generate storage vectors.
 
-Note: The operations `+` and `-` will not work for 3-args operators, you will have to create a 
-5-args operator to use them.
 ```
 A = rand(2, 2)
 op = LinearOperator(Float64, 2, 2, false, false, 
@@ -109,12 +107,5 @@ function LinearOperator(
   args5::Bool = true,
 ) where {T, I <: Integer}
 
-  if !args5
-    prod5! = @closure (res, v, α, β) -> prod!(res, v)
-    tprod5! = (tprod! == nothing) ? nothing : @closure (res, u, α, β) -> tprod!(res, u)
-    ctprod5! = (ctprod! == nothing) ? nothing : @closure (res, w, α, β) -> ctprod!(res, w)
-    return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod5!, tprod5!, ctprod5!, args5 = args5)
-  else
-    return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
-  end
+  return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, args5 = args5)
 end
