@@ -20,11 +20,11 @@ function prod3!(res, op, v, α, β)
 end
 
 function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where T
-  args5 = has_args5(op)
-  args5 || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
+  use_p5! = use_prod5!(op) 
+  has_args5(op) || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) || throw(LinearOperatorException("shape mismatch"))
   increase_nprod(op)
-  if args5
+  if use_p5!
     op.prod!(res, v, α, β)
   else
     prod3!(res, op, v, α, β)
@@ -50,7 +50,8 @@ function -(op::AbstractLinearOperator{T}) where {T}
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, -α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, -α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, -α, β)
-  LinearOperator{T}(op.nrow, op.ncol, op.symmetric, op.hermitian, prod!, tprod!, ctprod!)
+  CompositeLinearOperator(T, op.nrow, op.ncol, op.symmetric, op.hermitian, prod!, tprod!, ctprod!, 
+                          has_args5(op))
 end
 
 function prod_op!(
@@ -81,7 +82,8 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
   tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
-  LinearOperator{T}(m1, n2, false, false, prod!, tprod!, ctprod!)
+  args5 = (has_args5(op1) && has_args5(op2))
+  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5)
 end
 
 ## Matrix times operator.
@@ -94,15 +96,8 @@ function *(op::AbstractLinearOperator, x::Number)
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, x * α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, x * α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, x' * α, β)
-  LinearOperator{S}(
-    op.nrow,
-    op.ncol,
-    op.symmetric,
-    op.hermitian && isreal(x),
-    prod!,
-    tprod!,
-    ctprod!,
-  )
+  CompositeLinearOperator(S, op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), 
+                          prod!, tprod!, ctprod!, has_args5(op))
 end
 
 function *(x::Number, op::AbstractLinearOperator)
@@ -135,7 +130,8 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   ctprod! = @closure (res, w, α, β) -> sum_prod!(res, adjoint(op1), adjoint(op2), w, α, β)
   symm = (symmetric(op1) && symmetric(op2))
   herm = (hermitian(op1) && hermitian(op2))
-  return LinearOperator{S}(m1, n1, symm, herm, prod!, tprod!, ctprod!)
+  args5 = (has_args5(op1) && has_args5(op2))
+  return CompositeLinearOperator(S, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5)
 end
 
 # Operator + matrix.
