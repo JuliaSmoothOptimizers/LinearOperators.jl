@@ -30,6 +30,7 @@ OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
 eltype(A::AbstractLinearOperator{T}) where {T} = T
 isreal(A::AbstractLinearOperator{T}) where {T} = T <: Real
+get_nargs(f) = first(methods(f)).nargs - 1
 
 """
 Base type to represent a linear operator.
@@ -58,11 +59,14 @@ end
 
 function LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool, 
                   prod!::F, tprod!::Ft, ctprod!::Fct,
-                  nprod::I, ntprod::I, nctprod::I, args5::Bool
+                  nprod::I, ntprod::I, nctprod::I,
                   ) where {T,I<:Integer,F,Ft,Fct}
                   
   Mv5, Mtu5 = T[], T[]
   S = typeof(Mv5)
+  nargs = get_nargs(prod!)
+  args5 = (nargs == 4)
+  (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments")) 
   allocated5 = args5 ? true : false
   use_prod5! = args5 ? true : false
   return LinearOperator{T,I,F,Ft,Fct,S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!,
@@ -77,9 +81,8 @@ LinearOperator{T}(
   hermitian::Bool,
   prod!,
   tprod!,
-  ctprod!;
-  args5::Bool = true,
-) where {T,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, args5)
+  ctprod!
+) where {T,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
 
 # create operator from other operators with +, *, vcat,...
 function CompositeLinearOperator(
@@ -113,6 +116,9 @@ increase_nctprod(op::AbstractLinearOperator) = (op.nctprod += 1)
     has_args5(op)
 
 Determine whether the operator can work with the 5-args `mul!`.
+If `false`, storage vectors will be generated at the first call of
+the 5-args `mul!`.
+No additional vectors are generated when using the 3-args `mul!`.
 """
 has_args5(op::LinearOperator) = op.args5
 use_prod5!(op::LinearOperator) = op.use_prod5!

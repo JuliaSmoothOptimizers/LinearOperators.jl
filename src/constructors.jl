@@ -47,8 +47,7 @@ end
 """
     LinearOperator(type, nrow, ncol, symmetric, hermitian, prod!,
                     [tprod!=nothing,
-                    ctprod!=nothing],
-                    args5=true)
+                    ctprod!=nothing])
                     
 Construct a linear operator from functions where the type is specified as the first argument.
 Notice that the linear operator does not enforce the type, so using a wrong type can
@@ -84,15 +83,14 @@ op = LinearOperator(Float64, 2, 2, true, true,
                     (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β))
 ```
 
-It is possible to create an operator with the 3-args `mul!` using the keyword argument `args5`.
+It is possible to create an operator with the 3-args `mul!`.
 In this case, using the 5-args `mul!` will generate storage vectors.
 
 ```
 A = rand(2, 2)
 op = LinearOperator(Float64, 2, 2, false, false, 
                     (res, v) -> mul!(res, A, v),
-                    (res, w) -> mul!(res, A', w),
-                    args5 = false)
+                    (res, w) -> mul!(res, A', w))
 ```
 """
 function LinearOperator(
@@ -103,9 +101,7 @@ function LinearOperator(
   hermitian::Bool,
   prod!,
   tprod! = nothing,
-  ctprod! = nothing;
-  args5::Bool = true,
+  ctprod! = nothing,
 ) where {T, I <: Integer}
-
-  return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, args5 = args5)
+  return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
 end

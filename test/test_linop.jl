@@ -712,7 +712,7 @@ function test_linop()
       prod! = (res, v) -> mul!(res, A, v)
       tprod! = (T == Float64) ? (res, v) -> mul!(res, transpose(A), v) : nothing
       ctprod! = (T == Float64) ? nothing : (res, v) -> mul!(res, adjoint(A), v) 
-      opA = LinearOperator(T, 12, 10, false, false, prod!, tprod!, ctprod!, args5 = false)
+      opA = LinearOperator(T, 12, 10, false, false, prod!, tprod!, ctprod!)
       @test has_args5(opA) == false
       @test opA * b == A * b
       res = rand(T, 12)
@@ -745,8 +745,8 @@ function test_linop()
       tprod1! = (res, v) -> mul!(res, transpose(A1), v)
       prod2! = (res, v) -> mul!(res, A2, v)
       tprod2! = (res, v) -> mul!(res, transpose(A2), v)
-      opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
-      opA2 = LinearOperator(T, 12, 10, false, false, prod2!, tprod2!, args5 = false)
+      opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!)
+      opA2 = LinearOperator(T, 12, 10, false, false, prod2!, tprod2!)
       opA = eval(operation)(opA1, opA2)
       b = rand(T, opA.ncol)
       @test has_args5(opA) == false
@@ -769,8 +769,8 @@ function test_linop()
     tprod1! = (res, v) -> mul!(res, transpose(A1), v)
     prod2! = (res, v) -> mul!(res, A2, v)
     tprod2! = (res, v) -> mul!(res, transpose(A2), v)
-    opA1 = LinearOperator(T, 10, 10, false, false, prod1!, tprod1!, args5 = false)
-    opA2 = LinearOperator(T, 10, 10, false, false, prod2!, tprod2!, args5 = false)
+    opA1 = LinearOperator(T, 10, 10, false, false, prod1!, tprod1!)
+    opA2 = LinearOperator(T, 10, 10, false, false, prod2!, tprod2!)
     opA = BlockDiagonalOperator(opA1, opA2)
     @test has_args5(opA) == false
     @test isallocated5(opA1) == isallocated5(opA2) == false
@@ -786,7 +786,7 @@ function test_linop()
     b = rand(T, 10)
     prod1! = (res, v) -> mul!(res, A1, v)
     tprod1! = (res, v) -> mul!(res, transpose(A1), v)
-    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
+    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!)
     opA = -opA1
     @test has_args5(opA) == false
     @test isallocated5(opA1) == false
@@ -802,7 +802,7 @@ function test_linop()
     b = rand(T, 10)
     prod1! = (res, v) -> mul!(res, A1, v)
     tprod1! = (res, v) -> mul!(res, transpose(A1), v)
-    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!, args5 = false)
+    opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!)
     x = 4.0
     opA = x * opA1
     @test has_args5(opA) == false
@@ -821,7 +821,7 @@ function test_linop()
     b = rand(T, 10)
     prod! = (res, v) -> mul!(res, A, v)
     tprod! = (res, v) -> mul!(res, transpose(A), v)
-    opA = LinearOperator(T, 10, 10, true, true, prod!, tprod!, args5 = false)
+    opA = LinearOperator(T, 10, 10, true, true, prod!, tprod!)
     @test has_args5(opA) == false
     res = rand(T, 10)
     mul!(res, opA, b)

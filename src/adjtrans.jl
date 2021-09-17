@@ -173,7 +173,6 @@ function mul!(
   if use_p5!
     ctprod!(res, conj.(v), α, β)
   else
-    p.tprod! == nothing && println("ok")
     prod3!(res, ctprod!, conj.(v), α, β, p.Mtu5)
   end
   res .= conj.(res)
