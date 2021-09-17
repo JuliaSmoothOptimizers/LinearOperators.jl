@@ -19,10 +19,11 @@ function prod3!(res, prod!, v, α, β, Mv5)
   end
 end
 
-function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where T
-  use_p5! = use_prod5!(op) 
+function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where {T}
+  use_p5! = use_prod5!(op)
   has_args5(op) || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
-  (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) || throw(LinearOperatorException("shape mismatch"))
+  (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) ||
+    throw(LinearOperatorException("shape mismatch"))
   increase_nprod(op)
   if use_p5!
     op.prod!(res, v, α, β)
@@ -50,8 +51,17 @@ function -(op::AbstractLinearOperator{T}) where {T}
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, -α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, -α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, -α, β)
-  CompositeLinearOperator(T, op.nrow, op.ncol, op.symmetric, op.hermitian, prod!, tprod!, ctprod!, 
-                          has_args5(op))
+  CompositeLinearOperator(
+    T,
+    op.nrow,
+    op.ncol,
+    op.symmetric,
+    op.hermitian,
+    prod!,
+    tprod!,
+    ctprod!,
+    has_args5(op),
+  )
 end
 
 function prod_op!(
@@ -96,8 +106,17 @@ function *(op::AbstractLinearOperator, x::Number)
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, x * α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, x * α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, x' * α, β)
-  CompositeLinearOperator(S, op.nrow, op.ncol, op.symmetric, op.hermitian && isreal(x), 
-                          prod!, tprod!, ctprod!, has_args5(op))
+  CompositeLinearOperator(
+    S,
+    op.nrow,
+    op.ncol,
+    op.symmetric,
+    op.hermitian && isreal(x),
+    prod!,
+    tprod!,
+    ctprod!,
+    has_args5(op),
+  )
 end
 
 function *(x::Number, op::AbstractLinearOperator)

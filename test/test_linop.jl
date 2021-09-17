@@ -711,7 +711,7 @@ function test_linop()
       b = rand(T, 10)
       prod! = (res, v) -> mul!(res, A, v)
       tprod! = (T == Float64) ? (res, v) -> mul!(res, transpose(A), v) : nothing
-      ctprod! = (T == Float64) ? nothing : (res, v) -> mul!(res, adjoint(A), v) 
+      ctprod! = (T == Float64) ? nothing : (res, v) -> mul!(res, adjoint(A), v)
       opA = LinearOperator(T, 12, 10, false, false, prod!, tprod!, ctprod!)
       @test has_args5(opA) == false
       @test opA * b == A * b
@@ -721,7 +721,7 @@ function test_linop()
       for (α, β) in [(2.0, 3.0), (1.0, 3.0), (2.0, 0.0)]
         res2 = copy(res)
         mul!(res, opA, b, α, β)
-        @test res == α * A * b + β * res2 
+        @test res == α * A * b + β * res2
         c, res3 = rand(T, 12), rand(T, 10)
         res4 = copy(res3)
         mul!(res3, transpose(opA), c, α, β)
@@ -761,9 +761,11 @@ function test_linop()
     end
     # blockdiag
     A1 = rand(T, 10, 10)
-    A2 = rand(T, 10, 10)  
-    A = [A1 zeros(T, 10, 10);
-         zeros(T, 10, 10) A2]
+    A2 = rand(T, 10, 10)
+    A = [
+      A1 zeros(T, 10, 10)
+      zeros(T, 10, 10) A2
+    ]
     b = rand(T, 20)
     prod1! = (res, v) -> mul!(res, A1, v)
     tprod1! = (res, v) -> mul!(res, transpose(A1), v)
@@ -829,7 +831,7 @@ function test_linop()
     α, β = 2.0, 3.0
     res2 = copy(res)
     mul!(res, opA, b, α, β)
-    @test res == α * A * b + β * res2 
+    @test res == α * A * b + β * res2
     c, res3 = rand(T, 10), rand(T, 10)
     mul!(res3, opA', c)
     @test norm(res3 - A' * c) ≤ sqrt(eps())

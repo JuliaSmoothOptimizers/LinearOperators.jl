@@ -57,21 +57,42 @@ mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct, S} <: AbstractLinearO
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
-function LinearOperator{T}(nrow::I, ncol::I, symmetric::Bool, hermitian::Bool, 
-                  prod!::F, tprod!::Ft, ctprod!::Fct,
-                  nprod::I, ntprod::I, nctprod::I,
-                  ) where {T,I<:Integer,F,Ft,Fct}
-                  
+function LinearOperator{T}(
+  nrow::I,
+  ncol::I,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+  nprod::I,
+  ntprod::I,
+  nctprod::I,
+) where {T, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = T[], T[]
   S = typeof(Mv5)
   nargs = get_nargs(prod!)
   args5 = (nargs == 4)
-  (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments")) 
+  (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments"))
   allocated5 = args5 ? true : false
   use_prod5! = args5 ? true : false
-  return LinearOperator{T,I,F,Ft,Fct,S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!,
-                                         nprod, ntprod, nctprod, args5, use_prod5!, Mv5, Mtu5, allocated5)
-
+  return LinearOperator{T, I, F, Ft, Fct, S}(
+    nrow,
+    ncol,
+    symmetric,
+    hermitian,
+    prod!,
+    tprod!,
+    ctprod!,
+    nprod,
+    ntprod,
+    nctprod,
+    args5,
+    use_prod5!,
+    Mv5,
+    Mtu5,
+    allocated5,
+  )
 end
 
 LinearOperator{T}(
@@ -81,8 +102,9 @@ LinearOperator{T}(
   hermitian::Bool,
   prod!,
   tprod!,
-  ctprod!
-) where {T,I<:Integer} = LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
+  ctprod!,
+) where {T, I <: Integer} =
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
 
 # create operator from other operators with +, *, vcat,...
 function CompositeLinearOperator(
@@ -100,8 +122,23 @@ function CompositeLinearOperator(
   S = typeof(Mv5)
   allocated5 = true
   use_prod5! = true
-  return LinearOperator{T,I,F,Ft,Fct,S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!,
-                                        0, 0, 0, args5, use_prod5!, Mv5, Mtu5, allocated5)
+  return LinearOperator{T, I, F, Ft, Fct, S}(
+    nrow,
+    ncol,
+    symmetric,
+    hermitian,
+    prod!,
+    tprod!,
+    ctprod!,
+    0,
+    0,
+    0,
+    args5,
+    use_prod5!,
+    Mv5,
+    Mtu5,
+    allocated5,
+  )
 end
 
 nprod(op::AbstractLinearOperator) = op.nprod
