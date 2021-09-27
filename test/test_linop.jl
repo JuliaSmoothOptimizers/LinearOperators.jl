@@ -693,6 +693,13 @@ function test_linop()
     @test norm(Matrix(M) - D) ≤ sqrt(eps()) * norm(D)
     @test norm(Matrix(transpose(M)) - transpose(D)) ≤ sqrt(eps()) * norm(D)
     @test norm(Matrix(M') - D') ≤ sqrt(eps()) * norm(D)
+
+    M = BlockDiagonalOperator(A, B, C)
+    @test size(M, 1) == size(A, 1) + size(B, 1) + size(C, 1)
+    @test size(M, 2) == size(A, 2) + size(B, 2) + size(C, 2)
+    @test norm(Matrix(M) - D) ≤ sqrt(eps()) * norm(D)
+    @test norm(Matrix(transpose(M)) - transpose(D)) ≤ sqrt(eps()) * norm(D)
+    @test norm(Matrix(M') - D') ≤ sqrt(eps()) * norm(D)
   end
 
   # Issue #139
