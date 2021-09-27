@@ -161,6 +161,8 @@ has_args5(op::LinearOperator) = op.args5
 use_prod5!(op::LinearOperator) = op.use_prod5!
 isallocated5(op::LinearOperator) = op.allocated5
 
+has_args5(op::AbstractMatrix) = true  # Needed for BlockDiagonalOperator
+
 """
   reset!(op)
 
