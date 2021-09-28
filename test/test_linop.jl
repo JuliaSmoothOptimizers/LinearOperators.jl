@@ -700,6 +700,22 @@ function test_linop()
     @test norm(Matrix(M) - D) ≤ sqrt(eps()) * norm(D)
     @test norm(Matrix(transpose(M)) - transpose(D)) ≤ sqrt(eps()) * norm(D)
     @test norm(Matrix(M') - D') ≤ sqrt(eps()) * norm(D)
+
+    F = cholesky([2.0 0.0 0.0; 0.0 4.0 0.0; 0.0 0.0 8.0])
+    A = LinearOperator(Float64, 3, 3, true, true, (y, v) -> ldiv!(y, F, v))
+    B = rand(4, 2)
+    C = sprand(2, 4, 0.5)
+    D = [
+      Diagonal([0.5; 0.25; 0.125]) zeros(3, 2) zeros(3, 4)
+      zeros(4, 3)                  B           zeros(4, 4)
+      zeros(2, 3)                  zeros(2, 2) C
+    ]
+    M = BlockDiagonalOperator(A, B, C)
+    @test size(M, 1) == size(A, 1) + size(B, 1) + size(C, 1)
+    @test size(M, 2) == size(A, 2) + size(B, 2) + size(C, 2)
+    @test norm(Matrix(M) - D) ≤ sqrt(eps()) * norm(D)
+    @test norm(Matrix(transpose(M)) - transpose(D)) ≤ sqrt(eps()) * norm(D)
+    @test norm(Matrix(M') - D') ≤ sqrt(eps()) * norm(D)
   end
 
   # Issue #139
