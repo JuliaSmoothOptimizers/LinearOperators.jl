@@ -7,16 +7,16 @@ op2 = LinearOperator(A2)
 op = op1 * op2  # Does not form A1 * A2
 x = rand(3)
 y = op * x</code></pre><pre class="documenter-example-output">5-element Vector{Float64}:
- 0.40712409963604274
- 0.11693594791571996
- 0.33820405478373994
- 0.43906434617345236
- 0.40187388074600117</pre><h2 id="Inverse"><a class="docs-heading-anchor" href="#Inverse">Inverse</a><a id="Inverse-1"></a><a class="docs-heading-anchor-permalink" href="#Inverse" title="Permalink"></a></h2><p>Operators may be defined to represent (approximate) inverses.</p><pre><code class="language-julia">using LinearAlgebra
+ 1.332553672006653
+ 1.0615733831010548
+ 1.1266060516166585
+ 1.4019678430056848
+ 1.18867713727826</pre><h2 id="Inverse"><a class="docs-heading-anchor" href="#Inverse">Inverse</a><a id="Inverse-1"></a><a class="docs-heading-anchor-permalink" href="#Inverse" title="Permalink"></a></h2><p>Operators may be defined to represent (approximate) inverses.</p><pre><code class="language-julia">using LinearAlgebra
 A = rand(5,5)
 A = A&#39; * A
 op = opCholesky(A)  # Use, e.g., as a preconditioner
 v = rand(5)
-norm(A \ v - op * v) / norm(v)</code></pre><pre class="documenter-example-output">1.3080222436685166e-13</pre><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2 id="mul!"><a class="docs-heading-anchor" href="#mul!">mul!</a><a id="mul!-1"></a><a class="docs-heading-anchor-permalink" href="#mul!" title="Permalink"></a></h2><p>It is often useful to reuse the memory used by the operator.  For that reason, we can use <code>mul!</code> on operators as if we were using matrices using preallocated vectors:</p><pre><code class="language-julia">m, n = 50, 30
+norm(A \ v - op * v) / norm(v)</code></pre><pre class="documenter-example-output">9.209712520887261e-13</pre><p>In this example, the Cholesky factor is computed only once and can be used many times transparently.</p><h2 id="mul!"><a class="docs-heading-anchor" href="#mul!">mul!</a><a id="mul!-1"></a><a class="docs-heading-anchor-permalink" href="#mul!" title="Permalink"></a></h2><p>It is often useful to reuse the memory used by the operator.  For that reason, we can use <code>mul!</code> on operators as if we were using matrices using preallocated vectors:</p><pre><code class="language-julia">m, n = 50, 30
 A = rand(m, n) + im * rand(m, n)
 op = LinearOperator(A)
 v = rand(n)
@@ -51,17 +51,17 @@ dft = LinearOperator(ComplexF64, 10, 10, false, false,
                      mulifft!)
 x = rand(10)
 y = dft * x
-norm(dft&#39; * y - x)  # DFT is a unitary operator</code></pre><pre class="documenter-example-output">1.1443916996305594e-16</pre><pre><code class="language-julia">transpose(dft) * y</code></pre><pre class="documenter-example-output">10-element Vector{ComplexF64}:
-  0.5528838848392958 - 0.0im
- 0.13331291736760706 - 0.0im
-  0.2500283934152503 - 0.0im
-  0.6125019770697748 - 0.0im
-  0.9127969640472161 - 0.0im
-  0.8232725170654325 - 0.0im
-  0.9772511501113401 - 0.0im
-  0.8035974218304969 - 0.0im
- 0.17511946943379164 - 0.0im
- 0.23921663121329972 - 0.0im</pre><p>Another example:</p><pre><code class="language-julia">function customfunc!(res, v, α, β::T) where T
+norm(dft&#39; * y - x)  # DFT is a unitary operator</code></pre><pre class="documenter-example-output">2.9176378038049177e-16</pre><pre><code class="language-julia">transpose(dft) * y</code></pre><pre class="documenter-example-output">10-element Vector{ComplexF64}:
+  0.9368791250462452 - 0.0im
+ 0.10032440743056457 - 0.0im
+ 0.06839771863234674 - 0.0im
+  0.4677973470753948 - 0.0im
+  0.5386773743276699 - 0.0im
+ 0.07439210475029778 - 0.0im
+  0.3717493055477397 - 0.0im
+  0.2600035336878123 - 0.0im
+   0.914923870974085 - 0.0im
+  0.7867934209909323 - 0.0im</pre><p>Another example:</p><pre><code class="language-julia">function customfunc!(res, v, α, β::T) where T
   if β == zero(T)
     res[1] = (v[1] + v[2]) * α
     res[2] = v[2] * α
@@ -112,7 +112,7 @@ for i = 1:100
   push!(H, s, y)
   r += norm(B * H * s - s)
 end
-r</code></pre><pre class="documenter-example-output">3.757687630604598e-13</pre><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2 id="Restriction,-extension-and-slices"><a class="docs-heading-anchor" href="#Restriction,-extension-and-slices">Restriction, extension and slices</a><a id="Restriction,-extension-and-slices-1"></a><a class="docs-heading-anchor-permalink" href="#Restriction,-extension-and-slices" title="Permalink"></a></h2><p>The restriction operator restricts a vector to a set of indices.</p><pre><code class="language-julia">v = collect(1:5)
+r</code></pre><pre class="documenter-example-output">3.982194011572729e-13</pre><p>There is also a LSR1 operator that behaves similarly to these two.</p><h2 id="Restriction,-extension-and-slices"><a class="docs-heading-anchor" href="#Restriction,-extension-and-slices">Restriction, extension and slices</a><a id="Restriction,-extension-and-slices-1"></a><a class="docs-heading-anchor-permalink" href="#Restriction,-extension-and-slices" title="Permalink"></a></h2><p>The restriction operator restricts a vector to a set of indices.</p><pre><code class="language-julia">v = collect(1:5)
 R = opRestriction([2;5], 5)
 R * v</code></pre><pre class="documenter-example-output">2-element Vector{Int64}:
  2
@@ -130,16 +130,16 @@ opA = LinearOperator(A)
 I = [1;3;5]
 J = 2:4
 A[I,J] * ones(3)</code></pre><pre class="documenter-example-output">3-element Vector{Float64}:
- 1.0386314152796008
- 1.7631984648640184
- 1.8176102830845235</pre><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre class="documenter-example-output">3-element Vector{Float64}:
- 1.0386314152796008
- 1.7631984648640184
- 1.8176102830845235</pre><p>A main <a href="../#differences">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre class="documenter-example-output">1-element Vector{Float64}:
- 1.937987079357493</pre><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre class="documenter-example-output">5-element Vector{Float64}:
- 0.8082400994908265
- 0.3649069493064865
- 0.5950059480735559
- 0.2537197877062396
- 0.6495583119299808</pre><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre class="documenter-example-output">1-element Vector{Float64}:
- 0.8082400994908265</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 29 September 2021 02:06">Wednesday 29 September 2021</span>. Using Julia version 1.6.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 1.9255626938224397
+ 2.015100835408506
+ 1.3958533229657564</pre><pre><code class="language-julia">opRestriction(I, 5) * opA * opExtension(J, 5) * ones(3)</code></pre><pre class="documenter-example-output">3-element Vector{Float64}:
+ 1.9255626938224397
+ 2.015100835408506
+ 1.3958533229657564</pre><p>A main <a href="../#differences">difference</a> with matrices, is that slices <strong>do not</strong> return vectors nor numbers.</p><pre><code class="language-julia">opA[1,:] * ones(5)</code></pre><pre class="documenter-example-output">1-element Vector{Float64}:
+ 2.8057479162139076</pre><pre><code class="language-julia">opA[:,1] * ones(1)</code></pre><pre class="documenter-example-output">5-element Vector{Float64}:
+ 0.16070837075586608
+ 0.2760280039778038
+ 0.6258762932393906
+ 0.4952501712517765
+ 0.5484490958733785</pre><pre><code class="language-julia">opA[1,1] * ones(1)</code></pre><pre class="documenter-example-output">1-element Vector{Float64}:
+ 0.16070837075586608</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 29 September 2021 02:18">Wednesday 29 September 2021</span>. Using Julia version 1.6.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
