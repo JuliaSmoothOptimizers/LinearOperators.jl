@@ -348,6 +348,9 @@ function test_linop()
     @testset "Transpose and adjoint" begin
       A = simple_matrix(ComplexF64, nrow, nrow)
       v = simple_vector(ComplexF64, nrow)
+      res_init = simple_vector(ComplexF64, nrow)
+      res = copy(res_init)
+      α, β = 2.0, -3.0
 
       op = LinearOperator(
         ComplexF64,
@@ -365,6 +368,8 @@ function test_linop()
       @test(norm(A * v - adjoint(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
+      mul!(res, adjoint(op), v, α, β)
+      @test(norm(α * A' * v + β * res_init - res) <= rtol * norm(v))
 
       op = LinearOperator(
         ComplexF64,
@@ -382,6 +387,9 @@ function test_linop()
       @test(norm(A * v - adjoint(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - transpose(adjoint(op)) * v) <= rtol * norm(v))
       @test(norm(conj.(A) * v - adjoint(transpose(op)) * v) <= rtol * norm(v))
+      res .= res_init
+      mul!(res, transpose(op), v, α, β)
+      @test(norm(α * transpose(A) * v + β * res_init - res) <= rtol * norm(v))
     end
 
     @testset "Integer" begin
@@ -748,9 +756,7 @@ function test_linop()
         c, res3 = rand(T, 12), rand(T, 10)
         res4 = copy(res3)
         mul!(res3, transpose(opA), c, α, β)
-        if T == Float64 || (T == Complex{Float64} && β == 0)
-          @test norm(α * transpose(A) * c + β * res4 - res3) ≤ sqrt(eps())
-        end
+        @test norm(α * transpose(A) * c + β * res4 - res3) ≤ sqrt(eps())
         @test transpose(A) * c == transpose(opA) * c
         res4 = copy(res3)
         mul!(res3, opA', c, α, β)
