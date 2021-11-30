@@ -24,3 +24,5 @@
   kwargs...,
 ) false
 @deprecate LSR1Operator(n::Int, mem::Int; kwargs...) LSR1Operator(n; mem = mem, kwargs...) false
+@deprecate hermitian(op::AbstractLinearOperator) ishermitian(op::AbstractLinearOperator)
+@deprecate symmetric(op::AbstractLinearOperator) issymmetric(op::AbstractLinearOperator)

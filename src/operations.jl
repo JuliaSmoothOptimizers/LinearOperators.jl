@@ -1,4 +1,4 @@
-import Base.+, Base.-, Base.*, LinearAlgebra.mul!
+import Base.+, Base.-, Base.*, Base./, LinearAlgebra.mul!
 
 function allocate_vectors_args3!(op::AbstractLinearOperator)
   S = typeof(op.Mv5)
@@ -122,6 +122,8 @@ end
 function *(x::Number, op::AbstractLinearOperator)
   return op * x
 end
+
+/(op::AbstractLinearOperator{T}, x::Number) where {T} = op * (one(T) / x)
 
 # Operator + operator.
 

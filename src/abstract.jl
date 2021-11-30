@@ -216,8 +216,9 @@ ishermitian(op::AbstractLinearOperator) = op.hermitian
     Hermitian(op, uplo=:U)
 """
 function Hermitian(op::AbstractLinearOperator, uplo::Symbol = :U)
-  ishermitian(op) || throw(LinearOperatorException("Operator is not Hermitian"))
-  return op
+  isequal(size(op)...) || throw(LinearOperatorException("Operator is not square"))
+  ishermitian(op) && return op
+  return (op + adjoint(op)) / 2
 end
 
 hermitian(A::AbstractLinearOperator, uplo::Symbol) = Hermitian(A, uplo)
@@ -233,8 +234,9 @@ issymmetric(op::AbstractLinearOperator) = op.symmetric
     Symmetric(op, uplo=:U)
 """
 function Symmetric(op::AbstractLinearOperator, uplo::Symbol = :U)
-  issymmetric(op) || throw(LinearOperatorException("Operator is not Symmetric"))
-  return op
+  isequal(size(op)...) || throw(LinearOperatorException("Operator is not square"))
+  issymmetric(op) && return op
+  return (op + transpose(op)) / 2
 end
 
 symmetric(A::AbstractLinearOperator, uplo::Symbol) = Symmetric(A, uplo)

@@ -85,10 +85,15 @@ function test_linop()
       v4 = simple_vector(ComplexF64, ncol4)
       @test(norm(A4 * v4 - op4 * v4) <= rtol * norm(v4))
 
-      A5 = rand(10, 20)
+      A5 = rand(Complex{Float64}, 10, 20)
       op5 = LinearOperator(A5)
       @test_throws LinearOperatorException Symmetric(op5)
       @test_throws LinearOperatorException Hermitian(op5)
+
+      A6 = rand(Complex{Float64}, 10, 10)
+      op6 = LinearOperator(A6)
+      @test Matrix(Symmetric(op6)) == (A6 + transpose(A6)) / 2
+      @test Matrix(Hermitian(op6)) == (A6 + adjoint(A6)) / 2
     end
 
     @testset "Constructor with specified structure" begin
