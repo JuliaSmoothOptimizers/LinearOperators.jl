@@ -28,8 +28,8 @@ function test_linop()
       end
 
       @testset "Boolean operators" begin
-        @test(symmetric(op) == false)
-        @test(hermitian(op) == false)
+        @test(issymmetric(op) == false)
+        @test(ishermitian(op) == false)
       end
 
       @testset "Full" begin
@@ -62,13 +62,17 @@ function test_linop()
 
       A3 = Hermitian(A2' * A2)
       op3 = LinearOperator(A3)
+      @test Hermitian(op3) == op3
+      @test hermitian(op3, :L) == op3 
       nrow3, ncol3 = size(A3)
       @test(op3.nrow == op3.ncol == nrow3)
       v3 = simple_vector(ComplexF64, ncol3)
       @test(norm(A3 * v3 - op3 * v3) <= rtol * norm(v3))
 
-      A3 = Symmetric(A2' * A2)
+      A3 = Symmetric(real.(A2' * A2))
       op3 = LinearOperator(A3)
+      @test Symmetric(op3) == op3
+      @test symmetric(op3, :L) == op3
       nrow3, ncol3 = size(A3)
       @test(op3.nrow == op3.ncol == nrow3)
       v3 = simple_vector(ComplexF64, ncol3)
@@ -80,6 +84,11 @@ function test_linop()
       @test(op4.nrow == op4.ncol == nrow4)
       v4 = simple_vector(ComplexF64, ncol4)
       @test(norm(A4 * v4 - op4 * v4) <= rtol * norm(v4))
+
+      A5 = rand(10, 20)
+      op5 = LinearOperator(A5)
+      @test_throws LinearOperatorException Symmetric(op5)
+      @test_throws LinearOperatorException Hermitian(op5)
     end
 
     @testset "Constructor with specified structure" begin
@@ -655,9 +664,7 @@ function test_linop()
     for fn ∈ (
       :size,
       :shape,
-      :symmetric,
       :issymmetric,
-      :hermitian,
       :ishermitian,
       :nprod,
       :ntprod,

@@ -23,7 +23,7 @@ const LinearOperatorIndexType{I} =
 
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
-import LinearAlgebra.issymmetric, LinearAlgebra.ishermitian
+import LinearAlgebra.Symmetric, LinearAlgebra.issymmetric, LinearAlgebra.Hermitian, LinearAlgebra.ishermitian
 
 abstract type AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
@@ -206,22 +206,38 @@ An alias for size.
 shape(op::AbstractLinearOperator) = size(op)
 
 """
-    hermitian(op)
     ishermitian(op)
 
 Determine whether the operator is Hermitian.
 """
-hermitian(op::AbstractLinearOperator) = op.hermitian
 ishermitian(op::AbstractLinearOperator) = op.hermitian
 
 """
-    symmetric(op)
+    Hermitian(op, uplo=:U)
+"""
+function Hermitian(op::AbstractLinearOperator, uplo::Symbol = :U)
+  ishermitian(op) || throw(LinearOperatorException("Operator is not Hermitian"))
+  return op
+end
+
+hermitian(A::AbstractLinearOperator, uplo::Symbol) = Hermitian(A, uplo)
+
+"""
     issymmetric(op)
 
 Determine whether the operator is symmetric.
 """
-symmetric(op::AbstractLinearOperator) = op.symmetric
 issymmetric(op::AbstractLinearOperator) = op.symmetric
+
+"""
+    Symmetric(op, uplo=:U)
+"""
+function Symmetric(op::AbstractLinearOperator, uplo::Symbol = :U)
+  issymmetric(op) || throw(LinearOperatorException("Operator is not Symmetric"))
+  return op
+end
+
+symmetric(A::AbstractLinearOperator, uplo::Symbol) = Symmetric(A, uplo)
 
 """
     show(io, op)
@@ -234,8 +250,8 @@ function show(io::IO, op::AbstractLinearOperator)
   s *= @sprintf("  nrow: %s\n", nrow)
   s *= @sprintf("  ncol: %d\n", ncol)
   s *= @sprintf("  eltype: %s\n", eltype(op))
-  s *= @sprintf("  symmetric: %s\n", symmetric(op))
-  s *= @sprintf("  hermitian: %s\n", hermitian(op))
+  s *= @sprintf("  symmetric: %s\n", issymmetric(op))
+  s *= @sprintf("  hermitian: %s\n", ishermitian(op))
   s *= @sprintf("  nprod:   %d\n", nprod(op))
   s *= @sprintf("  ntprod:  %d\n", ntprod(op))
   s *= @sprintf("  nctprod: %d\n", nctprod(op))
