@@ -23,7 +23,8 @@ const LinearOperatorIndexType{I} =
 
 # import methods we overload
 import Base.eltype, Base.isreal, Base.size, Base.show
-import LinearAlgebra.Symmetric, LinearAlgebra.issymmetric, LinearAlgebra.Hermitian, LinearAlgebra.ishermitian
+import LinearAlgebra.Symmetric,
+  LinearAlgebra.issymmetric, LinearAlgebra.Hermitian, LinearAlgebra.ishermitian
 
 abstract type AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}

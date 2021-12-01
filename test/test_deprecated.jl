@@ -9,7 +9,7 @@ function test_deprecated()
     @test_deprecated InverseLBFGSOperator(T, n, mem, scaling = false)
     @test_deprecated LSR1Operator(n, mem, scaling = false)
     @test_deprecated LSR1Operator(T, n, mem, scaling = false)
-    opA = LinearOperator(rand(10,10))
+    opA = LinearOperator(rand(10, 10))
     @test_deprecated hermitian(opA)
     @test_deprecated symmetric(opA)
   end

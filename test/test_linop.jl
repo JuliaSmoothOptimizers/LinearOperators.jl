@@ -63,7 +63,7 @@ function test_linop()
       A3 = Hermitian(A2' * A2)
       op3 = LinearOperator(A3)
       @test Hermitian(op3) == op3
-      @test hermitian(op3, :L) == op3 
+      @test hermitian(op3, :L) == op3
       nrow3, ncol3 = size(A3)
       @test(op3.nrow == op3.ncol == nrow3)
       v3 = simple_vector(ComplexF64, ncol3)
@@ -666,15 +666,7 @@ function test_linop()
     for _ = 1:nctprods
       op' * rand(3)
     end
-    for fn ∈ (
-      :size,
-      :shape,
-      :issymmetric,
-      :ishermitian,
-      :nprod,
-      :ntprod,
-      :nctprod,
-    )
+    for fn ∈ (:size, :shape, :issymmetric, :ishermitian, :nprod, :ntprod, :nctprod)
       @eval begin
         @test $fn($top) == $fn($top.op)
       end
