@@ -37,9 +37,7 @@ TimedLinearOperator(op::ConjugateLinearOperator) = conj(TimedLinearOperator(op.p
 for fn ∈ (
   :size,
   :shape,
-  :symmetric,
   :issymmetric,
-  :hermitian,
   :ishermitian,
   :has_args5,
   :use_prod5!,
