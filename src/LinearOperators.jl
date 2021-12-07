@@ -1,6 +1,7 @@
 module LinearOperators
 
 using FastClosures, LinearAlgebra, Printf, SparseArrays
+using LDLFactorizations
 
 # Basic defitions
 include("abstract.jl")

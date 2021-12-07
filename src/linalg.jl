@@ -63,6 +63,13 @@ end
 Inverse of a symmetric matrix as a linear operator using its LDLᵀ factorization
 if it exists. The factorization is computed only once. The optional `check`
 argument will perform a cheap hermicity check.
+
+If M is sparse and real, then only the upper triangle should be store to use 
+[`LDLFactorizations.jl`](https://github.com/JuliaSmoothOptimizers/LDLFactorizations.jl):
+
+    triu!(M)
+    opLDL(Symmetric(M, :U))
+
 """
 function opLDL(M::AbstractMatrix; check::Bool = false) where {T}
   (m, n) = size(M)
@@ -77,6 +84,20 @@ function opLDL(M::AbstractMatrix; check::Bool = false) where {T}
   S = eltype(LDL)
   return LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!)
   #TODO: use iterative refinement.
+end
+
+function opLDL(M::Symmetric{T, SparseMatrixCSC{T, Int}}; check::Bool = false) where {T}
+  (m, n) = size(M)
+  m == n || throw(LinearOperatorException("shape mismatch"))
+  if check
+    check_hermitian(M) || throw(LinearOperatorException("matrix is not Hermitian"))
+  end
+  LDL = ldl(M)
+  prod! = @closure (res, v) -> ldiv!(res, LDL, v)
+  tprod! = @closure (res, u) -> ldiv!(res, LDL, u)  # M.' = conj(M)
+  ctprod! = @closure (res, w) -> ldiv!(res, LDL, w)
+  S = eltype(LDL)
+  return LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!)
 end
 
 function mulHouseholder!(res, h, v, α, β::T) where {T}
