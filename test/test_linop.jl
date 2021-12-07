@@ -483,7 +483,7 @@ function test_linop()
       @test(norm(LDL * (K * e) - e) < rtol * norm(e))
 
       # tests LDLFactorizations
-      LDL = opLDL(Symmetric(triu!(sparse(K)), :U))
+      LDL = opLDL(Symmetric(triu!(sparse(K)), :U), check = true)
       e = ones(size(K, 1))
       @test(norm(LDL * (K * e) - e) < rtol * norm(e))
     end
