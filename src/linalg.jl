@@ -64,7 +64,7 @@ Inverse of a symmetric matrix as a linear operator using its LDLᵀ factorizatio
 if it exists. The factorization is computed only once. The optional `check`
 argument will perform a cheap hermicity check.
 
-If M is sparse and real, then only the upper triangle should be store to use 
+If M is sparse and real, then only the upper triangle should be stored in order to use 
 [`LDLFactorizations.jl`](https://github.com/JuliaSmoothOptimizers/LDLFactorizations.jl):
 
     triu!(M)
