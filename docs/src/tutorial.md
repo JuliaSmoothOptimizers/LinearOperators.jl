@@ -69,15 +69,15 @@ may contain `NaN` values, and `0 * NaN == NaN`.
 
 ```@example ex1
 using FFTW
-function mulfft!(res, v, α, β::T) where T
-  if β == zero(T)
+function mulfft!(res, v, α, β)
+  if β == 0
     res .= α .* fft(v)
   else
     res .= α .* fft(v) .+ β .* res
   end
 end
-function mulifft!(res, w, α, β::T) where T
-  if β == zero(T)
+function mulifft!(res, w, α, β)
+  if β == 0
     res .= α .* ifft(w)
   else
     res .= α .* ifft(w) .+ β .* res
@@ -98,8 +98,8 @@ transpose(dft) * y
 Another example:
 
 ```@example ex1
-function customfunc!(res, v, α, β::T) where T
-  if β == zero(T)
+function customfunc!(res, v, α, β)
+  if β == 0
     res[1] = (v[1] + v[2]) * α
     res[2] = v[2] * α
   else
@@ -107,8 +107,8 @@ function customfunc!(res, v, α, β::T) where T
     res[2] = v[2] * α + res[2] * β
   end
 end
-function tcustomfunc!(res, w, α, β::T) where T
-  if β == zero(T)
+function tcustomfunc!(res, w, α, β)
+  if β == 0
     res[1] = w[1] * α
     res[2] =  (w[1] + w[2]) * α
   else
@@ -116,11 +116,29 @@ function tcustomfunc!(res, w, α, β::T) where T
     res[2] =  (w[1] + w[2]) * α + res[2] * β
   end
 end
-op = LinearOperator(Float64, 10, 10, false, false,
+op = LinearOperator(Float64, 2, 2, false, false,
                     customfunc!,
                     nothing,
                     tcustomfunc!)
 ```
+
+Operators can also be defined with the 3-args `mul!` function:
+
+```@example ex1
+op2 = LinearOperator(Float64, 2, 2, false, false,
+                     (res, v) -> customfunc!(res, v, 1.0, 0.),
+                     nothing,
+                     (res, w) -> tcustomfunc!(res, w, 1.0, 0.))
+```
+
+When using the 5-args `mul!` with the above operator, some vectors will be allocated (only at the first call):
+```@example ex1
+res, a = zeros(2), rand(2)
+mul!(res, op2, a) # compile
+println("allocations 1st call = ", @allocated mul!(res, op2, a, 2.0, 3.0))
+println("allocations 2nd call = ", @allocated mul!(res, op2, a, 2.0, 3.0))
+```
+
 Make sure that the type passed to `LinearOperator` is correct, otherwise errors may occur.
 ```@example ex1
 using LinearOperators, FFTW # hide
@@ -133,7 +151,22 @@ println("eltype(dft)         = $(eltype(dft))")
 println("eltype(v)           = $(eltype(v))")
 # dft * v     # ERROR: expected Vector{Float64}
 # Matrix(dft) # ERROR: tried to create a Matrix of Float64
-``` 
+```
+
+## Using external modules
+
+It may be possible to use some modules made for matrices that do not need to access specific elements of their input matrices, and only use operations implemented within LinearOperators, such as `mul!`, `*`, `+`, ...
+For example, we show the solving of a linear system using [`Krylov.jl`](https://github.com/JuliaSmoothOptimizers/Krylov.jl):
+
+```@example ex1
+using Krylov
+A = rand(5, 5)
+opA = LinearOperator(A)
+opAAT = opA * opA'
+b = rand(5)
+(x, stats) = minres(opAAT, b)
+norm(b - opAAT * x)
+```
 
 ## Limited memory BFGS and SR1
 
