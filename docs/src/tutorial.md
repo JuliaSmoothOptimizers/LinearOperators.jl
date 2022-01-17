@@ -155,14 +155,14 @@ println("eltype(v)           = $(eltype(v))")
 
 ## Using external modules
 
-It may be possible to use some modules made for matrices that do not need to access specific elements of their input matrices, and only use operations implemented within LinearOperators, such as `mul!`, `*`, `+`, ...
-For example, we show the solving of a linear system using [`Krylov.jl`](https://github.com/JuliaSmoothOptimizers/Krylov.jl):
+It is possible to use certain modules made for matrices that do not need to access specific elements of their input matrices, and only use operations implemented within LinearOperators, such as `mul!`, `*`, `+`, ...
+For example, we show the solution of a linear system using [`Krylov.jl`](https://github.com/JuliaSmoothOptimizers/Krylov.jl):
 
 ```@example ex1
 using Krylov
 A = rand(5, 5)
 opA = LinearOperator(A)
-opAAT = opA * opA'
+opAAT = opA + opA'
 b = rand(5)
 (x, stats) = minres(opAAT, b)
 norm(b - opAAT * x)
