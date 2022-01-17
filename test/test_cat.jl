@@ -54,18 +54,34 @@ function test_cat()
     B = simple_matrix(T, 100, 10)
     C = simple_matrix(T, 100, 90)
     D = [A B C]
-    Ao = LinearOperator(T, 100, 100, false, false, 
-                        (res, v) -> mul!(res, A, v),
-                        (res, u) -> mul!(res, transpose(A), u),
-                        (res, w) -> mul!(res, adjoint(A), w))
-    Bo = LinearOperator(T, size(B)..., false, false, 
-                        (res, v) -> mul!(res, B, v),
-                        (res, u) -> mul!(res, transpose(B), u),
-                        (res, w) -> mul!(res, adjoint(B), w))
-    Co = LinearOperator(T, size(C)..., false, false, 
-                        (res, v) -> mul!(res, C, v),
-                        (res, u) -> mul!(res, transpose(C), u),
-                        (res, w) -> mul!(res, adjoint(C), w))
+    Ao = LinearOperator(
+      T,
+      100,
+      100,
+      false,
+      false,
+      (res, v) -> mul!(res, A, v),
+      (res, u) -> mul!(res, transpose(A), u),
+      (res, w) -> mul!(res, adjoint(A), w),
+    )
+    Bo = LinearOperator(
+      T,
+      size(B)...,
+      false,
+      false,
+      (res, v) -> mul!(res, B, v),
+      (res, u) -> mul!(res, transpose(B), u),
+      (res, w) -> mul!(res, adjoint(B), w),
+    )
+    Co = LinearOperator(
+      T,
+      size(C)...,
+      false,
+      false,
+      (res, v) -> mul!(res, C, v),
+      (res, u) -> mul!(res, transpose(C), u),
+      (res, w) -> mul!(res, adjoint(C), w),
+    )
     Do = [Ao Bo Co]
     Do2 = LinearOperator(D)
     rhs = simple_vector(T, 200)
@@ -106,18 +122,34 @@ function test_cat()
     B = simple_matrix(T, 10, 100)
     C = simple_matrix(T, 90, 100)
     D = [A; B; C]
-    Ao = LinearOperator(T, 100, 100, false, false, 
-                        (res, v) -> mul!(res, A, v),
-                        (res, u) -> mul!(res, transpose(A), u),
-                        (res, w) -> mul!(res, adjoint(A), w))
-    Bo = LinearOperator(T, size(B)..., false, false, 
-                        (res, v) -> mul!(res, B, v),
-                        (res, u) -> mul!(res, transpose(B), u),
-                        (res, w) -> mul!(res, adjoint(B), w))
-    Co = LinearOperator(T, size(C)..., false, false, 
-                        (res, v) -> mul!(res, C, v),
-                        (res, u) -> mul!(res, transpose(C), u),
-                        (res, w) -> mul!(res, adjoint(C), w))
+    Ao = LinearOperator(
+      T,
+      100,
+      100,
+      false,
+      false,
+      (res, v) -> mul!(res, A, v),
+      (res, u) -> mul!(res, transpose(A), u),
+      (res, w) -> mul!(res, adjoint(A), w),
+    )
+    Bo = LinearOperator(
+      T,
+      size(B)...,
+      false,
+      false,
+      (res, v) -> mul!(res, B, v),
+      (res, u) -> mul!(res, transpose(B), u),
+      (res, w) -> mul!(res, adjoint(B), w),
+    )
+    Co = LinearOperator(
+      T,
+      size(C)...,
+      false,
+      false,
+      (res, v) -> mul!(res, C, v),
+      (res, u) -> mul!(res, transpose(C), u),
+      (res, w) -> mul!(res, adjoint(C), w),
+    )
     Do = [Ao; Bo; Co]
     Do2 = LinearOperator(D)
     rhs = simple_vector(T, 100)
