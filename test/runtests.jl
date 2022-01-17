@@ -1,5 +1,5 @@
 using Arpack, Test, TestSetExtensions, LinearOperators
-
+using LinearAlgebra, SparseArrays
 include("test_aux.jl")
 
 include("test_linop.jl")

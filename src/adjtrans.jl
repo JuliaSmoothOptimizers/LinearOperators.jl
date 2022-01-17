@@ -64,7 +64,7 @@ size(A::AdjTrans, d::Int) = size(A.parent, 3 - d)
 size(A::ConjugateLinearOperator) = size(A.parent)
 size(A::ConjugateLinearOperator, d::Int) = size(A.parent, d)
 
-for f in [:ishermitian, :issymmetric, :has_args5, :use_prod5!, :isallocated5]
+for f in [:ishermitian, :issymmetric, :has_args5, :use_prod5!, :isallocated5, :allocate_vectors_args3!]
   @eval begin
     $f(A::AdjTrans) = $f(A.parent)
     $f(A::ConjugateLinearOperator) = $f(A.parent)

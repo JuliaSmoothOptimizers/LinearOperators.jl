@@ -42,6 +42,7 @@ for fn ∈ (
   :has_args5,
   :use_prod5!,
   :isallocated5,
+  :allocate_vectors_args3!,
   :nprod,
   :ntprod,
   :nctprod,
