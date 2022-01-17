@@ -158,9 +158,9 @@ If `false`, storage vectors will be generated at the first call of
 the 5-args `mul!`.
 No additional vectors are generated when using the 3-args `mul!`.
 """
-has_args5(op::LinearOperator) = op.args5
-use_prod5!(op::LinearOperator) = op.use_prod5!
-isallocated5(op::LinearOperator) = op.allocated5
+has_args5(op::AbstractLinearOperator) = op.args5
+use_prod5!(op::AbstractLinearOperator) = op.use_prod5!
+isallocated5(op::AbstractLinearOperator) = op.allocated5
 
 has_args5(op::AbstractMatrix) = true  # Needed for BlockDiagonalOperator
 
