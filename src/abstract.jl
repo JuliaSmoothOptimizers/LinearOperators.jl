@@ -71,7 +71,7 @@ function LinearOperator{T}(
   nctprod::I;
   S::DataType = Vector{T},
 ) where {T, I <: Integer, F, Ft, Fct}
-  Mv5, Mtu5 = S[], S[]
+  Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   nargs = get_nargs(prod!)
   args5 = (nargs == 4)
   (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments"))
@@ -121,7 +121,7 @@ function CompositeLinearOperator(
   args5::Bool;
   S::DataType = Vector{T},
 ) where {I <: Integer, F, Ft, Fct}
-  Mv5, Mtu5 = S[], S[]
+  Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   allocated5 = true
   use_prod5! = true
   return LinearOperator{T, I, F, Ft, Fct, S}(
