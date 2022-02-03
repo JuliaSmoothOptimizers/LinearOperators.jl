@@ -86,15 +86,17 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   if m2 != n1
     throw(LinearOperatorException("shape mismatch"))
   end
+  S = promote_type(storage_type(op1), storage_type(op2))
+  isconcretetype(S) || throw(LinearOperatorException("promote_type(op1, op2) is not concrete"))
   #tmp vector for products
-  vtmp = zeros(T, m2)
-  utmp = zeros(T, n1)
-  wtmp = zeros(T, n1)
+  vtmp = fill!(S(undef, m2), zero(T))
+  utmp = fill!(S(undef, n1), zero(T))
+  wtmp = fill!(S(undef, n1), zero(T))
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
   tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
   args5 = (has_args5(op1) && has_args5(op2))
-  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5, S = storage_type(op1))
+  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5, S = S)
 end
 
 ## Matrix times operator.
@@ -154,7 +156,9 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   symm = (issymmetric(op1) && issymmetric(op2))
   herm = (ishermitian(op1) && ishermitian(op2))
   args5 = (has_args5(op1) && has_args5(op2))
-  return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S = storage_type(op1))
+  S = promote_type(storage_type(op1), storage_type(op2))
+  isconcretetype(S) || throw(LinearOperatorException("promote_type(op1, op2) is not concrete"))
+  return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S = S)
 end
 
 # Operator + matrix.
