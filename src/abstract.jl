@@ -68,10 +68,10 @@ function LinearOperator{T}(
   ctprod!::Fct,
   nprod::I,
   ntprod::I,
-  nctprod::I,
+  nctprod::I;
+  S::DataType = Vector{T},
 ) where {T, I <: Integer, F, Ft, Fct}
-  Mv5, Mtu5 = T[], T[]
-  S = typeof(Mv5)
+  Mv5, Mtu5 = S[], S[]
   nargs = get_nargs(prod!)
   args5 = (nargs == 4)
   (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments"))
@@ -103,9 +103,10 @@ LinearOperator{T}(
   hermitian::Bool,
   prod!,
   tprod!,
-  ctprod!,
+  ctprod!;
+  S::DataType = Vector{T},
 ) where {T, I <: Integer} =
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, S = S)
 
 # create operator from other operators with +, *, vcat,...
 function CompositeLinearOperator(
@@ -117,10 +118,10 @@ function CompositeLinearOperator(
   prod!::F,
   tprod!::Ft,
   ctprod!::Fct,
-  args5::Bool,
+  args5::Bool;
+  S::DataType = Vector{T},
 ) where {I <: Integer, F, Ft, Fct}
-  Mv5, Mtu5 = T[], T[]
-  S = typeof(Mv5)
+  Mv5, Mtu5 = S[], S[]
   allocated5 = true
   use_prod5! = true
   return LinearOperator{T, I, F, Ft, Fct, S}(
@@ -163,6 +164,8 @@ use_prod5!(op::AbstractLinearOperator) = op.use_prod5!
 isallocated5(op::AbstractLinearOperator) = op.allocated5
 
 has_args5(op::AbstractMatrix) = true  # Needed for BlockDiagonalOperator
+
+storage_type(op::LinearOperator) = typeof(op.Mv5)
 
 """
   reset!(op)

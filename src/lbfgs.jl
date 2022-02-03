@@ -92,6 +92,7 @@ LBFGSOperator{T}(
 has_args5(op::LBFGSOperator) = true
 use_prod5!(op::LBFGSOperator) = true
 isallocated5(op::LBFGSOperator) = true
+storage_type(op::LBFGSOperator{T}) where {T} = Vector{T}
 
 """
     InverseLBFGSOperator(T, n, [mem=5; scaling=true])

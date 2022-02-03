@@ -1,55 +1,60 @@
 # Constructors.
 """
-    LinearOperator(M; symmetric=false, hermitian=false)
+    LinearOperator(M::AbstractMatrix{T}; symmetric=false, hermitian=false, S = Vector{T}) where {T}
 Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
+Change `S` if want to use LinearOperators on GPU.
 """
-function LinearOperator(M::AbstractMatrix{T}; symmetric = false, hermitian = false) where {T}
+function LinearOperator(M::AbstractMatrix{T}; symmetric = false, hermitian = false, S = Vector{T}) where {T}
   nrow, ncol = size(M)
   prod! = @closure (res, v, α, β) -> mul!(res, M, v, α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(M), u, α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(M), w, α, β)
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
+  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, S = S)
 end
 
 """
-  LinearOperator(Mv, M :: Symmetric{<:Real})
+  LinearOperator(M::Symmetric{T}, S = Vector{T}) where {T <: Real} =
 
 Construct a linear operator from a symmetric real square matrix `M`.
+Change `S` if want to use LinearOperators on GPU.
 """
-LinearOperator(M::Symmetric{T}) where {T <: Real} =
-  LinearOperator(M, symmetric = true, hermitian = true)
+LinearOperator(M::Symmetric{T}, S = Vector{T}) where {T <: Real} = 
+  LinearOperator(M, symmetric = true, hermitian = true, S = S)
 
 """
-    LinearOperator(M)
+    LinearOperator(M::SymTridiagonal{T}, S = Vector{T}) where {T}
 
 Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
+Change `S` if want to use LinearOperators on GPU.
 """
-function LinearOperator(M::SymTridiagonal{T}) where {T}
+function LinearOperator(M::SymTridiagonal{T}, S = Vector{T}) where {T}
   hermitian = eltype(M) <: Real
-  LinearOperator(M, symmetric = true, hermitian = hermitian)
+  LinearOperator(M, symmetric = true, hermitian = hermitian, S = S)
 end
 
 """
-    LinearOperator(M)
+    LinearOperator(M::Hermitian{T}, S = Vector{T}) where {T}
     
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
+Change `S` if want to use LinearOperators on GPU.
 """
-function LinearOperator(M::Hermitian{T}) where {T}
+function LinearOperator(M::Hermitian{T}, S = Vector{T}) where {T}
   symmetric = eltype(M) <: Real
-  LinearOperator(M, symmetric = symmetric, hermitian = true)
+  LinearOperator(M, symmetric = symmetric, hermitian = true, S = S)
 end
 
 """
-    LinearOperator(type, nrow, ncol, symmetric, hermitian, prod!,
-                    [tprod!=nothing,
-                    ctprod!=nothing])
+    LinearOperator(type::Type{T}, nrow, ncol, symmetric, hermitian, prod!,
+                    [tprod!=nothing, ctprod!=nothing],
+                    S = Vector{T}) where {T}
                     
 Construct a linear operator from functions where the type is specified as the first argument.
+Change `S` if want to use LinearOperators on GPU.
 Notice that the linear operator does not enforce the type, so using a wrong type can
 result in errors. For instance,
 ```
@@ -101,7 +106,8 @@ function LinearOperator(
   hermitian::Bool,
   prod!,
   tprod! = nothing,
-  ctprod! = nothing,
+  ctprod! = nothing;
+  S = Vector{T},
 ) where {T, I <: Integer}
-  return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
+  return LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, S = S)
 end

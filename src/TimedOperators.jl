@@ -46,6 +46,7 @@ for fn ∈ (
   :nprod,
   :ntprod,
   :nctprod,
+  :storage_type,
   :increase_nprod,
   :increase_ntprod,
   :increase_nctprod,
