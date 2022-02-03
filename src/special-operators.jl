@@ -36,32 +36,34 @@ function mulOpEye!(res, v, α, β::T, n_min) where {T}
 end
 
 """
-    opEye(T, n)
+    opEye(T, n; S = Vector{T})
     opEye(n)
 
 Identity operator of order `n` and of data type `T` (defaults to `Float64`).
+Change `S` if want to use LinearOperators on GPU.
 """
-function opEye(T::DataType, n::Int)
+function opEye(T::DataType, n::Int; S = Vector{T})
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, n)
-  LinearOperator{T}(n, n, true, true, prod!, prod!, prod!)
+  LinearOperator{T}(n, n, true, true, prod!, prod!, prod!, S = S)
 end
 
 opEye(n::Int) = opEye(Float64, n)
 
 # TODO: not type stable
 """
-    opEye(T, nrow, ncol)
+    opEye(T, nrow, ncol; S = Vector{T})
     opEye(nrow, ncol)
 
 Rectangular identity operator of size `nrow`x`ncol` and of data type `T`
 (defaults to `Float64`).
+Change `S` if want to use LinearOperators on GPU.
 """
-function opEye(T::DataType, nrow::I, ncol::I) where {I <: Integer}
+function opEye(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   if nrow == ncol
     return opEye(T, nrow)
   end
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, min(nrow, ncol))
-  return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!)
+  return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!, S = S)
 end
 
 opEye(nrow::I, ncol::I) where {I <: Integer} = opEye(Float64, nrow, ncol)
@@ -75,15 +77,16 @@ function mulOpOnes!(res, v, α, β::T) where {T}
 end
 
 """
-    opOnes(T, nrow, ncol)
+    opOnes(T, nrow, ncol; S = Vector{T})
     opOnes(nrow, ncol)
 
 Operator of all ones of size `nrow`-by-`ncol` of data type `T` (defaults to
 `Float64`).
+Change `S` if want to use LinearOperators on GPU.
 """
-function opOnes(T::DataType, nrow::I, ncol::I) where {I <: Integer}
+function opOnes(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpOnes!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, S = S)
 end
 
 opOnes(nrow::I, ncol::I) where {I <: Integer} = opOnes(Float64, nrow, ncol)
@@ -97,15 +100,16 @@ function mulOpZeros!(res, v, α, β::T) where {T}
 end
 
 """
-    opZeros(T, nrow, ncol)
+    opZeros(T, nrow, ncol; S = Vector{T})
     opZeros(nrow, ncol)
 
 Zero operator of size `nrow`-by-`ncol`, of data type `T` (defaults to
 `Float64`).
+Change `S` if want to use LinearOperators on GPU.
 """
-function opZeros(T::DataType, nrow::I, ncol::I) where {I <: Integer}
+function opZeros(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpZeros!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
+  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, S = S)
 end
 
 opZeros(nrow::I, ncol::I) where {I <: Integer} = opZeros(Float64, nrow, ncol)
@@ -126,7 +130,7 @@ Diagonal operator with the vector `d` on its main diagonal.
 function opDiagonal(d::AbstractVector{T}) where {T}
   prod! = @closure (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   ctprod! = @closure (res, w, α, β) -> mulSquareOpDiagonal!(res, conj.(d), w, α, β)
-  LinearOperator{T}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!)
+  LinearOperator{T}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!, S = typeof(d))
 end
 
 function mulOpDiagonal!(res, d, v, α, β::T, n_min) where {T}
@@ -149,7 +153,7 @@ function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T, I <: Integ
   prod! = @closure (res, v, α, β) -> mulOpDiagonal!(res, d, v, α, β, n_min)
   tprod! = @closure (res, u, α, β) -> mulOpDiagonal!(res, d, u, α, β, n_min)
   ctprod! = @closure (res, w, α, β) -> mulOpDiagonal!(res, conj.(d), w, α, β, n_min)
-  LinearOperator{T}(nrow, ncol, false, false, prod!, tprod!, ctprod!)
+  LinearOperator{T}(nrow, ncol, false, false, prod!, tprod!, ctprod!, S = typeof(d))
 end
 
 function mulRestrict!(res, I, v, α, β)
@@ -219,7 +223,7 @@ end
 eltypeof(op::AbstractLinearOperator) = eltype(op)  # need this for promote_eltypeof
 
 """
-    BlockDiagonalOperator(M1, M2, ..., Mn)
+    BlockDiagonalOperator(M1, M2, ..., Mn; S = Vector{eltype(ops[1])})
 
 Creates a block-diagonal linear operator:
 
@@ -227,8 +231,10 @@ Creates a block-diagonal linear operator:
     [    M2        ]
     [       ...    ]
     [           Mn ]
+
+Change `S` if want to use LinearOperators on GPU.
 """
-function BlockDiagonalOperator(ops...) where {S}
+function BlockDiagonalOperator(ops...; S = Vector{eltype(ops[1])})
   nrow = ncol = 0
   for op ∈ ops
     m, n = size(op)
@@ -273,5 +279,5 @@ function BlockDiagonalOperator(ops...) where {S}
   symm = all((issymmetric(op) for op ∈ ops))
   herm = all((ishermitian(op) for op ∈ ops))
   args5 = all((has_args5(op) for op ∈ ops))
-  CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5)
+  CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5, S = S)
 end

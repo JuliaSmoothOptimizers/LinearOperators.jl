@@ -1,7 +1,7 @@
 import Base.+, Base.-, Base.*, Base./, LinearAlgebra.mul!
 
 function allocate_vectors_args3!(op::AbstractLinearOperator)
-  S = typeof(op.Mv5)
+  S = storage_type(op)
   op.Mv5 = S(undef, op.nrow)
   op.Mtu5 = (op.nrow == op.ncol) ? op.Mv5 : S(undef, op.ncol)
   op.allocated5 = true
@@ -61,6 +61,7 @@ function -(op::AbstractLinearOperator{T}) where {T}
     tprod!,
     ctprod!,
     has_args5(op),
+    S = storage_type(op),
   )
 end
 
@@ -93,7 +94,7 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
   args5 = (has_args5(op1) && has_args5(op2))
-  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5)
+  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5, S = storage_type(op1))
 end
 
 ## Matrix times operator.
@@ -102,12 +103,12 @@ end
 
 ## Scalar times operator. (# commutation α*v ???)
 function *(op::AbstractLinearOperator, x::Number)
-  S = promote_type(eltype(op), typeof(x))
+  T = promote_type(eltype(op), typeof(x))
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, x * α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, x * α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, x' * α, β)
   CompositeLinearOperator(
-    S,
+    T,
     op.nrow,
     op.ncol,
     op.symmetric,
@@ -116,6 +117,7 @@ function *(op::AbstractLinearOperator, x::Number)
     tprod!,
     ctprod!,
     has_args5(op),
+    S = storage_type(op),
   )
 end
 
@@ -145,14 +147,14 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   if (m1 != m2) || (n1 != n2)
     throw(LinearOperatorException("shape mismatch"))
   end
-  S = promote_type(eltype(op1), eltype(op2))
+  T = promote_type(eltype(op1), eltype(op2))
   prod! = @closure (res, v, α, β) -> sum_prod!(res, op1, op2, v, α, β)
   tprod! = @closure (res, u, α, β) -> sum_prod!(res, transpose(op1), transpose(op2), u, α, β)
   ctprod! = @closure (res, w, α, β) -> sum_prod!(res, adjoint(op1), adjoint(op2), w, α, β)
   symm = (issymmetric(op1) && issymmetric(op2))
   herm = (ishermitian(op1) && ishermitian(op2))
   args5 = (has_args5(op1) && has_args5(op2))
-  return CompositeLinearOperator(S, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5)
+  return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S = storage_type(op1))
 end
 
 # Operator + matrix.
