@@ -40,7 +40,7 @@ end
     opEye(n)
 
 Identity operator of order `n` and of data type `T` (defaults to `Float64`).
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 function opEye(T::DataType, n::Int; S = Vector{T})
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, n)
@@ -56,7 +56,7 @@ opEye(n::Int) = opEye(Float64, n)
 
 Rectangular identity operator of size `nrow`x`ncol` and of data type `T`
 (defaults to `Float64`).
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 function opEye(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   if nrow == ncol
@@ -82,7 +82,7 @@ end
 
 Operator of all ones of size `nrow`-by-`ncol` of data type `T` (defaults to
 `Float64`).
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 function opOnes(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpOnes!(res, v, α, β)
@@ -105,7 +105,7 @@ end
 
 Zero operator of size `nrow`-by-`ncol`, of data type `T` (defaults to
 `Float64`).
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 function opZeros(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpZeros!(res, v, α, β)
@@ -223,7 +223,7 @@ end
 eltypeof(op::AbstractLinearOperator) = eltype(op)  # need this for promote_eltypeof
 
 """
-    BlockDiagonalOperator(M1, M2, ..., Mn; S = Vector{eltype(ops[1])})
+    BlockDiagonalOperator(M1, M2, ..., Mn; S = Vector{promote_type(eltype.(M1, M2, ..., Mn))})
 
 Creates a block-diagonal linear operator:
 
@@ -232,9 +232,9 @@ Creates a block-diagonal linear operator:
     [       ...    ]
     [           Mn ]
 
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
-function BlockDiagonalOperator(ops...; S = Vector{eltype(ops[1])})
+function BlockDiagonalOperator(ops...; S = Vector{promote_type(eltype.(ops)...)})
   nrow = ncol = 0
   for op ∈ ops
     m, n = size(op)

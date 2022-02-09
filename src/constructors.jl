@@ -4,7 +4,7 @@
 Construct a linear operator from a dense or sparse matrix.
 Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 function LinearOperator(M::AbstractMatrix{T}; symmetric = false, hermitian = false, S = Vector{T}) where {T}
   nrow, ncol = size(M)
@@ -18,7 +18,7 @@ end
   LinearOperator(M::Symmetric{T}, S = Vector{T}) where {T <: Real} =
 
 Construct a linear operator from a symmetric real square matrix `M`.
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 LinearOperator(M::Symmetric{T}, S = Vector{T}) where {T <: Real} = 
   LinearOperator(M, symmetric = true, hermitian = true, S = S)
@@ -29,7 +29,7 @@ LinearOperator(M::Symmetric{T}, S = Vector{T}) where {T <: Real} =
 Constructs a linear operator from a symmetric tridiagonal matrix. If
 its elements are real, it is also Hermitian, otherwise complex
 symmetric.
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 function LinearOperator(M::SymTridiagonal{T}, S = Vector{T}) where {T}
   hermitian = eltype(M) <: Real
@@ -41,7 +41,7 @@ end
     
 Constructs a linear operator from a Hermitian matrix. If
 its elements are real, it is also symmetric.
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 """
 function LinearOperator(M::Hermitian{T}, S = Vector{T}) where {T}
   symmetric = eltype(M) <: Real
@@ -54,7 +54,7 @@ end
                     S = Vector{T}) where {T}
                     
 Construct a linear operator from functions where the type is specified as the first argument.
-Change `S` if want to use LinearOperators on GPU.
+Change `S` to use LinearOperators on GPU.
 Notice that the linear operator does not enforce the type, so using a wrong type can
 result in errors. For instance,
 ```
