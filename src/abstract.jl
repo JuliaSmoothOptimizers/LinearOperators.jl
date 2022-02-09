@@ -166,6 +166,7 @@ isallocated5(op::AbstractLinearOperator) = op.allocated5
 has_args5(op::AbstractMatrix) = true  # Needed for BlockDiagonalOperator
 
 storage_type(op::LinearOperator) = typeof(op.Mv5)
+storage_type(M::AbstractMatrix{T}) where {T} = Vector{T}
 
 """
   reset!(op)
