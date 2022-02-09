@@ -223,7 +223,7 @@ end
 eltypeof(op::AbstractLinearOperator) = eltype(op)  # need this for promote_eltypeof
 
 """
-    BlockDiagonalOperator(M1, M2, ..., Mn; S = Vector{promote_type(eltype.(M1, M2, ..., Mn))})
+    BlockDiagonalOperator(M1, M2, ..., Mn; S = promote_type(storage_type.(M1, M2, ..., Mn)))
 
 Creates a block-diagonal linear operator:
 
@@ -234,7 +234,7 @@ Creates a block-diagonal linear operator:
 
 Change `S` to use LinearOperators on GPU.
 """
-function BlockDiagonalOperator(ops...; S = Vector{promote_type(eltype.(ops)...)})
+function BlockDiagonalOperator(ops...; S = promote_type(storage_type.(ops)...))
   nrow = ncol = 0
   for op ∈ ops
     m, n = size(op)
