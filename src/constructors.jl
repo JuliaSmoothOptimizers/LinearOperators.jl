@@ -6,7 +6,12 @@ Use the optional keyword arguments to indicate whether the operator
 is symmetric and/or hermitian.
 Change `S` to use LinearOperators on GPU.
 """
-function LinearOperator(M::AbstractMatrix{T}; symmetric = false, hermitian = false, S = Vector{T}) where {T}
+function LinearOperator(
+  M::AbstractMatrix{T};
+  symmetric = false,
+  hermitian = false,
+  S = Vector{T},
+) where {T}
   nrow, ncol = size(M)
   prod! = @closure (res, v, α, β) -> mul!(res, M, v, α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(M), u, α, β)
@@ -20,7 +25,7 @@ end
 Construct a linear operator from a symmetric real square matrix `M`.
 Change `S` to use LinearOperators on GPU.
 """
-LinearOperator(M::Symmetric{T}, S = Vector{T}) where {T <: Real} = 
+LinearOperator(M::Symmetric{T}, S = Vector{T}) where {T <: Real} =
   LinearOperator(M, symmetric = true, hermitian = true, S = S)
 
 """
