@@ -44,6 +44,22 @@ function *(op::AbstractLinearOperator{T}, v::AbstractVector{S}) where {T, S}
   return res
 end
 
+function *(
+  v::Union{Adjoint{S, V}, Transpose{S, V}},
+  op::AbstractLinearOperator{T},
+) where {T, S, V <: AbstractVector{S}}
+  nrow, ncol = size(op)
+  res = similar(v.parent, promote_type(T, S), ncol)
+  tv = typeof(v)
+  if tv <: Adjoint
+    mul!(res, adjoint(op), adjoint(v))
+    return adjoint(res)
+  else
+    mul!(res, transpose(op), transpose(v))
+    return transpose(res)
+  end 
+end
+
 # Unary operations.
 +(op::AbstractLinearOperator) = op
 

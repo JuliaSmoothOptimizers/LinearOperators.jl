@@ -58,6 +58,10 @@ function test_linop()
         u = simple_vector(ComplexF64, nrow)
         @test(norm(transpose(A) * u - transpose(op) * u) <= rtol * norm(u))
         @test(norm(A' * u - op' * u) <= rtol * norm(u))
+        @test(norm(u' * A - u' * op) <= rtol * norm(u))
+        @test(norm(transpose(u) * A - transpose(u) * op) <= rtol * norm(u))
+        @test(typeof(u' * op * v) <: Number)
+        @test(norm(u' * A * v - u' * op * v) <= rtol * norm(u))
       end
 
       A3 = Hermitian(A2' * A2)
