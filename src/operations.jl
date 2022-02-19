@@ -44,24 +44,33 @@ function *(op::AbstractLinearOperator{T}, v::AbstractVector{S}) where {T, S}
   return res
 end
 
-function *(
-  v::Adjoint{S, V},
+function mul!(
+  res::Adjoint{S1, V1},
+  v::Adjoint{S2, V2},
   op::AbstractLinearOperator{T},
-) where {T, S, V <: AbstractVector{S}}
-  nrow, ncol = size(op)
-  res = similar(v.parent, promote_type(T, S), ncol)
-  mul!(res, adjoint(op), adjoint(v))
-  return adjoint(res)
+) where {T, S1, S2, V1 <: AbstractVector{S1}, V2 <: AbstractVector{S2}}
+  mul!(adjoint(res), adjoint(op), adjoint(v))
+  return res
+end
+
+function mul!(
+  res::Transpose{S1, V1},
+  v::Transpose{S2, V2},
+  op::AbstractLinearOperator{T},
+) where {T, S1, S2, V1 <: AbstractVector{S1}, V2 <: AbstractVector{S2}}
+  mul!(transpose(res), transpose(op), transpose(v))
+  return res
 end
 
 function *(
-  v::Transpose{S, V},
+  v::Union{Transpose{S, V}, Adjoint{S, V}},
   op::AbstractLinearOperator{T},
 ) where {T, S, V <: AbstractVector{S}}
   nrow, ncol = size(op)
   res = similar(v.parent, promote_type(T, S), ncol)
-  mul!(res, transpose(op), transpose(v))
-  return transpose(res)
+  v_wrapper = typeof(v).name.wrapper
+  mul!(v_wrapper(res), v, op)
+  return v_wrapper(res)
 end
 
 # Unary operations.
