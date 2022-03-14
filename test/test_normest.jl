@@ -23,7 +23,6 @@ function simple_matrix_test(ϵ)
   simple_matrix_test_helper(S, ϵ)
   S = reshape(collect(1:400), (20, 20))
   simple_matrix_test_helper(S, ϵ)
-
 end
-#running the tests
+
 test_normest()
