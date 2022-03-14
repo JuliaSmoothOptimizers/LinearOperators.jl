@@ -23,7 +23,7 @@ include("TimedOperators.jl")
 
 # Utilities
 include("utilities.jl")
-
+include("normest.jl")
 include("deprecated.jl")
 
 end # module
