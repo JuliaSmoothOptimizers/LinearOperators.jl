@@ -24,7 +24,8 @@ function normest(S, tol = -1, maxiter = 100)
     # Compute an "estimate" of the ab-val column sums.
     v = ones(eltype(S), m)
     v[randn(m).<0] .= -1
-    x = abs.(S' * v)
+    x = zeros(eltype(S), n)
+    mul!(x, S', v)
     e = norm(x)
 
     if e == 0
@@ -36,11 +37,12 @@ function normest(S, tol = -1, maxiter = 100)
 
     while abs(e - e_0) > tol * e
         e_0 = e
-        Sx = S * x
+        Sx = zeros(eltype(S), n)
+        mul!(Sx, S, x)
         if count(x -> x != 0, Sx) == 0
-            Sx = randn(eltype(Sx), size(Sx))
+            Sx .= randn(eltype(Sx), size(Sx))
         end
-        x = S' * Sx
+        mul!(x, S', Sx)
         normx = norm(x)
         e = normx / norm(Sx)
         x ./= normx
