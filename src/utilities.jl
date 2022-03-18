@@ -18,7 +18,7 @@ export check_ctranspose, check_hermitian, check_positive_definite, normest
 function normest(S, tol = -1, maxiter = 100)
     (m, n) = size(S)
     cnt = 0
-    if tol === -1
+    if tol == -1
       tol = Float64(eps(eltype(S)))
     end 
     # Compute an "estimate" of the ab-val column sums.
