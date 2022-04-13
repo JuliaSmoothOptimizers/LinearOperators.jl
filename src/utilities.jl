@@ -1,4 +1,60 @@
-export check_ctranspose, check_hermitian, check_positive_definite
+export check_ctranspose, check_hermitian, check_positive_definite, normest
+
+"""
+  normest(S) estimates the matrix 2-norm of S.
+  This function is an adaptation of Matlab's built-in NORMEST.
+  This method allocates.
+
+  -----------------------------------------
+  Inputs:
+    S --- Matrix or LinearOperator type, 
+    tol ---  relative error tol, default(or -1) Machine eps
+    maxiter --- maximum iteration, default 100
+    
+  Returns:
+    e --- the estimated norm
+    cnt --- the number of iterations used
+  """
+function normest(S, tol = -1, maxiter = 100)
+  (m, n) = size(S)
+  cnt = 0
+  if tol == -1
+    tol = Float64(eps(eltype(S)))
+  end
+  # Compute an "estimate" of the ab-val column sums.
+  v = ones(eltype(S), m)
+  v[randn(m) .< 0] .= -1
+  x = zeros(eltype(S), n)
+  mul!(x, S', v)
+  e = norm(x)
+
+  if e == 0
+    return e, cnt
+  end
+
+  x ./= e
+  e_0 = zero(e)
+
+  while abs(e - e_0) > tol * e
+    e_0 = e
+    Sx = zeros(eltype(S), n)
+    mul!(Sx, S, x)
+    if count(x -> x != 0, Sx) == 0
+      Sx .= randn(eltype(Sx), size(Sx))
+    end
+    mul!(x, S', Sx)
+    normx = norm(x)
+    e = normx / norm(Sx)
+    x ./= normx
+    cnt = cnt + 1
+    if cnt > maxiter
+      @warn("normest did not converge ", maxiter, tol,)
+      break
+    end
+  end
+
+  return e, cnt
+end
 
 """
     check_ctranspose(op)
