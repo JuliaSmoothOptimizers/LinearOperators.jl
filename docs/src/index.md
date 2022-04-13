@@ -55,7 +55,7 @@ Function           | Description
 `show`             | Display basic information about an operator
 `size`             | Return the size of a linear operator
 `symmetric`        | Determine whether the operator is symmetric
-`normest`          | Estimates the 2-norm
+`normest`          | Estimate the 2-norm
 
 
 ## Other Operations on Operators

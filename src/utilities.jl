@@ -48,10 +48,9 @@ function normest(S, tol = -1, maxiter = 100)
         x ./= normx
         cnt = cnt + 1
         if cnt > maxiter
-            error(
-                "normest did not converge for ",
-                maxiter,
-                "  iterations with tolerance ",
+            @warn(
+                "normest did not converge ",
+                maxiter,                
                 tol,
             )
             break
