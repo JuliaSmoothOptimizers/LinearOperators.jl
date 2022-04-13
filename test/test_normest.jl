@@ -18,9 +18,8 @@ end
 
 function simple_matrix_test(ϵ)
   (nrow, ncol) = (10, 10)
-  ϵ_norm = eps(Float64)
   for (nrow, ncol) in [(10, 10), (5, 5), (3, 3)]
-    
+    ϵ_norm = eps(Float64)
     A1 = simple_matrix(ComplexF64, nrow, ncol)
     simple_matrix_test_helper(A1, ϵ_norm, ϵ)
     LA1 = LinearOperator(A1)
