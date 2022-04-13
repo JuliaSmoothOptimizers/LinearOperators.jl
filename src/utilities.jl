@@ -16,50 +16,45 @@ export check_ctranspose, check_hermitian, check_positive_definite, normest
     cnt --- the number of iterations used
   """
 function normest(S, tol = -1, maxiter = 100)
-    (m, n) = size(S)
-    cnt = 0
-    if tol == -1
-      tol = Float64(eps(eltype(S)))
-    end 
-    # Compute an "estimate" of the ab-val column sums.
-    v = ones(eltype(S), m)
-    v[randn(m).<0] .= -1
-    x = zeros(eltype(S), n)
-    mul!(x, S', v)
-    e = norm(x)
+  (m, n) = size(S)
+  cnt = 0
+  if tol == -1
+    tol = Float64(eps(eltype(S)))
+  end
+  # Compute an "estimate" of the ab-val column sums.
+  v = ones(eltype(S), m)
+  v[randn(m) .< 0] .= -1
+  x = zeros(eltype(S), n)
+  mul!(x, S', v)
+  e = norm(x)
 
-    if e == 0
-        return e, cnt
-    end
-
-    x ./= e
-    e_0 = zero(e)
-
-    while abs(e - e_0) > tol * e
-        e_0 = e
-        Sx = zeros(eltype(S), n)
-        mul!(Sx, S, x)
-        if count(x -> x != 0, Sx) == 0
-            Sx .= randn(eltype(Sx), size(Sx))
-        end
-        mul!(x, S', Sx)
-        normx = norm(x)
-        e = normx / norm(Sx)
-        x ./= normx
-        cnt = cnt + 1
-        if cnt > maxiter
-            @warn(
-                "normest did not converge ",
-                maxiter,                
-                tol,
-            )
-            break
-        end
-    end
-
+  if e == 0
     return e, cnt
-end
+  end
 
+  x ./= e
+  e_0 = zero(e)
+
+  while abs(e - e_0) > tol * e
+    e_0 = e
+    Sx = zeros(eltype(S), n)
+    mul!(Sx, S, x)
+    if count(x -> x != 0, Sx) == 0
+      Sx .= randn(eltype(Sx), size(Sx))
+    end
+    mul!(x, S', Sx)
+    normx = norm(x)
+    e = normx / norm(Sx)
+    x ./= normx
+    cnt = cnt + 1
+    if cnt > maxiter
+      @warn("normest did not converge ", maxiter, tol,)
+      break
+    end
+  end
+
+  return e, cnt
+end
 
 """
     check_ctranspose(op)
