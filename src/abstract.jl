@@ -165,7 +165,10 @@ isallocated5(op::AbstractLinearOperator) = op.allocated5
 
 has_args5(op::AbstractMatrix) = true  # Needed for BlockDiagonalOperator
 
-storage_type(op::AbstractLinearOperator) = typeof(op.Mv5) # Need abstract for arbitrary, user defined operators
+# Alert user of the need for storage_type method definition for arbitrary, user defined operators
+storage_type(op::AbstractLinearOperator) = error("please implement storage_type for $(typeof(op))")
+
+storage_type(op::LinearOperator) = typeof(op.Mv5) 
 storage_type(M::AbstractMatrix{T}) where {T} = Vector{T}
 
 """
