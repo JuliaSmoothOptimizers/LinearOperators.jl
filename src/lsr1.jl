@@ -136,6 +136,13 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
   ϵ = eps(eltype(op))
   well_defined = abs(dot(ymBs, s)) ≥ ϵ + ϵ * norm(ymBs) * sNorm
 
+  # check if y and s are collinear: make a componentwise division and check if the resulting components get approximately the same factor.
+  and(bool1, bool2) = bool1 && bool2 
+  s_y = (s ./ y)
+  collinear = (length(s) == 1) || mapreduce(i-> i ≈ s_y[1], and, s_y) # ≈ to avoid numerical issues
+  collinear && (tmp_scaling = data.scaling) # save data.scaling
+  collinear && (data.scaling = false) # if the scaling is applied then all the components of Matrix(op_updated) are NaN
+
   sufficient_curvature = true
   scaling_condition = true
   if data.scaling
@@ -178,6 +185,8 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
       data.as[k] = dot(data.a[k], data.s[k])
     end
   end
+
+  collinear && (data.scaling = tmp_scaling) # set data.scaling to its original value
 
   return op
 end
