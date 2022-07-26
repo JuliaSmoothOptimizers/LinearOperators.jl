@@ -39,7 +39,7 @@ end
 LSR1Data(n::I; kwargs...) where {I <: Integer} = LSR1Data(Float64, n; kwargs...)
 
 "A type for limited-memory SR1 approximations."
-mutable struct LSR1Operator{T, I <: Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
+mutable struct LSR1Operator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewtonOperator{T}
   nrow::I
   ncol::I
   symmetric::Bool

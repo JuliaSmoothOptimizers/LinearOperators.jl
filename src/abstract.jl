@@ -27,6 +27,7 @@ import LinearAlgebra.Symmetric,
   LinearAlgebra.issymmetric, LinearAlgebra.Hermitian, LinearAlgebra.ishermitian
 
 abstract type AbstractLinearOperator{T} end
+abstract type AbstractQuasiNewtonOperator{T} <: AbstractLinearOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
 eltype(A::AbstractLinearOperator{T}) where {T} = T
