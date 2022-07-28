@@ -16,6 +16,9 @@ include("kron.jl")
 # quasi-Newton operators
 include("qn.jl")
 
+# Hessian diagonal approximations
+include("DiagonalHessianApproximation.jl")
+
 # Special operators
 include("linalg.jl")
 include("special-operators.jl")
