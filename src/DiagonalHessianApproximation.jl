@@ -1,6 +1,3 @@
-using LinearAlgebra
-using LinearOperators
-
 function mulSquareOpDiagonal!(res, d, v, α, β::T) where {T <: Real}
   if β == zero(T)
     res .= α .* d .* v
@@ -8,8 +5,6 @@ function mulSquareOpDiagonal!(res, d, v, α, β::T) where {T <: Real}
     res .= α .* d .* v .+ β .* res
   end
 end
-
-abstract type AbstractDiagonalQuasiNewtonOperator{T} <: AbstractLinearOperator{T} end
 
 """
 Implementation of the diagonal quasi-Newton approximation described in
