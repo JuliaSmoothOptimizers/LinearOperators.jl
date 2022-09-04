@@ -13,8 +13,8 @@ function test_adjtrans()
       @test foo(fop) === opA
 
       @test Matrix(-fop) == foo(-A)
-      @test Matrix((2 + 3im) * fop) == (2 + 3im) * foo(A)
-      @test Matrix(fop * (2 + 3im)) == foo(A) * (2 + 3im)
+      @test Matrix((2 + 3im) * fop) ≈ (2 + 3im) * foo(A)
+      @test Matrix(fop * (2 + 3im)) ≈ foo(A) * (2 + 3im)
     end
 
     @test adjoint(topA) === copA
