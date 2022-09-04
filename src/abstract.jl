@@ -28,6 +28,7 @@ import LinearAlgebra.Symmetric,
 
 abstract type AbstractLinearOperator{T} end
 abstract type AbstractQuasiNewtonOperator{T} <: AbstractLinearOperator{T} end
+abstract type AbstractDiagonalQuasiNewtonOperator{T} <: AbstractQuasiNewtonOperator{T} end
 OperatorOrMatrix = Union{AbstractLinearOperator, AbstractMatrix}
 
 eltype(A::AbstractLinearOperator{T}) where {T} = T
