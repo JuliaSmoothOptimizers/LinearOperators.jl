@@ -15,6 +15,7 @@ jobs:
         pkg: [
           "JuliaSmoothOptimizers/CaNNOLeS.jl",
           "JuliaSmoothOptimizers/DCISolver.jl",
+          "JuliaSmoothOptimizers/FletcherPenaltySolver.jl",
           "JuliaSmoothOptimizers/JSOSolvers.jl",
           "JuliaSmoothOptimizers/Krylov.jl",
           "JuliaSmoothOptimizers/NLPModels.jl",
