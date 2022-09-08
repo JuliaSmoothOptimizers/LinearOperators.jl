@@ -41,7 +41,7 @@ The optional `check` argument will perform cheap hermicity and definiteness
 checks.
 This Operator is not in-place when using `mul!`.
 """
-function opCholesky(M::AbstractMatrix; check::Bool = false) where {T}
+function opCholesky(M::AbstractMatrix; check::Bool = false)
   (m, n) = size(M)
   m == n || throw(LinearOperatorException("shape mismatch"))
   if check
@@ -71,7 +71,7 @@ If M is sparse and real, then only the upper triangle should be stored in order 
     opLDL(Symmetric(M, :U))
 
 """
-function opLDL(M::AbstractMatrix; check::Bool = false) where {T}
+function opLDL(M::AbstractMatrix; check::Bool = false)
   (m, n) = size(M)
   m == n || throw(LinearOperatorException("shape mismatch"))
   if check

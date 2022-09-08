@@ -176,7 +176,7 @@ The operation `Z * v` is equivalent to `v[I]`. `I` can be `:`.
 
 Alias for `opRestriction([k], ncol)`.
 """
-function opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I) where {T, I <: Integer}
+function opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I) where {I <: Integer}
   all(1 .≤ Idx .≤ ncol) || throw(LinearOperatorException("indices should be between 1 and $ncol"))
   nrow = length(Idx)
   prod! = @closure (res, v, α, β) -> mulRestrict!(res, Idx, v, α, β)
