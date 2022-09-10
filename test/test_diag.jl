@@ -52,3 +52,15 @@ end
     @test abs(B.d - Bref) <= 1e-10
   end
 end
+
+@testset "Allocations test" begin
+  d = rand(5)
+  A = DiagonalQN(d)
+  v = rand(5)
+  u = similar(v)
+  mul!(u, A, v)
+  @test (@allocated mul!(u, A, v)) == 0
+  B = SpectralGradient(rand(), 5)
+  mul!(u, B, v)
+  @test (@allocated mul!(u, B, v)) == 0
+end
