@@ -1,13 +1,5 @@
 export DiagonalQN, SpectralGradient
 
-function mulSquareOpDiagonal!(res, d, v, α, β::T) where {T <: Real}
-  if β == zero(T)
-    res .= α .* d .* v
-  else
-    res .= α .* d .* v .+ β .* res
-  end
-end
-
 """
 Implementation of the diagonal quasi-Newton approximation described in
 
@@ -15,16 +7,16 @@ Andrei, N.
 A diagonal quasi-Newton updating method for unconstrained optimization. 
 https://doi.org/10.1007/s11075-018-0562-7
 """
-mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}} <:
+mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
   d::V # Diagonal of the operator
   nrow::I
   ncol::I
   symmetric::Bool
   hermitian::Bool
-  prod!
-  tprod!
-  ctprod!
+  prod!::F
+  tprod!::F
+  ctprod!::F
   nprod::I
   ntprod::I
   nctprod::I
@@ -44,31 +36,19 @@ positive definite.
 
 - `d::AbstractVector`: initial diagonal approximation.
 """
-DiagonalQN(d::AbstractVector{T}) where {T <: Real} = DiagonalQN(
-  d,
-  length(d),
-  length(d),
-  true,
-  true,
-  (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β),
-  (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β),
-  (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β),
-  0,
-  0,
-  0,
-  true,
-  true,
-  true,
-)
+function DiagonalQN(d::AbstractVector{T}) where {T <: Real}
+  prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
+  DiagonalQN(d, length(d), length(d), true, true, prod, prod, prod, 0, 0, 0, true, true, true)
+end
 
 # update function
 # s = x_{k+1} - x_k
 # y = ∇f(x_{k+1}) - ∇f(x_k)
 function push!(
-  B::DiagonalQN{T, I, V},
+  B::DiagonalQN{T, I, V, F},
   s::V,
   y::V,
-) where {T <: Real, I <: Integer, V <: AbstractVector{T}}
+) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
   trA2 = zero(T)
   for i in eachindex(s)
     trA2 += s[i]^4
@@ -91,15 +71,16 @@ Birgin, E. G., Martínez, J. M., & Raydan, M.
 Spectral Projected Gradient Methods: Review and Perspectives. 
 https://doi.org/10.18637/jss.v060.i03
 """
-mutable struct SpectralGradient{T <: Real, I <: Integer} <: AbstractDiagonalQuasiNewtonOperator{T}
+mutable struct SpectralGradient{T <: Real, I <: Integer, F} <:
+               AbstractDiagonalQuasiNewtonOperator{T}
   d::T # Diagonal coefficient of the operator (multiple of the identity)
   nrow::I
   ncol::I
   symmetric::Bool
   hermitian::Bool
-  prod!
-  tprod!
-  ctprod!
+  prod!::F
+  tprod!::F
+  ctprod!::F
   nprod::I
   ntprod::I
   nctprod::I
@@ -121,32 +102,18 @@ The approximation is defined as σI.
 """
 function SpectralGradient(d::T, n::I) where {T <: Real, I <: Integer}
   @assert d > 0
-  SpectralGradient(
-    d,
-    n,
-    n,
-    true,
-    true,
-    (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β),
-    (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β),
-    (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β),
-    0,
-    0,
-    0,
-    true,
-    true,
-    true,
-  )
+  prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
+  SpectralGradient(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true)
 end
 
 # update function
 # s = x_{k+1} - x_k
 # y = ∇f(x_{k+1}) - ∇f(x_k)
 function push!(
-  B::SpectralGradient{T, I},
+  B::SpectralGradient{T, I, F},
   s::V,
   y::V,
-) where {T <: Real, I <: Integer, V <: AbstractVector{T}}
+) where {T <: Real, I <: Integer, F, V <: AbstractVector{T}}
   if all(s .== 0)
     error("Cannot divide by zero and s .= 0")
   end
