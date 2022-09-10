@@ -1,4 +1,6 @@
 export AbstractLinearOperator,
+  AbstractQuasiNewtonOperator,
+  AbstractDiagonalQuasiNewtonOperator,
   LinearOperator,
   LinearOperatorException,
   hermitian,
