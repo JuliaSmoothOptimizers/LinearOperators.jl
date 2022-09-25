@@ -2,7 +2,8 @@ using TimerOutputs
 
 export TimedLinearOperator
 
-mutable struct TimedLinearOperator{T, OP <: AbstractLinearOperator{T}, F, Ft, Fct} <: AbstractLinearOperator{T}
+mutable struct TimedLinearOperator{T, OP <: AbstractLinearOperator{T}, F, Ft, Fct} <:
+               AbstractLinearOperator{T}
   timer::TimerOutput
   op::OP
   prod!::F
@@ -16,7 +17,8 @@ TimedLinearOperator{T}(
   prod!::F,
   tprod!::Ft,
   ctprod!::Fct,
-) where {T, F, Ft, Fct} = TimedLinearOperator{T, typeof(op), F, Ft, Fct}(timer, op, prod!, tprod!, ctprod!)
+) where {T, F, Ft, Fct} =
+  TimedLinearOperator{T, typeof(op), F, Ft, Fct}(timer, op, prod!, tprod!, ctprod!)
 
 """
     TimedLinearOperator(op)
