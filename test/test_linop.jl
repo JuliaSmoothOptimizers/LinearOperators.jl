@@ -223,6 +223,7 @@ function test_linop()
       @test(abs(norm(opI2 * v - v)) <= ϵ * norm(v))
       @test(abs(norm(transpose(opI) * v - v)) <= ϵ * norm(v))
       @test(abs(norm(opI' * v - v)) <= ϵ * norm(v))
+      @test(abs(norm(v' * opI - v')) <= ϵ * norm(v))
       @test(norm(Matrix(opI) - Matrix(1.0I, nrow, nrow)) <= ϵ * norm(Matrix(1.0I, nrow, nrow)))
 
       w = opI * v

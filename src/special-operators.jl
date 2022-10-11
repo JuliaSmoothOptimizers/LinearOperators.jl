@@ -17,6 +17,10 @@ struct opEye <: AbstractLinearOperator{Any} end
 *(x::AbstractArray{T, 1} where {T}, ::opEye) = x
 *(::opEye, A::AbstractArray{T, 2} where {T}) = A
 *(A::AbstractArray{T, 2} where {T}, ::opEye) = A
+*(
+  v::Union{LinearAlgebra.Adjoint{S, V}, LinearAlgebra.Transpose{S, V}},
+  ::LinearOperators.opEye,
+) where {S, V <: AbstractVector{S}} = v
 *(::opEye, T::AbstractLinearOperator) = T
 *(T::AbstractLinearOperator, ::opEye) = T
 *(::opEye, T::opEye) = T
@@ -212,9 +216,9 @@ opExtension(k::I, ncol::I) where {I <: Integer} = opExtension([k], ncol)
 import Base.getindex
 function getindex(
   op::AbstractLinearOperator,
-  rows::Union{LinearOperatorIndexType{I}, I, Colon},
-  cols::Union{LinearOperatorIndexType{I}, I, Colon},
-) where {I <: Integer}
+  rows::Union{LinearOperatorIndexType{<:Integer}, <:Integer, Colon},
+  cols::Union{LinearOperatorIndexType{<:Integer}, <:Integer, Colon},
+)
   R = opRestriction(rows, size(op, 1))
   E = opExtension(cols, size(op, 2))
   return R * op * E
