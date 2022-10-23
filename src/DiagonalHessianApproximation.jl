@@ -1,7 +1,14 @@
 export DiagonalQN, SpectralGradient
 
 """
-Implementation of the diagonal quasi-Newton approximation described in
+Implementation of the diagonal quasi-Newton approximations described in
+
+M. Zhu, J. L. Nazareth and H. Wolkowicz
+The Quasi-Cauchy Relation and Diagonal Updating.
+SIAM Journal on Optimization, vol. 9, number 4, pp. 1192-1204, 1999.
+https://doi.org/10.1137/S1052623498331793.
+
+and
 
 Andrei, N. 
 A diagonal quasi-Newton updating method for unconstrained optimization. 
@@ -23,6 +30,7 @@ mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
   args5::Bool
   use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
+  psb::Bool
 end
 
 """
@@ -34,11 +42,12 @@ positive definite.
 
 # Arguments
 
-- `d::AbstractVector`: initial diagonal approximation.
+- `d::AbstractVector`: initial diagonal approximation;
+- `psb::Bool`: whether to use the diagonal PSB update or the Andrei update.
 """
-function DiagonalQN(d::AbstractVector{T}) where {T <: Real}
+function DiagonalQN(d::AbstractVector{T}, psb::Bool = false) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
-  DiagonalQN(d, length(d), length(d), true, true, prod, prod, prod, 0, 0, 0, true, true, true)
+  DiagonalQN(d, length(d), length(d), true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb)
 end
 
 # update function
@@ -49,18 +58,23 @@ function push!(
   s::V,
   y::V,
 ) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
-  trA2 = zero(T)
-  for i in eachindex(s)
-    trA2 += s[i]^4
-  end
-  sT_s = dot(s, s)
-  sT_y = dot(s, y)
-  sT_B_s = sum(s[i]^2 * B.d[i] for i ∈ eachindex(s))
+  s2 = (si^2 for si ∈ s)
+  trA2 = dot(s2, s2)
   if trA2 == 0
     error("Cannot divide by zero and trA2 = 0")
   end
-  q = (sT_y + sT_s - sT_B_s) / trA2
-  B.d .+= q .* s .^ 2 .- 1
+  sT_y = dot(s, y)
+  sT_B_s = dot(s2, B.d)
+  q = sT_y - sT_B_s
+  if B.psb
+    q /= trA2
+    B.d .+= q .* s .^ 2
+  else
+    sT_s = dot(s, s)
+    q += sT_s
+    q /= trA2
+    B.d .+= q .* s .^ 2 .- 1
+  end
   return B
 end
 
