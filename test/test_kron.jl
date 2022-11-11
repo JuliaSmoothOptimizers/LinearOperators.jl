@@ -46,6 +46,16 @@ function test_kron()
     y = K * x
     @test eltype(y) == Complex{Float64}
   end
+
+  @testset ExtendedTestSet "kron scaling" begin
+   A =2kron(opEye(2),I(1))
+   x = randn(2)
+   y1=A*x
+   y2=A'*x
+   y3=transpose(A)*x
+   err = norm(y1-2x) + norm(y2-2x) + norm(y3-2x)
+   @test err < 1e-12
+  end
 end
 
 test_kron()

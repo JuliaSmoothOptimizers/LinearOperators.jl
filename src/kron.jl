@@ -15,27 +15,27 @@ function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), q, n)
     if β == zero(T2)
-      res .= Matrix(B * X * transpose(A))[:]
+      res .= α .* Matrix(B * X * transpose(A))[:]
     else
-      res .= Matrix(B * X * transpose(A))[:] .+ β .* res
+      res .= α .* Matrix(B * X * transpose(A))[:] .+ β .* res
     end
   end
   function tprod!(res, x, α, β::T2) where {T2}
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), p, m)
     if β == zero(T2)
-      res .= Matrix(transpose(B) * X * A)[:]
+      res .= α .* Matrix(transpose(B) * X * A)[:]
     else
-      res .= Matrix(transpose(B) * X * A)[:] .+ β .* res
+      res .= α .* Matrix(transpose(B) * X * A)[:] .+ β .* res
     end
   end
   function ctprod!(res, x, α, β::T2) where {T2}
     S = promote_type(T, eltype(x))
     X = reshape(convert(Vector{S}, x), p, m)
     if β == zero(T2)
-      res .= Matrix(B' * X * conj(A))[:]
+      res .= α .* Matrix(B' * X * conj(A))[:]
     else
-      res .= Matrix(B' * X * conj(A))[:] .+ β .* res
+      res .= α .* Matrix(B' * X * conj(A))[:] .+ β .* res
     end
   end
   symm = issymmetric(A) && issymmetric(B)
