@@ -13,5 +13,5 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
 
   v = CUDA.rand(35)
   y = M * v
-  @test y <: CuVector{Float32}
+  @test y isa CuVector{Float32}
 end
