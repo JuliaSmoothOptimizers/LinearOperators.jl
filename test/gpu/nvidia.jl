@@ -1,3 +1,4 @@
+using Test, LinearAlgebra, SparseArrays
 using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
 
 @testset "Nvidia -- CUDA.jl" begin
