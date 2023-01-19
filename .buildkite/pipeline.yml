@@ -1,0 +1,15 @@
+steps:
+  - label: "Nvidia GPUs -- LinearOperators.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: 1.8
+    agents:
+      queue: "juliagpu"
+      cuda: "*"
+    command: |
+      julia --color=yes --project -e '
+      using Pkg
+      Pkg.add("CUDA")
+      Pkg.instantiate()
+      include("test/gpu/nvidia.jl")'
+    timeout_in_minutes: 30
