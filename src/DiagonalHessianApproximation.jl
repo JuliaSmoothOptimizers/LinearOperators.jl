@@ -79,6 +79,18 @@ function push!(
 end
 
 """
+    reset!(op)
+Resets the DiagonalQN data of the given operator.
+"""
+function reset!(op::DiagonalQN{T}) where {T <: Real}
+  op.d .= one(T)
+  op.nprod = 0
+  op.ntprod = 0
+  op.nctprod = 0
+  return op
+end
+
+"""
 Implementation of a spectral gradient quasi-Newton approximation described in
 
 Birgin, E. G., Martínez, J. M., & Raydan, M. 
@@ -87,7 +99,7 @@ https://doi.org/10.18637/jss.v060.i03
 """
 mutable struct SpectralGradient{T <: Real, I <: Integer, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
-  d::T # Diagonal coefficient of the operator (multiple of the identity)
+  d::Vector{T} # Diagonal coefficient of the operator (multiple of the identity)
   nrow::I
   ncol::I
   symmetric::Bool
@@ -114,8 +126,9 @@ The approximation is defined as σI.
 - `σ::Real`: initial positive multiple of the identity;
 - `n::Int`: operator size.
 """
-function SpectralGradient(d::T, n::I) where {T <: Real, I <: Integer}
-  @assert d > 0
+function SpectralGradient(σ::T, n::I) where {T <: Real, I <: Integer}
+  @assert σ > 0
+  d = [σ]
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   SpectralGradient(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true)
 end
@@ -131,6 +144,18 @@ function push!(
   if all(s .== 0)
     error("Cannot divide by zero and s .= 0")
   end
-  B.d = dot(s, y) / dot(s, s)
+  B.d[1] = dot(s, y) / dot(s, s)
   return B
+end
+
+"""
+    reset!(op)
+Resets the SpectralGradient data of the given operator.
+"""
+function reset!(op::SpectralGradient{T}) where {T <: Real}
+  op.d[1] = one(T)
+  op.nprod = 0
+  op.ntprod = 0
+  op.nctprod = 0
+  return op
 end
