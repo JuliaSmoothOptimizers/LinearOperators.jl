@@ -79,7 +79,7 @@ function push!(
 end
 
 """
-    reset!(op)
+    reset!(op::DiagonalQN)
 Resets the DiagonalQN data of the given operator.
 """
 function reset!(op::DiagonalQN{T}) where {T <: Real}
@@ -149,7 +149,7 @@ function push!(
 end
 
 """
-    reset!(op)
+    reset!(op::SpectralGradient)
 Resets the SpectralGradient data of the given operator.
 """
 function reset!(op::SpectralGradient{T}) where {T <: Real}
