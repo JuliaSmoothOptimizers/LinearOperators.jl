@@ -63,7 +63,7 @@ end
       Bref = -5 / 2
     end
     push!(B, s, y)
-    @test abs(B.d - Bref) <= 1e-10
+    @test abs(B.d[1] - Bref) <= 1e-10
   end
 end
 
@@ -80,4 +80,20 @@ end
   C = SpectralGradient(rand(), 5)
   mul!(u, C, v)
   @test (@allocated mul!(u, C, v)) == 0
+end
+
+@testset "reset" begin
+  B = DiagonalQN([1.0, -1.0, 1.0], false)
+  s = x1 - x0
+  y = ∇f(x1) - ∇f(x0)
+  push!(B, s, y)
+  reset!(B)
+  @test B * x0 == x0
+
+  B = SpectralGradient(2.5, 3)
+  s = x1 - x0
+  y = ∇f(x1) - ∇f(x0)
+  push!(B, s, y)
+  reset!(B)
+  @test B * x0 == x0
 end
