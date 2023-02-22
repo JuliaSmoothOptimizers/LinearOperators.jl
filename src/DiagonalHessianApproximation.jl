@@ -72,7 +72,7 @@ function push!(
   if s0Norm == 0
     error("Cannot update DiagonalQN operator with s=0")
   end
-  # sᵀBs = sᵀy can be scaled by ||s||² without changing the updating problem
+  # sᵀBs = sᵀy can be scaled by ‖s‖² without changing the update
   s .= s0 ./ s0Norm
   y .= y0 ./ s0Norm
   s2 .= s .^ 2
