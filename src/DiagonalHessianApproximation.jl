@@ -17,9 +17,6 @@ https://doi.org/10.1007/s11075-018-0562-7
 mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
   d::V # Diagonal of the operator
-  s::V
-  s2::V
-  y::V
   nrow::I
   ncol::I
   symmetric::Bool
@@ -51,10 +48,7 @@ positive definite.
 function DiagonalQN(d::AbstractVector{T}, psb::Bool = false) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   n = length(d)
-  s = similar(d)
-  s2 = similar(d)
-  y = similar(d)
-  DiagonalQN(d, s, s2, y, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb)
+  DiagonalQN(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb)
 end
 
 # update function
@@ -65,17 +59,14 @@ function push!(
   s0::V,
   y0::V,
 ) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
-  s = B.s
-  s2 = B.s2
-  y = B.y
   s0Norm = norm(s0, 2)
   if s0Norm == 0
     error("Cannot update DiagonalQN operator with s=0")
   end
-  # sᵀBs = sᵀy can be scaled by ‖s‖² without changing the update
-  s .= s0 ./ s0Norm
-  y .= y0 ./ s0Norm
-  s2 .= s .^ 2
+  # sᵀBs = sᵀy can be scaled by ||s||² without changing the update
+  s = (si / s0Norm for si ∈ s0)
+  s2 = (si^2 for si ∈ s)
+  y = (yi / s0Norm for yi ∈ y0) 
   trA2 = dot(s2, s2)
   sT_y = dot(s, y)
   sT_B_s = dot(s2, B.d)
