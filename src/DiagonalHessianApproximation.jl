@@ -66,7 +66,7 @@ function push!(
   # sᵀBs = sᵀy can be scaled by ||s||² without changing the update
   s = (si / s0Norm for si ∈ s0)
   s2 = (si^2 for si ∈ s)
-  y = (yi / s0Norm for yi ∈ y0) 
+  y = (yi / s0Norm for yi ∈ y0)
   trA2 = dot(s2, s2)
   sT_y = dot(s, y)
   sT_B_s = dot(s2, B.d)
