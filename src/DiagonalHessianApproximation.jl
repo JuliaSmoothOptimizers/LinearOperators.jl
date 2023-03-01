@@ -47,7 +47,8 @@ positive definite.
 """
 function DiagonalQN(d::AbstractVector{T}, psb::Bool = false) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
-  DiagonalQN(d, length(d), length(d), true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb)
+  n = length(d)
+  DiagonalQN(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb)
 end
 
 # update function
@@ -55,14 +56,18 @@ end
 # y = ∇f(x_{k+1}) - ∇f(x_k)
 function push!(
   B::DiagonalQN{T, I, V, F},
-  s::V,
-  y::V,
+  s0::V,
+  y0::V,
 ) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
-  s2 = (si^2 for si ∈ s)
-  trA2 = dot(s2, s2)
-  if trA2 == 0
-    error("Cannot divide by zero and trA2 = 0")
+  s0Norm = norm(s0, 2)
+  if s0Norm == 0
+    error("Cannot update DiagonalQN operator with s=0")
   end
+  # sᵀBs = sᵀy can be scaled by ||s||² without changing the update
+  s = (si / s0Norm for si ∈ s0)
+  s2 = (si^2 for si ∈ s)
+  y = (yi / s0Norm for yi ∈ y0) 
+  trA2 = dot(s2, s2)
   sT_y = dot(s, y)
   sT_B_s = dot(s2, B.d)
   q = sT_y - sT_B_s
