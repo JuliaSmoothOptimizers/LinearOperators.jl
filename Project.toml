@@ -10,6 +10,12 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
+[weakdeps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+
+[extensions]
+LinearOperatorsChainRulesCoreExt = "ChainRulesCore"
+
 [compat]
 FastClosures = "0.2, 0.3"
 LDLFactorizations = "0.9, 0.10"
@@ -20,6 +26,7 @@ julia = "^1.6.0"
 Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestSetExtensions = "98d24dd4-01ad-11ea-1b02-c9a08f80db04"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [targets]
-test = ["Arpack", "Test", "TestSetExtensions"]
+test = ["Arpack", "Test", "TestSetExtensions", "Zygote"]
