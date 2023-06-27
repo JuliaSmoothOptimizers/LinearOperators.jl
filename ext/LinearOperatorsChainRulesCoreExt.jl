@@ -1,7 +1,7 @@
 module LinearOperatorsChainRulesCoreExt
 
 using LinearOperators
-import ChainRulesCore
+isdefined(Base, :get_extension) ? (import ChainRulesCore) : (import ..ChainRulesCore)
 
 function ChainRulesCore.frule((_, Δx, _), ::typeof(*), op::AbstractLinearOperator{T}, x::AbstractVector{S}) where {T, S}
   y = op*x
