@@ -13,7 +13,7 @@ function matmulOp(mat::AbstractArray{T}) where {T}
     end
   end
 
-  return LinearOperator{T}(size(mat, 1), size(mat, 2), false, false, prod!, nothing, ctprod!)
+  return LinearOperator(T, size(mat, 1), size(mat, 2), false, false, prod!, nothing, ctprod!)
 end
 
 function test_chainrules()

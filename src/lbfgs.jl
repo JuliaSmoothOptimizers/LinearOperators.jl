@@ -64,7 +64,7 @@ mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewton
   nctprod::I
 end
 
-LBFGSOperator{T}(
+LBFGSOperator(
   nrow::I,
   ncol::I,
   symmetric::Bool,
@@ -149,7 +149,7 @@ function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I <: Integer}
   end
 
   prod! = @closure (res, x, α, β) -> lbfgs_multiply(res, lbfgs_data, x, α, β)
-  return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, true, lbfgs_data)
+  return LBFGSOperator(n, n, true, true, prod!, prod!, prod!, true, lbfgs_data)
 end
 
 InverseLBFGSOperator(n::Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
@@ -199,7 +199,7 @@ function LBFGSOperator(T::DataType, n::I; kwargs...) where {I <: Integer}
   end
 
   prod! = @closure (res, x, α, β) -> lbfgs_multiply(res, lbfgs_data, x, α, β)
-  return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, false, lbfgs_data)
+  return LBFGSOperator(n, n, true, true, prod!, prod!, prod!, false, lbfgs_data)
 end
 
 LBFGSOperator(n::I; kwargs...) where {I <: Integer} = LBFGSOperator(Float64, n; kwargs...)

@@ -28,7 +28,7 @@ function opInverse(M::AbstractMatrix{T}; symm = false, herm = false) where {T}
   prod! = @closure (res, v, α, β) -> mulFact!(res, M, v, α, β)
   tprod! = @closure (res, u, α, β) -> mulFact!(res, transpose(M), u, α, β)
   ctprod! = @closure (res, w, α, β) -> mulFact!(res, adjoint(M), w, α, β)
-  LinearOperator{T}(size(M, 2), size(M, 1), symm, herm, prod!, tprod!, ctprod!)
+  LinearOperator5(T, size(M, 2), size(M, 1), symm, herm, prod!, tprod!, ctprod!)
 end
 
 """
@@ -53,7 +53,7 @@ function opCholesky(M::AbstractMatrix; check::Bool = false)
   tprod! = @closure (res, u, α, β) -> tmulFact!(res, LL, u, α, β)  # M.' = conj(M)
   ctprod! = @closure (res, w, α, β) -> mulFact!(res, LL, w, α, β)
   S = eltype(LL)
-  LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!)
+  LinearOperator5(S, m, m, isreal(M), true, prod!, tprod!, ctprod!)
   #TODO: use iterative refinement.
 end
 
@@ -82,7 +82,7 @@ function opLDL(M::AbstractMatrix; check::Bool = false)
   tprod! = @closure (res, u, α, β) -> tmulFact!(res, LDL, u, α, β)  # M.' = conj(M)
   ctprod! = @closure (res, w, α, β) -> mulFact!(res, LDL, w, α, β)
   S = eltype(LDL)
-  return LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!)
+  return LinearOperator5(S, m, m, isreal(M), true, prod!, tprod!, ctprod!)
   #TODO: use iterative refinement.
 end
 
@@ -97,7 +97,7 @@ function opLDL(M::Symmetric{T, SparseMatrixCSC{T, Int}}; check::Bool = false) wh
   tprod! = @closure (res, u) -> ldiv!(res, LDL, u)  # M.' = conj(M)
   ctprod! = @closure (res, w) -> ldiv!(res, LDL, w)
   S = eltype(LDL)
-  return LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!)
+  return LinearOperator(S, m, m, isreal(M), true, prod!, tprod!, ctprod!)
 end
 
 function mulHouseholder!(res, h, v, α, β::T) where {T}
@@ -117,7 +117,7 @@ The result is `x -> (I - 2 h hᵀ) x`.
 function opHouseholder(h::AbstractVector{T}) where {T}
   n = length(h)
   prod! = @closure (res, v, α, β) -> mulHouseholder!(res, h, v, α, β)  # tprod will be inferred
-  LinearOperator{T}(n, n, isreal(h), true, prod!, nothing, prod!)
+  LinearOperator5(T, n, n, isreal(h), true, prod!, nothing, prod!)
 end
 
 function mulHermitian!(res, d, L, v, α, β::T) where {T}
@@ -139,7 +139,7 @@ function opHermitian(d::AbstractVector{S}, A::AbstractMatrix{T}) where {S, T}
   L = tril(A, -1)
   U = promote_type(S, T)
   prod! = @closure (res, v, α, β) -> mulHermitian!(res, d, L, v, α, β)
-  LinearOperator{U}(m, m, isreal(A), true, prod!, nothing, nothing)
+  LinearOperator5(U, m, m, isreal(A), true, prod!, nothing, nothing)
 end
 
 """

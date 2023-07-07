@@ -370,7 +370,7 @@ function test_linop()
       res = copy(res_init)
       α, β = 2.0, -3.0
 
-      op = LinearOperator(
+      op = LinearOperator5(
         ComplexF64,
         nrow,
         nrow,
@@ -389,7 +389,7 @@ function test_linop()
       mul!(res, adjoint(op), v, α, β)
       @test(norm(α * A' * v + β * res_init - res) <= rtol * norm(v))
 
-      op = LinearOperator(
+      op = LinearOperator5(
         ComplexF64,
         nrow,
         nrow,
@@ -506,7 +506,7 @@ function test_linop()
     function test_func(res)
       res .= 1.0 .+ im * 1.0
     end
-    op = LinearOperator(ComplexF64, 5, 3, false, false, (res, p, α, β) -> test_func(res))
+    op = LinearOperator5(ComplexF64, 5, 3, false, false, (res, p, α, β) -> test_func(res))
     @test eltype(op) == ComplexF64
     v = rand(5)
     @test_throws LinearOperatorException transpose(op) * v  # cannot be inferred
@@ -528,7 +528,7 @@ function test_linop()
     # Adjoint of a symmetric non-hermitian
     A = simple_matrix(ComplexF64, 3, 3)
     A = A + transpose(A)
-    op = LinearOperator(ComplexF64, 3, 3, true, false, (res, v, α, β) -> mul!(res, A, v))
+    op = LinearOperator5(ComplexF64, 3, 3, true, false, (res, v, α, β) -> mul!(res, A, v))
     v = rand(3)
     @test op' * v ≈ A' * v
   end
@@ -543,7 +543,7 @@ function test_linop()
       res[2] = v[1] + v[2]
     end
     for T in (Complex{Float64}, Complex{Float32}, BigFloat, Float64, Float32, Float16, Int32)
-      op = LinearOperator(T, 2, 2, false, false, prod!, nothing, ctprod!)
+      op = LinearOperator5(T, 2, 2, false, false, prod!, nothing, ctprod!)
       w = ones(T, 2)
       @test eltype(op) == T
       @test op * w == T[2; 1]
@@ -560,10 +560,10 @@ function test_linop()
     function ctprod2!(res, w, α, β)
       mul!(res, A', w)
     end
-    opC = LinearOperator(ComplexF64, 2, 2, false, false, prod2!, tprod2!, ctprod2!)
+    opC = LinearOperator5(ComplexF64, 2, 2, false, false, prod2!, tprod2!, ctprod2!)
     v = simple_vector(ComplexF64, 2)
     @test A == Matrix(opC)
-    opF = LinearOperator(Float64, 2, 2, false, false, prod2!, tprod2!, ctprod2!) # The type is a lie
+    opF = LinearOperator5(Float64, 2, 2, false, false, prod2!, tprod2!, ctprod2!) # The type is a lie
     @test eltype(opF) == Float64
     @test_throws InexactError Matrix(opF) # changed here TypeError to InexactError
   end
