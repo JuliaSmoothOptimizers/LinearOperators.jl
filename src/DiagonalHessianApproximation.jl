@@ -13,6 +13,12 @@ and
 Andrei, N. 
 A diagonal quasi-Newton updating method for unconstrained optimization. 
 https://doi.org/10.1007/s11075-018-0562-7
+
+and
+
+Mahsa Nosrati, Keyvan Amini. 
+A New Diagonal Quasi-Newton Algorithm for Unconstrained Optimization Problems.
+https://doi.org/10.21203/rs.3.rs-1871447/v2
 """
 mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
@@ -31,6 +37,7 @@ mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
   use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
   psb::Bool
+  andrei::Bool
 end
 
 """
@@ -43,12 +50,13 @@ positive definite.
 # Arguments
 
 - `d::AbstractVector`: initial diagonal approximation;
-- `psb::Bool`: whether to use the diagonal PSB update or the Andrei update.
+- `psb::Bool`: whether to use the diagonal PSB update.
+- `andrei::Bool`: whether to use the diagonal Andrei update.
 """
-function DiagonalQN(d::AbstractVector{T}, psb::Bool = false) where {T <: Real}
+function DiagonalQN(d::AbstractVector{T}, psb::Bool = false, andrei::Bool = true) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   n = length(d)
-  DiagonalQN(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb)
+  DiagonalQN(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb, andrei)
 end
 
 # update function
@@ -74,11 +82,14 @@ function push!(
   if B.psb
     q /= trA2
     B.d .+= q .* s .^ 2
-  else
+  elseif B.andrei
     sT_s = dot(s, s)
     q += sT_s
     q /= trA2
     B.d .+= q .* s .^ 2 .- 1
+  else
+    sT_y /= trA2
+    B.d .= sT_y .* s .^ 2
   end
   return B
 end
