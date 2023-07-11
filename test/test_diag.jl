@@ -34,7 +34,7 @@ end
   end
 end
 
-@testset "Weak secant equation for Nosreti update" begin
+@testset "Weak secant equation for Nosrati update" begin
   for grad_fun in (:∇f, :∇g, ∇h)
     grad = eval(grad_fun)
     s = x1 - x0
