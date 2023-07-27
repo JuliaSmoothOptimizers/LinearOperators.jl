@@ -34,14 +34,14 @@ end
   end
 end
 
-@testset "Weak secant equation for Nosrati update" begin
+@testset "Weak secant equation for Wolk update" begin
   for grad_fun in (:∇f, :∇g, ∇h)
     grad = eval(grad_fun)
     s = x1 - x0
     y = grad(x1) - grad(x0)
-    B = DiagonalQN([1.0, -1.0, 1.0], false, false)
+    B = DiagonalQN([1.0, 1.0, 1.0], false, false, true)
     push!(B, s, y)
-    @test abs(dot(s, B * s) - dot(s, y)) <= 1e-10
+    @test abs(dot(s.^2, B.d) - dot(s, y)) <= 1e-10
   end
 end
 

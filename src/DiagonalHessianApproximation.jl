@@ -16,9 +16,7 @@ https://doi.org/10.1007/s11075-018-0562-7
 
 and
 
-Mahsa Nosrati, Keyvan Amini. 
-A New Diagonal Quasi-Newton Algorithm for Unconstrained Optimization Problems.
-https://doi.org/10.21203/rs.3.rs-1871447/v2
+DBFGS and Wolk updates
 """
 mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
@@ -38,6 +36,7 @@ mutable struct DiagonalQN{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
   psb::Bool
   andrei::Bool
+  wolk::Bool
 end
 
 """
@@ -53,10 +52,10 @@ positive definite.
 - `psb::Bool`: whether to use the diagonal PSB update.
 - `andrei::Bool`: whether to use the diagonal Andrei update.
 """
-function DiagonalQN(d::AbstractVector{T}, psb::Bool = false, andrei::Bool = true) where {T <: Real}
+function DiagonalQN(d::AbstractVector{T}, psb::Bool = false, andrei::Bool = true, wolk::Bool = false) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   n = length(d)
-  DiagonalQN(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb, andrei)
+  DiagonalQN(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true, psb, andrei, wolk)
 end
 
 # update function
@@ -78,6 +77,8 @@ function push!(
   trA2 = dot(s2, s2)
   sT_y = dot(s, y)
   sT_B_s = dot(s2, B.d)
+  sT_y0 = dot(s0, y0)
+  sT_B_s0 = dot(s0.^2, B.d)
   q = sT_y - sT_B_s
   if B.psb
     q /= trA2
@@ -87,9 +88,22 @@ function push!(
     q += sT_s
     q /= trA2
     B.d .+= q .* s .^ 2 .- 1
-  else
-    sT_y /= trA2
-    B.d .= sT_y .* s .^ 2
+  elseif B.wolk
+    @assert all(x -> x > 0, B.d)
+    σ1 = dot(s0.^2, sqrt.(B.d))
+    if σ1^2 + s0Norm^2 * ( sT_y0 - sT_B_s0) >= 0
+      σf = -σ1 + sqrt(σ1^2 + s0Norm^2 * ( sT_y0 - sT_B_s0))
+      σf2 = -σ1 - sqrt(σ1^2 + s0Norm^2 * ( sT_y0 - sT_B_s0))
+      if abs(σf2) < abs(σf)
+        σf = σf2
+      end 
+      σf /= s0Norm^2
+      B.d = (sqrt.(B.d) .+ σf).^2 
+    end
+    B.d .*= sT_y/sT_B_s # rescale it so that it satisfies QC
+  else # DBFGS update
+    B.d .= sum(abs.(y))/sT_y .* abs.(y) 
+  #  B.d .*= sT_y/sT_B_s # rescale it so that it satisfies QC if needed
   end
   return B
 end
