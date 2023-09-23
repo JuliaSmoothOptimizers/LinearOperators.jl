@@ -3,8 +3,7 @@ using Documenter, LinearOperators
 makedocs(
   modules = [LinearOperators],
   doctest = true,
-  # linkcheck = true,
-  strict = true,
+  linkcheck = true,
   format = Documenter.HTML(
     assets = ["assets/style.css"],
     ansicolor = true,
