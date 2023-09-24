@@ -1,5 +1,6 @@
-# https://github.com/julia-actions/julia-format/blob/master/workflows/format_pr.yml
-name: format-pr
+name: Formatter
+
+# Modified from https://github.com/julia-actions/julia-format/blob/master/workflows/format_pr.yml
 on:
   push:
     branches:
