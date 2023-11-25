@@ -20,7 +20,6 @@ function test_linop()
 
       @testset "Size" begin
         @test(size(op) == (nrow, ncol))
-        @test(shape(op) == (nrow, ncol))
         @test(size(op, 1) == nrow)
         @test(size(op, 2) == ncol)
         @test_throws LinearOperatorException size(op, 3)
@@ -676,7 +675,7 @@ function test_linop()
     for _ = 1:nctprods
       op' * rand(3)
     end
-    for fn ∈ (:size, :shape, :issymmetric, :ishermitian, :nprod, :ntprod, :nctprod)
+    for fn ∈ (:size, :issymmetric, :ishermitian, :nprod, :ntprod, :nctprod)
       @eval begin
         @test $fn($top) == $fn($top.op)
       end

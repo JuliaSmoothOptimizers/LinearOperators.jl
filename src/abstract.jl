@@ -12,8 +12,7 @@ export AbstractLinearOperator,
   nprod,
   ntprod,
   nctprod,
-  reset!,
-  shape
+  reset!
 
 mutable struct LinearOperatorException <: Exception
   msg::AbstractString
@@ -209,13 +208,6 @@ function size(op::AbstractLinearOperator, d::Integer)
   end
   throw(LinearOperatorException("Linear operators only have 2 dimensions for now"))
 end
-
-"""
-    m, n = shape(op)
-
-An alias for size.
-"""
-shape(op::AbstractLinearOperator) = size(op)
 
 """
     ishermitian(op)

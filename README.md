@@ -74,7 +74,6 @@ Function           | Description
 `hermitian`        | Determine whether the operator is Hermitian
 `push!`            | For L-BFGS or L-SR1 operators, push a new pair {s,y}
 `reset!`           | For L-BFGS or L-SR1 operators, reset the data
-`shape`            | Return the size of a linear operator
 `show`             | Display basic information about an operator
 `size`             | Return the size of a linear operator
 `symmetric`        | Determine whether the operator is symmetric
