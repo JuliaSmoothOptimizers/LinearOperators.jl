@@ -51,7 +51,7 @@ nprod(A::TransposeLinearOperator) = ntprod(A.parent)
 ntprod(A::TransposeLinearOperator) = nprod(A.parent)
 nctprod(A::TransposeLinearOperator) = nprod(A.parent)  # (transpose(A))' = conj(A)
 
-for f in [:nprod, :ntprod, :nctprod, :increase_nprod, :increase_ntprod, :increase_nctprod]
+for f in [:nprod, :ntprod, :nctprod, :increase_nprod!, :increase_ntprod!, :increase_nctprod!]
   @eval begin
     $f(A::ConjugateLinearOperator) = $f(A.parent)
   end
@@ -110,7 +110,7 @@ function mul!(
     return mul!(res, p, v, α, β)
   end
   if p.ctprod! !== nothing
-    increase_nctprod(p)
+    increase_nctprod!(p)
     if use_p5!
       return p.ctprod!(res, v, α, β)
     else
@@ -128,9 +128,9 @@ function mul!(
     end
   end
   if increment_tprod
-    increase_ntprod(p)
+    increase_ntprod!(p)
   else
-    increase_nprod(p)
+    increase_nprod!(p)
   end
   if use_p5!
     tprod!(res, v, α, β)
@@ -156,7 +156,7 @@ function mul!(
     return mul!(res, p, v, α, β)
   end
   if p.tprod! !== nothing
-    increase_ntprod(p)
+    increase_ntprod!(p)
     if use_p5!
       return p.tprod!(res, v, α, β)
     else
@@ -174,9 +174,9 @@ function mul!(
     end
   end
   if increment_ctprod
-    increase_nctprod(p)
+    increase_nctprod!(p)
   else
-    increase_nprod(p)
+    increase_nprod!(p)
   end
   conj!(res)
   if use_p5!

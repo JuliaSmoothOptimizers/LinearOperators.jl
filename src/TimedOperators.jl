@@ -49,9 +49,9 @@ for fn ∈ (
   :ntprod,
   :nctprod,
   :storage_type,
-  :increase_nprod,
-  :increase_ntprod,
-  :increase_nctprod,
+  :increase_nprod!,
+  :increase_ntprod!,
+  :increase_nctprod!,
   :reset!,
 )
   @eval begin
