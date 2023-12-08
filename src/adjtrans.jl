@@ -132,10 +132,11 @@ function mul!(
   else
     increase_nprod(p)
   end
+  conj!(res)
   if use_p5!
-    tprod!(res, v, α, β)
+    tprod!(res, conj.(v), conj(α), conj(β))
   else
-    prod3!(res, tprod!, v, α, β, p.Mtu5)
+    prod3!(res, tprod!, conj.(v), conj(α), conj(β), p.Mtu5)
   end
   conj!(res)
 end
