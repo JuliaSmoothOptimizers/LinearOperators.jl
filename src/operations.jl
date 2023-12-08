@@ -24,7 +24,7 @@ function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVec
   has_args5(op) || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) ||
     throw(LinearOperatorException("shape mismatch"))
-  increase_nprod(op)
+  increase_nprod!(op)
   if use_p5!
     op.prod!(res, v, α, β)
   else
