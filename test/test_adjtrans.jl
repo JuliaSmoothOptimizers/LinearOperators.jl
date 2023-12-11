@@ -41,8 +41,8 @@ function test_derived_adjoint()
     A = rand(5, 3) + im * rand(5, 3)
 
     opA = LinearOperator{eltype(A)}(size(A,1), size(A,2), false, false,
-                          (y,x) -> (mul!(y,A,x)),
-                          (x,y) -> (mul!(x,transpose(A),y)),
+                          (y,x) -> mul!(y,A,x),
+                          (x,y) -> mul!(x,transpose(A),y),
                           nothing)
 
     aopA = AdjointLinearOperator(opA)
@@ -84,9 +84,9 @@ function test_derived_transpose()
     A = rand(5, 3) + im * rand(5, 3)
 
     opA = LinearOperator{eltype(A)}(size(A,1), size(A,2), false, false,
-                          (y,x) -> (mul!(y,A,x)),
+                          (y,x) -> mul!(y,A,x),
                           nothing,
-                          (x,y) -> (mul!(x,adjoint(A),y)))
+                          (x,y) -> mul!(x,adjoint(A),y))
 
     aopA = AdjointLinearOperator(opA)
     copA = ConjugateLinearOperator(opA)
