@@ -40,10 +40,15 @@ function test_derived_adjoint()
   @testset ExtendedTestSet "Derived Adjoint" begin
     A = rand(5, 3) + im * rand(5, 3)
 
-    opA = LinearOperator{eltype(A)}(size(A,1), size(A,2), false, false,
-                          (y,x) -> mul!(y,A,x),
-                          (x,y) -> mul!(x,transpose(A),y),
-                          nothing)
+    opA = LinearOperator{eltype(A)}(
+      size(A, 1),
+      size(A, 2),
+      false,
+      false,
+      (y, x) -> mul!(y, A, x),
+      (x, y) -> mul!(x, transpose(A), y),
+      nothing,
+    )
 
     aopA = AdjointLinearOperator(opA)
     copA = ConjugateLinearOperator(opA)
@@ -77,16 +82,20 @@ end
 
 test_derived_adjoint()
 
-
 ##
 function test_derived_transpose()
   @testset ExtendedTestSet "Derived Transpose" begin
     A = rand(5, 3) + im * rand(5, 3)
 
-    opA = LinearOperator{eltype(A)}(size(A,1), size(A,2), false, false,
-                          (y,x) -> mul!(y,A,x),
-                          nothing,
-                          (x,y) -> mul!(x,adjoint(A),y))
+    opA = LinearOperator{eltype(A)}(
+      size(A, 1),
+      size(A, 2),
+      false,
+      false,
+      (y, x) -> mul!(y, A, x),
+      nothing,
+      (x, y) -> mul!(x, adjoint(A), y),
+    )
 
     aopA = AdjointLinearOperator(opA)
     copA = ConjugateLinearOperator(opA)
