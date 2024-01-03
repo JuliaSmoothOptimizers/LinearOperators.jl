@@ -25,6 +25,10 @@ struct opEye <: AbstractLinearOperator{Any} end
 *(T::AbstractLinearOperator, ::opEye) = T
 *(::opEye, T::opEye) = T
 
+adjoint(A::opEye) = A
+transpose(A::opEye) = A
+conj(A::opEye) = A
+
 function show(io::IO, op::opEye)
   println(io, "Identity operator")
 end
