@@ -269,6 +269,10 @@ function test_linop()
       op2 = opEye()
       @test op === op2
       @test op === op * op2 === op2 * op
+
+      @test norm(transpose(op) * v - v) <= ϵ * norm(v)
+      @test norm(adjoint(op) * v - v) <= ϵ * norm(v)
+      @test norm(conj(op) * v - v) <= ϵ * norm(v)
     end
 
     @testset "Ones" begin
