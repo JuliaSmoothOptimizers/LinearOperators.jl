@@ -1,0 +1,46 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  LinearOperators.jl: Linear Operators for Julia
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Geoffroy
+    family-names: Leconte
+    email: geoffroy.leconte@gerad.ca
+    affiliation: >-
+      GERAD and Department of Mathematics and
+      Industrial Engineering, Polytechnique Montréal,
+      QC, Canada.
+    orcid: 'https://orcid.org/0000-0002-1825-1639'
+  - given-names: Dominique
+    family-names: Orban
+    email: dominique.orban@gerad.ca
+    orcid: 'https://orcid.org/0000-0002-8017-7687'
+    affiliation: >-
+      GERAD and Department of Mathematics and
+      Industrial Engineering, Polytechnique Montréal,
+      QC, Canada
+  - affiliation: 'Netherlands eScience Center, Amsterdam, NL'
+    orcid: 'https://orcid.org/0000-0003-4451-281X'
+    email: abel.s.siqueira@gmail.com
+    given-names: Abel
+    family-names: Soares Siqueira
+  - given-names: contributors
+identifiers:
+  - description: Zenodo archive
+    type: doi
+    value: 10.5281/zenodo.2559295
+keywords:
+  - Linear Algebra
+  - Julia
+  - Matrix Factorization
+license: MPL-2.0
+version: 2.6.0
+date-released: '2023-12-11'
+repository-code: >-
+  https://github.com/JuliaSmoothOptimizers/LinearOperators.jl
