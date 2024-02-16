@@ -1,13 +1,13 @@
 # A Julia Linear Operator Package
 
-Operators behave like matrices (with [exceptions](#Differences-1)) but are defined
+Operators behave like matrices (with [exceptions](@ref differences)) but are defined
 by their effect when applied to a vector.
 They can be transposed, conjugated, or combined with other operators cheaply.
 The costly operation is deferred until multiplied with a vector.
 
 ## Compatibility
 
-Julia 1.3 and up.
+Julia 1.6 and up.
 
 ## How to Install
 
@@ -68,21 +68,22 @@ operators (see [differences](@ref differences)).
 Unlike matrices, an operator never reduces to a vector or a number.
 
 ```@example exdiff
-using LinearOperators #hide
+using LinearOperators
 A = rand(5,5)
 opA = LinearOperator(A)
-A[:,1] * 3 # Vector
+A[:,1] * 3 isa Vector
 ```
 ```@example exdiff
-opA[:,1] * 3 # LinearOperator
+opA[:,1] * 3 isa LinearOperator
 ```
 ```@example exdiff
-# A[:,1] * [3] # ERROR
+opA[:,1] * [3] isa Vector
 ```
-```@example exdiff
-opA[:,1] * [3] # Vector
+However, the following returns an error
+```julia
+A[:,1] * [3]
 ```
-This is also true for `A[i,:]`, which returns vectors on Julia 0.6, and for the scalar
+This is also true for `A[i,:]`, which would return a vector and for the scalar
 `A[i,j]`.
 Similarly, `opA[1,1]` is an operator of size (1,1):"
 ```@example exdiff
