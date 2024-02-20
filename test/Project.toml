@@ -1,29 +1,24 @@
-name = "LinearOperators"
-uuid = "5c8ed15e-5a4c-59e4-a42b-c7e8811fb125"
-version = "2.6.0"
-
 [deps]
+Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 FastClosures = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+TestSetExtensions = "98d24dd4-01ad-11ea-1b02-c9a08f80db04"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
-
-[weakdeps]
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-
-[extensions]
-LinearOperatorsChainRulesCoreExt = "ChainRulesCore"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
+Arpack = "0.5"
 ChainRulesCore = "1"
 FastClosures = "0.2, 0.3"
 LDLFactorizations = "0.9, 0.10"
-LinearAlgebra = "1"
-Printf = "1"
 Requires = "1"
-SparseArrays = "1"
+Test = "1"
+TestSetExtensions = "3"
 TimerOutputs = "^0.5"
+Zygote = "0.6"
 julia = "^1.6.0"
