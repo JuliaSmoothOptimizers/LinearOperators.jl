@@ -17,7 +17,7 @@ x1 = x0 + [1.0, 0.0, 1.0]
     grad = eval(grad_fun)
     s = x1 - x0
     y = grad(x1) - grad(x0)
-    B = DiagonalQN([1.0, -1.0, 1.0])
+    B = DiagonalAndrei([1.0, -1.0, 1.0])
     push!(B, s, y)
     @test abs(dot(s, B * s) - dot(s, y)) <= 1e-10
   end
@@ -28,53 +28,53 @@ end
     grad = eval(grad_fun)
     s = x1 - x0
     y = grad(x1) - grad(x0)
-    B = DiagonalQN([1.0, -1.0, 1.0], true)
+    B = DiagonalPSB([1.0, -1.0, 1.0])
     push!(B, s, y)
     @test abs(dot(s, B * s) - dot(s, y)) <= 1e-10
   end
 end
 
 @testset "Hard coded test" begin
+  Bref = Dict{Symbol, Dict{Any, Any}}()
+  Bref[:∇f] = Dict{Any, Any}()
+  Bref[:∇g] = Dict{Any, Any}()
+  Bref[:∇h] = Dict{Any, Any}()
+  Bref[:∇f][DiagonalPSB] = [2, -1, 2]
+  Bref[:∇f][DiagonalAndrei] = [2, -2, 2]
+  Bref[:∇g][DiagonalPSB] = [1 + (sin(-1) - exp(-1) - 1) / 2, -1, 1 + (sin(-1) - exp(-1) - 1) / 2]
+  Bref[:∇g][DiagonalAndrei] = [(1 + sin(-1) - exp(-1)) / 2, -2, (1 + sin(-1) - exp(-1)) / 2]
+  Bref[:∇h][DiagonalPSB] = [-5 / 2, -1, -5 / 2]
+  Bref[:∇h][DiagonalAndrei] = [-5 / 2, -2, -5 / 2]
+
+  Bref_spg = Dict{Any, Any}()
+  Bref_spg[:∇f] = 2
+  Bref_spg[:∇g] = (1 - exp(-1) + sin(-1)) / 2
+  Bref_spg[:∇h] = -5 / 2
+
   for grad_fun in (:∇f, :∇g, :∇h)
     grad = eval(grad_fun)
     s = x1 - x0
     y = grad(x1) - grad(x0)
-    for psb ∈ (false, true)
-      B = DiagonalQN([1.0, -1.0, 1.0], psb)
-      if grad_fun == :∇f
-        Bref = psb ? [2, -1, 2] : [2, -2, 2]
-      elseif grad_fun == :∇g
-        Bref =
-          psb ? [1 + (sin(-1) - exp(-1) - 1) / 2, -1, 1 + (sin(-1) - exp(-1) - 1) / 2] :
-          [(1 + sin(-1) - exp(-1)) / 2, -2, (1 + sin(-1) - exp(-1)) / 2]
-      else
-        Bref = psb ? [-5 / 2, -1, -5 / 2] : [-5 / 2, -2, -5 / 2]
-      end
+    for DQN ∈ (DiagonalPSB, DiagonalAndrei)
+      B = DQN([1.0, -1.0, 1.0])
       push!(B, s, y)
-      @test norm(B.d - Bref) <= 1e-10
+      @test norm(B.d - Bref[grad_fun][DQN]) <= 1e-10
     end
 
     B = SpectralGradient(1.0, 3)
-    if grad_fun == :∇f
-      Bref = 2
-    elseif grad_fun == :∇g
-      Bref = (1 - exp(-1) + sin(-1)) / 2
-    else
-      Bref = -5 / 2
-    end
     push!(B, s, y)
-    @test abs(B.d[1] - Bref) <= 1e-10
+    @test abs(B.d[1] - Bref_spg[grad_fun]) <= 1e-10
   end
 end
 
 @testset "Allocations test" begin
   d = rand(5)
-  A = DiagonalQN(d)
+  A = DiagonalAndrei(d)
   v = rand(5)
   u = similar(v)
   mul!(u, A, v)
   @test (@allocated mul!(u, A, v)) == 0
-  B = DiagonalQN(d, true)
+  B = DiagonalPSB(d)
   mul!(u, B, v)
   @test (@allocated mul!(u, B, v)) == 0
   C = SpectralGradient(rand(), 5)
@@ -83,7 +83,7 @@ end
 end
 
 @testset "reset" begin
-  B = DiagonalQN([1.0, -1.0, 1.0], false)
+  B = DiagonalAndrei([1.0, -1.0, 1.0])
   s = x1 - x0
   y = ∇f(x1) - ∇f(x0)
   push!(B, s, y)
