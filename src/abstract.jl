@@ -2,6 +2,7 @@ export AbstractLinearOperator,
   AbstractQuasiNewtonOperator,
   AbstractDiagonalQuasiNewtonOperator,
   LinearOperator,
+  LinearOperator5,
   LinearOperatorException,
   hermitian,
   ishermitian,
@@ -61,7 +62,8 @@ mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct, S} <: AbstractLinearO
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
-function LinearOperator{T}(
+function LinearOperator(
+  ::Type{T},
   nrow::I,
   ncol::I,
   symmetric::Bool,
@@ -75,11 +77,9 @@ function LinearOperator{T}(
   S::DataType = Vector{T},
 ) where {T, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
-  nargs = get_nargs(prod!)
-  args5 = (nargs == 4)
-  (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments"))
-  allocated5 = args5 ? true : false
-  use_prod5! = args5 ? true : false
+  args5 = false
+  allocated5 = false
+  use_prod5! = false
   return LinearOperator{T, I, F, Ft, Fct, S}(
     nrow,
     ncol,
@@ -99,21 +99,46 @@ function LinearOperator{T}(
   )
 end
 
-LinearOperator{T}(
+function LinearOperator5(
+  ::Type{T},
   nrow::I,
   ncol::I,
   symmetric::Bool,
   hermitian::Bool,
-  prod!,
-  tprod!,
-  ctprod!;
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+  nprod::I,
+  ntprod::I,
+  nctprod::I;
   S::DataType = Vector{T},
-) where {T, I <: Integer} =
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, S = S)
+) where {T, I <: Integer, F, Ft, Fct}
+  Mv5, Mtu5 = S(undef, 0), S(undef, 0)
+  args5 = true
+  allocated5 = true
+  use_prod5! = true
+  return LinearOperator{T, I, F, Ft, Fct, S}(
+    nrow,
+    ncol,
+    symmetric,
+    hermitian,
+    prod!,
+    tprod!,
+    ctprod!,
+    nprod,
+    ntprod,
+    nctprod,
+    args5,
+    use_prod5!,
+    Mv5,
+    Mtu5,
+    allocated5,
+  )
+end
 
 # create operator from other operators with +, *, vcat,...
 function CompositeLinearOperator(
-  T::DataType,
+  ::Type{T},
   nrow::I,
   ncol::I,
   symmetric::Bool,
@@ -123,7 +148,7 @@ function CompositeLinearOperator(
   ctprod!::Fct,
   args5::Bool;
   S::DataType = Vector{T},
-) where {I <: Integer, F, Ft, Fct}
+) where {T, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   allocated5 = true
   use_prod5! = true

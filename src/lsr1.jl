@@ -54,7 +54,7 @@ mutable struct LSR1Operator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewtonO
   nctprod::I
 end
 
-LSR1Operator{T}(
+LSR1Operator(
   nrow::I,
   ncol::I,
   symmetric::Bool,
@@ -114,7 +114,7 @@ function LSR1Operator(T::DataType, n::I; kwargs...) where {I <: Integer}
   end
 
   prod! = @closure (res, x, α, β) -> lsr1_multiply(res, lsr1_data, x, α, β)
-  return LSR1Operator{T}(n, n, true, true, prod!, nothing, nothing, false, lsr1_data)
+  return LSR1Operator(n, n, true, true, prod!, nothing, nothing, false, lsr1_data)
 end
 
 LSR1Operator(n::I; kwargs...) where {I <: Integer} = LSR1Operator(Float64, n; kwargs...)

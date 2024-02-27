@@ -11,7 +11,7 @@ end
 function test_callable()
   @testset ExtendedTestSet "Test callable" begin
     Mv = ones(2)
-    op = LinearOperator(Float64, 2, 2, true, true, Flip())
+    op = LinearOperator5(Float64, 2, 2, true, true, Flip())
     @test op * ones(2) == -ones(2)
     @test op' * ones(2) == -ones(2)
     @test transpose(op) * ones(2) == -ones(2)
