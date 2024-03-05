@@ -27,7 +27,7 @@ Operators behave like matrices (with some exceptions - see below) but are define
 
 ## Compatibility
 
-Julia 1.3 and up.
+Julia 1.6 and up.
 
 ## How to Install
 
