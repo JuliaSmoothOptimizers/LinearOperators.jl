@@ -38,6 +38,9 @@ end
     Requires.@require ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4" begin
       include("../ext/LinearOperatorsChainRulesCoreExt.jl")
     end
+    Requires.@require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+      include("../ext/LinearOperatorsCUDAExt.jl")
+    end
   end
 end
 
