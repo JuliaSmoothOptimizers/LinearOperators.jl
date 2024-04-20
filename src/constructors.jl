@@ -10,7 +10,7 @@ function LinearOperator(
   M::AbstractMatrix{T};
   symmetric = false,
   hermitian = false,
-  S = storage_type(M)
+  S = storage_type(M),
 ) where {T}
   nrow, ncol = size(M)
   prod! = @closure (res, v, α, β) -> mul!(res, M, v, α, β)
