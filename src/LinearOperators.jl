@@ -1,7 +1,6 @@
 module LinearOperators
 
 using FastClosures, LinearAlgebra, Printf, SparseArrays
-using LDLFactorizations
 
 # Basic defitions
 include("abstract.jl")
@@ -40,6 +39,9 @@ end
     end
     Requires.@require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
       include("../ext/LinearOperatorsCUDAExt.jl")
+    end
+    Requires.@require LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b" begin
+      include("../ext/LinearOperatorsLDLFactorizationsExt.jl")
     end
   end
 end

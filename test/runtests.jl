@@ -1,5 +1,5 @@
 using Arpack, Test, TestSetExtensions, LinearOperators
-using LinearAlgebra, SparseArrays
+using LinearAlgebra, LDLFactorizations, SparseArrays
 using Zygote
 include("test_aux.jl")
 
