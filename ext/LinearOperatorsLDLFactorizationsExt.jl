@@ -17,7 +17,10 @@ function LinearOperators.opLDL(M::AbstractMatrix; check::Bool = false)
   #TODO: use iterative refinement.
 end
 
-function LinearOperators.opLDL(M::Symmetric{T, SparseMatrixCSC{T, Int}}; check::Bool = false) where {T <: Real}
+function LinearOperators.opLDL(
+  M::Symmetric{T, SparseMatrixCSC{T, Int}};
+  check::Bool = false,
+) where {T <: Real}
   (m, n) = size(M)
   m == n || throw(LinearOperatorException("shape mismatch"))
   if check
