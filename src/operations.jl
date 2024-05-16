@@ -32,8 +32,17 @@ function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVec
   end
 end
 
+function mul!(res::AbstractMatrix, op::AbstractLinearOperator{T}, m::AbstractMatrix, α, β) where {T}
+  # TODO: how to handle storage?
+  error("5-argument `mul!` is not defined between a linear operator and a matrix.")
+end
+
 function mul!(res::AbstractVector, op::AbstractLinearOperator, v::AbstractVector{T}) where {T}
   mul!(res, op, v, one(T), zero(T))
+end
+
+function mul!(res::AbstractMatrix, op::AbstractLinearOperator, m::AbstractMatrix{T}) where {T}
+  mul!(res, op, m, one(T), zero(T))
 end
 
 # Apply an operator to a vector.
@@ -73,6 +82,26 @@ function *(
   return v_wrapper(res)
 end
 
+# Apply an operator to a matrix (only in-place, since operator * matrix is a matrix).
+
+function mul!(
+  res::Adjoint{S1, M1},
+  m::Adjoint{S2, M2},
+  op::AbstractLinearOperator{T},
+) where {T, S1, S2, M1 <: AbstractMatrix{S1}, M2 <: AbstractMatrix{S2}}
+  mul!(adjoint(res), adjoint(op), adjoint(m))
+  return res
+end
+
+function mul!(
+  res::Transpose{S1, M1},
+  m::Transpose{S2, M2},
+  op::AbstractLinearOperator{T},
+) where {T, S1, S2, M1 <: AbstractMatrix{S1}, M2 <: AbstractMatrix{S2}}
+  mul!(transpose(res), transpose(op), transpose(m))
+  return res
+end
+
 # Unary operations.
 +(op::AbstractLinearOperator) = op
 
@@ -95,11 +124,11 @@ function -(op::AbstractLinearOperator{T}) where {T}
 end
 
 function prod_op!(
-  res::AbstractVector,
+  res::AbstractVecOrMat,
   op1::AbstractLinearOperator,
   op2::AbstractLinearOperator,
-  vtmp::AbstractVector,
-  v::AbstractVector,
+  vtmp::AbstractVecOrMat,
+  v::AbstractVecOrMat,
   α,
   β,
 )
@@ -162,10 +191,10 @@ end
 # Operator + operator.
 
 function sum_prod!(
-  res::AbstractVector,
+  res::AbstractVecOrMat,
   op1::AbstractLinearOperator,
   op2::AbstractLinearOperator{T},
-  v::AbstractVector,
+  v::AbstractVecOrMat,
   α,
   β,
 ) where {T}
