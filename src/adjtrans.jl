@@ -200,6 +200,8 @@ function mul!(
   conj!(res)
 end
 
+# TODO: overload the above for matrices?
+
 -(op::AdjointLinearOperator) = adjoint(-op.parent)
 -(op::TransposeLinearOperator) = transpose(-op.parent)
 -(op::ConjugateLinearOperator) = conj(-op.parent)

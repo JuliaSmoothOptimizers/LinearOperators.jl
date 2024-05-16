@@ -44,6 +44,8 @@ function kron(A::AbstractLinearOperator, B::AbstractLinearOperator)
   return LinearOperator{T}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!)
 end
 
+# TODO: overload the above for matrices?
+
 kron(A::AbstractMatrix, B::AbstractLinearOperator) = kron(LinearOperator(A), B)
 
 kron(A::AbstractLinearOperator, B::AbstractMatrix) = kron(A, LinearOperator(B))
