@@ -43,8 +43,6 @@ function mulOpEye!(res, v, α, β::T, n_min) where {T}
   end
 end
 
-# TODO: overload the above for matrices?
-
 """
     opEye(T, n; S = Vector{T})
     opEye(n)
@@ -86,8 +84,6 @@ function mulOpOnes!(res, v, α, β::T) where {T}
   end
 end
 
-# TODO: overload the above for matrices?
-
 """
     opOnes(T, nrow, ncol; S = Vector{T})
     opOnes(nrow, ncol)
@@ -110,8 +106,6 @@ function mulOpZeros!(res, v, α, β::T) where {T}
     res .*= β
   end
 end
-
-# TODO: overload the above for matrices?
 
 """
     opZeros(T, nrow, ncol; S = Vector{T})
@@ -136,8 +130,6 @@ function mulSquareOpDiagonal!(res, d, v, α, β::T) where {T}
   end
 end
 
-# TODO: overload the above for matrices?
-
 """
     opDiagonal(d)
 
@@ -157,9 +149,6 @@ function mulOpDiagonal!(res, d, v, α, β::T, n_min) where {T}
   end
   res[(n_min + 1):end] .= 0
 end
-
-# TODO: overload the above for matrices?
-
 """
     opDiagonal(nrow, ncol, d)
 
@@ -183,8 +172,6 @@ function multRestrict!(res, I, u, α, β)
   res .= 0
   res[I] = u
 end
-
-# TODO: overload the above for matrices?
 
 """
     Z = opRestriction(I, ncol)

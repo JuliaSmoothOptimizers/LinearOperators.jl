@@ -102,6 +102,8 @@ op = LinearOperator(Float64, 2, 2, false, false,
                     (res, v) -> mul!(res, A, v),
                     (res, w) -> mul!(res, A', w))
 ```
+
+The 3-args `mul!` also works when applying the operator on a matrix.
 """
 function LinearOperator(
   ::Type{T},

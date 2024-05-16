@@ -61,6 +61,18 @@ function test_linop()
         @test(norm(transpose(u) * A - transpose(u) * op) <= rtol * norm(u))
         @test(typeof(u' * op * v) <: Number)
         @test(norm(u' * A * v - u' * op * v) <= rtol * norm(u))
+
+        mv = hcat(v, -2v)
+        mu = hcat(u, -2u)
+        res_mat = similar(mu)
+        res_trans = similar(mv)
+        res_adj = similar(mv)
+        mul!(res_mat, op, mv)
+        mul!(res_trans, transpose(op), mu)
+        mul!(res_adj, op', mu)
+        @test(norm(A * mv - res_mat) <= rtol * norm(mv))
+        @test(norm(transpose(A) * mu - res_trans) <= rtol * norm(mu))
+        @test(norm(A' * mu - res_adj) <= rtol * norm(mu))
       end
 
       A3 = Hermitian(A2' * A2)
