@@ -293,5 +293,3 @@ function BlockDiagonalOperator(ops...; S = promote_type(storage_type.(ops)...))
   args5 = all((has_args5(op) for op ∈ ops))
   CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5, S = S)
 end
-
-# TODO: overload the above for matrices?
