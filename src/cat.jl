@@ -32,8 +32,6 @@ function hcat_ctprod!(
   mul!(view(res, (Ancol + 1):nV), B, u, α, β)
 end
 
-# TODO: overload the above for matrices?
-
 function hcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   size(A, 1) == size(B, 1) || throw(LinearOperatorException("hcat: inconsistent row sizes"))
 
@@ -92,8 +90,6 @@ function vcat_ctprod!(
   mul!(res, A, view(v, 1:Anrow), α, β)
   mul!(res, B, view(v, (Anrow + 1):nV), α, one(T))
 end
-
-# TODO: overload the above for matrices?
 
 function vcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   size(A, 2) == size(B, 2) || throw(LinearOperatorException("vcat: inconsistent column sizes"))

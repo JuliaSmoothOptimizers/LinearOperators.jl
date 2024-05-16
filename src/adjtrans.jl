@@ -142,6 +142,25 @@ function mul!(
 end
 
 function mul!(
+  res::AbstractMatrix,
+  op::AdjointLinearOperator{T, S},
+  m::AbstractMatrix,
+  α,
+  β,
+) where {T, S}
+  p = op.parent
+  (size(m, 1) == size(p, 1) && size(res, 1) == size(p, 2) && size(m, 2) == size(res, 2)) ||
+    throw(LinearOperatorException("shape mismatch"))
+  if ishermitian(p)
+    return mul!(res, p, m, α, β)
+  elseif p.ctprod! !== nothing
+    return p.ctprod!(res, m, α, β)
+  else
+    error("Not implemented")
+  end
+end
+
+function mul!(
   res::AbstractVector,
   op::TransposeLinearOperator{T, S},
   v::AbstractVector,
@@ -189,6 +208,25 @@ function mul!(
 end
 
 function mul!(
+  res::AbstractMatrix,
+  op::TransposeLinearOperator{T, S},
+  m::AbstractMatrix,
+  α,
+  β,
+) where {T, S}
+  p = op.parent
+  (size(m, 1) == size(p, 1) && size(res, 1) == size(p, 2) && size(m, 2) == size(res, 2)) ||
+    throw(LinearOperatorException("shape mismatch"))
+  if issymmetric(p)
+    return mul!(res, p, m, α, β)
+  elseif p.tprod! !== nothing
+    return p.tprod!(res, m, α, β)
+  else
+    error("Not implemented")
+  end
+end
+
+function mul!(
   res::AbstractVector,
   op::ConjugateLinearOperator{T, S},
   v::AbstractVector,
@@ -200,7 +238,17 @@ function mul!(
   conj!(res)
 end
 
-# TODO: overload the above for matrices?
+function mul!(
+  res::AbstractMatrix,
+  op::ConjugateLinearOperator{T, S},
+  v::AbstractMatrix,
+  α,
+  β,
+) where {T, S}
+  p = op.parent
+  mul!(res, p, conj.(v), α, β)
+  conj!(res)
+end
 
 -(op::AdjointLinearOperator) = adjoint(-op.parent)
 -(op::TransposeLinearOperator) = transpose(-op.parent)

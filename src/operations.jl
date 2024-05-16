@@ -32,17 +32,12 @@ function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVec
   end
 end
 
-function mul!(res::AbstractMatrix, op::AbstractLinearOperator{T}, m::AbstractMatrix, α, β) where {T}
-  # TODO: how to handle storage?
-  error("5-argument `mul!` is not defined between a linear operator and a matrix.")
+function mul!(res::AbstractMatrix, op::AbstractLinearOperator, m::AbstractMatrix{T}, α, β) where {T}
+  op.prod!(res, m, α, β)
 end
 
-function mul!(res::AbstractVector, op::AbstractLinearOperator, v::AbstractVector{T}) where {T}
+function mul!(res::AbstractVecOrMat, op::AbstractLinearOperator, v::AbstractVecOrMat{T}) where {T}
   mul!(res, op, v, one(T), zero(T))
-end
-
-function mul!(res::AbstractMatrix, op::AbstractLinearOperator, m::AbstractMatrix{T}) where {T}
-  mul!(res, op, m, one(T), zero(T))
 end
 
 # Apply an operator to a vector.
