@@ -43,6 +43,9 @@ end
     Requires.@require LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b" begin
       include("../ext/LinearOperatorsLDLFactorizationsExt.jl")
     end
+    Requires.@require JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb" begin
+      include("../ext/LinearOperatorsJLArraysExt.jl")
+    end
   end
 end
 
