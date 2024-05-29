@@ -68,7 +68,7 @@ Change `S` to use LinearOperators on GPU.
 """
 function opEye(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   if nrow == ncol
-    return opEye(T, nrow)
+    return opEye(T, nrow; S = S)
   end
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, min(nrow, ncol))
   return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!, S = S)
