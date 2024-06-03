@@ -11,18 +11,21 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [weakdeps]
+AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
 LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
 
 [extensions]
+LinearOperatorsAMDGPUExt = "AMDGPU" 
 LinearOperatorsChainRulesCoreExt = "ChainRulesCore"
 LinearOperatorsCUDAExt = "CUDA"
 LinearOperatorsLDLFactorizationsExt = "LDLFactorizations"
 LinearOperatorsJLArraysExt = "JLArrays"
 
 [compat]
+AMDGPU = "0.6, 0.7, 0.8, 0.9"
 ChainRulesCore = "1"
 CUDA = "4, 5"
 FastClosures = "0.2, 0.3"
@@ -36,6 +39,7 @@ TimerOutputs = "^0.5"
 julia = "^1.6.0"
 
 [extras]
+AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
