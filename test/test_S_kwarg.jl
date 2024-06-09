@@ -1,19 +1,21 @@
-function test_S_kwarg(; arrayType = JLArray)
+function test_S_kwarg(; arrayType = JLArray, notMetal = true)
   mat = arrayType(rand(Float32, 32, 32))
   vec = arrayType(rand(Float32, 32))
   vecT = typeof(vec)
 
-  # To test operators which can derive a default storage_type from their arguments
-  vecTother = typeof(arrayType(rand(Float64, 32)))
+  if notMetal
+    # To test operators which can derive a default storage_type from their arguments
+    vecTother = typeof(arrayType(rand(Float32, 32)))
+  end
 
-  @testset ExtendedTestSet "S Kwarg" begin
+  @testset ExtendedTestSet "S Kwarg with arrayType $(arrayType)" begin
     @test vecT == LinearOperators.storage_type(mat)
 
     # constructors.jl
     @test LinearOperators.storage_type(LinearOperator(mat)) == LinearOperators.storage_type(mat) # default
-    @test LinearOperators.storage_type(LinearOperator(mat; S = vecTother)) == vecTother
+    notMetal && @test LinearOperators.storage_type(LinearOperator(mat; S = vecTother)) == vecTother
     @test LinearOperators.storage_type(LinearOperator(Symmetric(mat); S = vecT)) == vecT
-    @test LinearOperators.storage_type(LinearOperator(SymTridiagonal(Symmetric(mat)); S = vecT)) == vecT
+    notMetal && @test LinearOperators.storage_type(LinearOperator(SymTridiagonal(Symmetric(mat)); S = vecT)) == vecT
     @test LinearOperators.storage_type(LinearOperator(Hermitian(mat); S = vecT)) == vecT
     @test LinearOperators.storage_type(LinearOperator(Float32, 32, 32, true, true, () -> 0; S = vecT)) == vecT
 
@@ -32,9 +34,12 @@ function test_S_kwarg(; arrayType = JLArray)
     @test LinearOperators.storage_type(opExtension([1, 2, 3], 32; S = vecT)) == vecT
 
     @test LinearOperators.storage_type(BlockDiagonalOperator(mat, mat)) == vecT # default
-    @test LinearOperators.storage_type(BlockDiagonalOperator(mat, mat; S = vecTother)) == vecTother
+    notMetal && @test LinearOperators.storage_type(BlockDiagonalOperator(mat, mat; S = vecTother)) == vecTother
   end
 
 end
 
 test_S_kwarg()
+if Sys.isapple() && occursin("arm64", Sys.MACHINE)
+    test_S_kwarg(arrayType = MtlArray, notMetal = false)
+end
