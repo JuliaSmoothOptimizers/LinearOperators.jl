@@ -49,6 +49,9 @@ end
     Requires.@require JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb" begin
       include("../ext/LinearOperatorsJLArraysExt.jl")
     end
+    Requires.@require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
+      include("../ext/LinearOperatorsMetalExt.jl")
+    end
   end
 end
 
