@@ -11,5 +11,6 @@ steps:
       using Pkg
       Pkg.add("CUDA")
       Pkg.instantiate()
+      include("test/gpu/test_S_kwarg.jl")
       include("test/gpu/nvidia.jl")'
     timeout_in_minutes: 30

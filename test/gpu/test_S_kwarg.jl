@@ -1,4 +1,6 @@
-function test_S_kwarg(; arrayType = JLArray, notMetal = true)
+using Test, LinearOperators, LinearAlgebra
+
+function test_S_kwarg(; arrayType, notMetal = true)
   mat = arrayType(rand(Float32, 32, 32))
   vec = arrayType(rand(Float32, 32))
   vecT = typeof(vec)
@@ -8,7 +10,7 @@ function test_S_kwarg(; arrayType = JLArray, notMetal = true)
     vecTother = typeof(arrayType(rand(Float32, 32)))
   end
 
-  @testset ExtendedTestSet "S Kwarg with arrayType $(arrayType)" begin
+  @testset "S Kwarg with arrayType $(arrayType)" begin
     @test vecT == LinearOperators.storage_type(mat)
 
     # constructors.jl
@@ -37,9 +39,4 @@ function test_S_kwarg(; arrayType = JLArray, notMetal = true)
     notMetal && @test LinearOperators.storage_type(BlockDiagonalOperator(mat, mat; S = vecTother)) == vecTother
   end
 
-end
-
-test_S_kwarg()
-if Sys.isapple() && occursin("arm64", Sys.MACHINE)
-    test_S_kwarg(arrayType = MtlArray, notMetal = false)
 end
