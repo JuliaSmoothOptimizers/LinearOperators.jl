@@ -14,3 +14,21 @@ steps:
       include("test/gpu/test_S_kwarg.jl")
       include("test/gpu/nvidia.jl")'
     timeout_in_minutes: 30
+
+  - label: "AMD GPUs -- LinearOperators.jl"
+    plugins:
+      - JuliaCI/julia#v1:
+          version: 1.8
+    agents:
+      queue: "juliagpu"
+      rocm: "*"
+      rocmgpu: "*"
+    command: |
+      julia --color=yes --project -e '
+      using Pkg
+      Pkg.add("AMDGPU")
+      Pkg.instantiate()
+      include("test/gpu/test_S_kwarg.jl")
+      include("test/gpu/amdgpu.jl")'
+    timeout_in_minutes: 30
+
