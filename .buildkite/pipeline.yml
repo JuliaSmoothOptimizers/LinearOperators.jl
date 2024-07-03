@@ -18,7 +18,7 @@ steps:
   - label: "AMD GPUs -- LinearOperators.jl"
     plugins:
       - JuliaCI/julia#v1:
-          version: 1.8
+          version: 1.9
     agents:
       queue: "juliagpu"
       rocm: "*"
