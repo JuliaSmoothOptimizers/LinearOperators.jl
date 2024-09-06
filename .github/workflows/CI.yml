@@ -6,17 +6,31 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow_failure }}
     strategy:
       fail-fast: false
       matrix:
-        version:
-          - '1.6'
-          - '1'
-          - 'nightly'
-        os:
-          - ubuntu-latest
-        arch:
-          - x64
+        version: ['1.6', '1']
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        arch: [x64]
+        allow_failure: [false]
+        include:
+          - version: '1'
+            os: macos-latest
+            arch: arm64
+            allow_failure: false
+          - version: 'nightly'
+            os: ubuntu-latest
+            arch: x64
+            allow_failure: true
+          - version: 'nightly'
+            os: macos-latest
+            arch: x64
+            allow_failure: true
+          - version: 'nightly'
+            os: windows-latest
+            arch: x64
+            allow_failure: true
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
