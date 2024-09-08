@@ -12,6 +12,7 @@ mutable struct LSR1Data{T, I <: Integer}
   as::Vector{T}
   insert::I
   Ax::Vector{T}
+  tmp::Vector{T}
 end
 
 function LSR1Data(
@@ -32,6 +33,7 @@ function LSR1Data(
     [zeros(T, n) for _ = 1:mem],
     zeros(T, mem),
     1,
+    Vector{T}(undef, n),
     Vector{T}(undef, n),
   )
 end
@@ -127,8 +129,9 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
 
   # op.counters.updates += 1
   data = op.data
-  Bs = op * s
-  ymBs = y - Bs
+  ymBs = data.tmp
+  ymBs .= y
+  mul!(ymBs, op, s, -1, 1)  # ymBs = y - B * s
   ys = dot(y, s)
   sNorm = norm(s)
   yy = dot(y, y)
@@ -143,7 +146,8 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
     sufficient_curvature = abs(ys) ≥ ϵ * yNorm * sNorm
     if sufficient_curvature
       scaling_factor = ys / yy
-      scaling_condition = norm(y - s / scaling_factor) >= ϵ * yNorm * sNorm
+      @. data.tmp = y - s / scaling_factor
+      scaling_condition = norm(data.tmp) >= ϵ * yNorm * sNorm
     end
   end
 
