@@ -13,4 +13,5 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
   v = CUDA.rand(35)
   y = M * v
   @test y isa CuVector{Float32}
+  @testset "Nvidia S kwarg" test_S_kwarg(arrayType = CuArray)
 end
