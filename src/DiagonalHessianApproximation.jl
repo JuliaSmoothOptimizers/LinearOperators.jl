@@ -63,7 +63,7 @@ function push!(
   sT_B_s = dot(s2, B.d)
   q = sT_y - sT_B_s
   q /= trA2
-  B.d .+= q .* s .^ 2
+  B.d .+= q / s0Norm^2 .* s0 .^ 2
   return B
 end
 
@@ -144,7 +144,7 @@ function push!(
   sT_s = dot(s, s)
   q += sT_s
   q /= trA2
-  B.d .+= q .* s .^ 2 .- 1
+  B.d .+= q / s0Norm^2 .* s0 .^ 2 .- 1 
   return B
 end
 
@@ -199,7 +199,7 @@ function push!(
   s::V,
   y::V,
 ) where {T <: Real, I <: Integer, F, V <: AbstractVector{T}}
-  if all(s .== 0)
+  if all(x -> x == 0, s)
     error("Cannot divide by zero and s .= 0")
   end
   B.d[1] = dot(s, y) / dot(s, s)
