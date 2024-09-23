@@ -182,8 +182,6 @@ where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularizati
 
 The method uses a two-loop recursion-like approach with modifications to handle the shift `σ`.
 
-The solution is computed on the CPU, but the function can be extended for GPU compatibility.
-
 ### References
 @misc{erway2013shiftedlbfgssystems,
       title={Shifted L-BFGS Systems}, 
