@@ -175,6 +175,7 @@ where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularizati
 - `u::AbstractVector{T}`: A temporary vector that stores elements of the L-BFGS vectors `a_k` or `b_k` used in the algorithm.
 
 ### Returns
+
 - `inv_Cz::AbstractVector{T}`: The solution vector `s` such that `(B_k + σ * I) s = -∇f(x_k)`.
 
 ### Method
