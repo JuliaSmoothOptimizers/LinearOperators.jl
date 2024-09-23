@@ -164,6 +164,7 @@ Computes the regularized L-BFGS step by solving the linear system:
 where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularization parameter, and `∇f(x_k)` is the gradient at `x_k`.
 
 ### Parameters
+
 - `op::LBFGSOperator{T,I,F1,F2,F3}`: The L-BFGS operator `B_k`. Encodes the curvature information used to approximate the Hessian.
 - `z::AbstractVector{T}`: The vector representing `-∇f(x_k)` (negative gradient at the current iterate).
 - `σ::T`: Nonnegative shift.
