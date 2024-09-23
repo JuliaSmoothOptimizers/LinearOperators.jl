@@ -186,9 +186,6 @@ The method uses a two-loop recursion-like approach with modifications to handle 
 
 The solution is computed on the CPU, but the function can be extended for GPU compatibility.
 
-### To-Do
-- Implement GPU support for further acceleration.
-
 ### References
 @misc{erway2013shiftedlbfgssystems,
       title={Shifted L-BFGS Systems}, 
