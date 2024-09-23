@@ -78,6 +78,7 @@ Function           | Description
 `size`             | Return the size of a linear operator
 `symmetric`        | Determine whether the operator is symmetric
 `normest`          | Estimate the 2-norm
+`solve_shifted_system!`          | Computes the regularized L-BFGS step
 
 
 ## Other Operations on Operators
