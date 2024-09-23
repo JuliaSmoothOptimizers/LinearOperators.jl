@@ -166,7 +166,7 @@ where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularizati
 ### Parameters
 - `op::LBFGSOperator{T,I,F1,F2,F3}`: The L-BFGS operator `B_k`. Encodes the curvature information used to approximate the Hessian.
 - `z::AbstractVector{T}`: The vector representing `-∇f(x_k)` (negative gradient at the current iterate).
-- `σ::T`: The regularization parameter, used to shift the Hessian approximation `B_k` by adding a multiple of the identity matrix.
+- `σ::T`: Nonnegative shift.
 - `γ_inv::T`: The inverse of the initial curvature `γ_0`, used to initialize the L-BFGS matrix.
 - `inv_Cz::AbstractVector{T}`: A preallocated vector used to store the result of the solution. It will be overwritten in the function to hold the computed `s`.
 - `p::AbstractVector{T}`: A temporary matrix used in the computation to avoid allocating new memory during the solve process.
