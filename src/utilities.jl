@@ -182,7 +182,7 @@ where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularizati
 
 The function solves the system efficiently without allocating new memory, by reusing preallocated arrays `inv_Cz`, `p`, `v`, and `u`. It computes the solution iteratively, making use of the structure of the L-BFGS approximation to the Hessian.
 
-The method uses a two-loop recursion-like approach with modifications to handle the regularization term `σ`. The initial inverse Hessian approximation `B_0` is initialized using `γ_inv`.
+The method uses a two-loop recursion-like approach with modifications to handle the shift `σ`.
 
 The solution is computed on the CPU, but the function can be extended for GPU compatibility.
 
