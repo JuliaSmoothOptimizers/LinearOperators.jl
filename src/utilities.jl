@@ -179,6 +179,7 @@ where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularizati
 - `inv_Cz::AbstractVector{T}`: The solution vector `s` such that `(B_k + σ * I) s = -∇f(x_k)`.
 
 ### Method
+
 The function solves the system efficiently without allocating new memory, by reusing preallocated arrays `inv_Cz`, `p`, `v`, and `u`. It computes the solution iteratively, making use of the structure of the L-BFGS approximation to the Hessian.
 
 The method uses a two-loop recursion-like approach with modifications to handle the regularization term `σ`. The initial inverse Hessian approximation `B_0` is initialized using `γ_inv`.
