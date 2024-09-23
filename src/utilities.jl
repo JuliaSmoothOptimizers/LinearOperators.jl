@@ -183,10 +183,6 @@ The method uses a two-loop recursion-like approach with modifications to handle 
 
 The solution is computed on the CPU, but the function can be extended for GPU compatibility.
 
-### Notes
-- `data.a[k]` and `data.b[k]` represent stored L-BFGS vectors used in the computation of `B_k`. They are loaded into `u` and updated in each iteration.
-- The computation involves vector dot products and matrix updates which are efficiently performed in place.
-
 ### To-Do
 - Implement GPU support for further acceleration.
 
