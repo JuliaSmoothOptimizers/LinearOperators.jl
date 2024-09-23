@@ -157,22 +157,14 @@ check_positive_definite(M::AbstractMatrix; kwargs...) =
                         v::AbstractVector{T}, 
                         u::AbstractVector{T}) where {T,I,F1,F2,F3}
 
-Computes the regularized L-BFGS step by solving the linear system:
-
-  (B_k + σ_k * I) s = -∇f(x_k)
-
-where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularization parameter, and `∇f(x_k)` is the gradient at `x_k`.
+Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ <= 0.
 
 ### Parameters
 
 - `op::LBFGSOperator{T,I,F1,F2,F3}`: The L-BFGS operator `B_k`. Encodes the curvature information used to approximate the Hessian.
-- `z::AbstractVector{T}`: The vector representing `-∇f(x_k)` (negative gradient at the current iterate).
+- `z::AbstractVector{T}`: The vector representing `-b`.
 - `σ::T`: Nonnegative shift.
-- `γ_inv::T`: The inverse of the initial curvature `γ_0`, used to initialize the L-BFGS matrix.
 - `inv_Cz::AbstractVector{T}`: A preallocated vector used to store the result of the solution. It will be overwritten in the function to hold the computed `s`.
-- `p::AbstractVector{T}`: A temporary matrix used in the computation to avoid allocating new memory during the solve process.
-- `v::AbstractVector{T}`: A temporary vector for intermediate values during the solution process.
-- `u::AbstractVector{T}`: A temporary vector that stores elements of the L-BFGS vectors `a_k` or `b_k` used in the algorithm.
 
 ### Returns
 
@@ -183,30 +175,19 @@ where `B_k` is the L-BFGS approximation of the Hessian, `σ_k` is a regularizati
 The method uses a two-loop recursion-like approach with modifications to handle the shift `σ`.
 
 ### References
-@misc{erway2013shiftedlbfgssystems,
-      title={Shifted L-BFGS Systems}, 
-      author={Jennifer B. Erway and Vibhor Jain and Roummel F. Marcia},
-      year={2013},
-      eprint={1209.5141},
-      archivePrefix={arXiv},
-      primaryClass={math.NA},
-      url={https://arxiv.org/abs/1209.5141}, 
-}
+Erway, J. B., Jain, V., & Marcia, R. F. (2013). Shifted L-BFGS Systems.
 """
 
 function solve_shifted_system!(
   op::LBFGSOperator{T, I, F1, F2, F3},
   z::AbstractVector{T},
   σ::T,
-  γ_inv::T,
   inv_Cz::AbstractVector{T},
-  p::AbstractArray{T},
-  v::AbstractVector{T},
-  u::AbstractVector{T},
   ) where {T, I, F1, F2, F3}
   data = op.data
   insert = data.insert
-
+  
+  γ_inv = 1 / data.scaling_factor
   inv_c0 = 1 / (γ_inv + σ)
   @. inv_Cz = inv_c0 * z
 
@@ -214,19 +195,19 @@ function solve_shifted_system!(
   for i = 1:max_i
     j = (i + 1) ÷ 2
     k = mod(insert + j - 1, data.mem) + 1
-    u .= ((i % 2) == 0 ? data.b[k] : data.a[k])
+    data.shifted_u .= ((i % 2) == 0 ? data.b[k] : data.a[k])
 
-    @. p[:, i] = inv_c0 * u
+    @. data.shifted_p[:, i] = inv_c0 * data.shifted_u
 
     for t = 1:(i - 1)
-      c0 = dot(view(p, :, t), u)
-      c1 = (-1)^(t + 1) .* v[t]
+      c0 = dot(view(data.shifted_p, :, t), data.shifted_u)
+      c1= ((t % 2) == 0 ? -1 : 1) .*data.shifted_v[t]
       c2 = c1 * c0
-      view(p, :, i) .+= c2 .* view(p, :, t)
+      view(data.shifted_p, :, i) .+= c2 .* view(data.shifted_p, :, t)
     end
 
-    v[i] = 1 / (1 + (-1)^i * dot(u, view(p, :, i)))
-    inv_Cz .+= (-1)^(i + 1) * v[i] * (view(p, :, i)' * z) .* view(p, :, i)
+   data.shifted_v[i] = 1 / (1 + ((i % 2) == 0 ? 1 : -1) * dot(data.shifted_u, view(data.shifted_p, :, i)))
+    inv_Cz .+= ((i % 2) == 0 ? -1 : 1)  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * z) .* view(data.shifted_p, :, i)
   end
   return inv_Cz
 end
