@@ -161,7 +161,7 @@ Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and �
 
 ### Parameters
 
-- `op::LBFGSOperator{T,I,F1,F2,F3}`: The L-BFGS operator `B_k`. Encodes the curvature information used to approximate the Hessian.
+- `B::LBFGSOperator{T,I,F1,F2,F3}`: forward L-BFGS operator.
 - `z::AbstractVector{T}`: The vector representing `-b`.
 - `σ::T`: Nonnegative shift.
 - `inv_Cz::AbstractVector{T}`: A preallocated vector used to store the result of the solution. It will be overwritten in the function to hold the computed `s`.
