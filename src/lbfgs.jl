@@ -47,8 +47,8 @@ function LBFGSData(
     1,
     Vector{T}(undef, n),
     zeros(T, n, 2*mem),
-    zeros(T,2*mem),
-    zeros(T,n)
+    zeros(T, 2*mem),
+    zeros(T, n)
   )
 end
 
