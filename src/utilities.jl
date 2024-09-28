@@ -157,7 +157,7 @@ check_positive_definite(M::AbstractMatrix; kwargs...) =
                         v::AbstractVector{T}, 
                         u::AbstractVector{T}) where {T,I,F1,F2,F3}
 
-Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ <= 0.
+Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ ≥ 0.
 
 ### Parameters
 
