@@ -16,7 +16,7 @@ mutable struct LBFGSData{T, I <: Integer}
   b::Vector{Vector{T}}
   insert::I
   Ax::Vector{T}
-  shifted_p::AbstractArray{T} # Temporary matrix used in the computation solve_shifted_system!
+  shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
   shifted_v::Vector{T}
   shifted_u::Vector{T}
 end
