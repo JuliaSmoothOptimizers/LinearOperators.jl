@@ -148,50 +148,51 @@ check_positive_definite(M::AbstractMatrix; kwargs...) =
 
 
   """
-  solve_shifted_system!(op::LBFGSOperator{T,I,F1,F2,F3}, 
-                        z::AbstractVector{T}, 
-                        σ::T, 
-                        γ_inv::T, 
-                        inv_Cz::AbstractVector{T}, 
-                        p::AbstractVector{T}, 
-                        v::AbstractVector{T}, 
-                        u::AbstractVector{T}) where {T,I,F1,F2,F3}
+  solve_shifted_system!(B, 
+                        x, 
+                        σ, 
+                        γ_inv, 
+                        inv_Cx, 
+                        p,
+                        v, 
+                        u)
 
 Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ ≥ 0.
 
 ### Parameters
 
 - `B::LBFGSOperator{T,I,F1,F2,F3}`: forward L-BFGS operator.
-- `z::AbstractVector{T}`: The vector representing `-b`.
+- `x::AbstractVector{T}`: The vector representing `-b`.
 - `σ::T`: Nonnegative shift.
-- `inv_Cz::AbstractVector{T}`: A preallocated vector used to store the solution.
+- `inv_Cx::AbstractVector{T}`: A preallocated vector used to store the solution.
 
 ### Returns
 
-- `inv_Cz::AbstractVector{T}`: The solution vector `s` such that `(B_k + σ * I) s = -∇f(x_k)`.
+- `inv_Cx::AbstractVector{T}`: The solution vector `x`, the solution to `(B + σI) x = b`.
 
 ### Method
 
 The method uses a two-loop recursion-like approach with modifications to handle the shift `σ`.
 
 ### References
-Erway, J. B., Jain, V., & Marcia, R. F. (2013). Shifted L-BFGS Systems.
+Erway, J. B., Jain, V., & Marcia, R. F. (2014). Shifted L-BFGS Systems. Optimization Methods and Software, 29(5), 992-1004.
 """
 
 function solve_shifted_system!(
-  op::LBFGSOperator{T, I, F1, F2, F3},
-  z::AbstractVector{T},
+  B::LBFGSOperator{T, I, F1, F2, F3},
+  x::AbstractVector{T},
   σ::T,
-  inv_Cz::AbstractVector{T},
+  inv_Cx::AbstractVector{T},
   ) where {T, I, F1, F2, F3}
-  data = op.data
+  data = B.data
   insert = data.insert
   
   γ_inv = 1 / data.scaling_factor
   inv_c0 = 1 / (γ_inv + σ)
-  @. inv_Cz = inv_c0 * z
+  @. inv_Cx = inv_c0 * x
 
   max_i = 2 * data.mem
+  sign_i = 1
   for i = 1:max_i
     j = (i + 1) ÷ 2
     k = mod(insert + j - 1, data.mem) + 1
@@ -199,15 +200,18 @@ function solve_shifted_system!(
 
     @. data.shifted_p[:, i] = inv_c0 * data.shifted_u
 
+    sign_t = 1
     for t = 1:(i - 1)
       c0 = dot(view(data.shifted_p, :, t), data.shifted_u)
-      c1= ((t % 2) == 0 ? -1 : 1) .*data.shifted_v[t]
+      c1= sign_t .*data.shifted_v[t]
       c2 = c1 * c0
       view(data.shifted_p, :, i) .+= c2 .* view(data.shifted_p, :, t)
+      sign_t = -sign_t
     end
 
-   data.shifted_v[i] = 1 / (1 + ((i % 2) == 0 ? 1 : -1) * dot(data.shifted_u, view(data.shifted_p, :, i)))
-    inv_Cz .+= ((i % 2) == 0 ? -1 : 1)  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * z) .* view(data.shifted_p, :, i)
+    data.shifted_v[i] = 1 / (1 + ((i % 2) == 0 ? 1 : -1) * dot(data.shifted_u, view(data.shifted_p, :, i)))
+    inv_Cx .+= sign_i  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * x) .* view(data.shifted_p, :, i)
+    sign_i = -sign_i
   end
-  return inv_Cz
+  return inv_Cx
 end

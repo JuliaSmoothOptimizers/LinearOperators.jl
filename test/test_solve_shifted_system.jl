@@ -12,8 +12,6 @@ function setup_test_val(; M = 5, n = 100, scaling = false)
     push!(B, s, y)
   end
 
-  # γ_inv = 1 / B.data.scaling_factor
-
   x = randn(n)
   z = B * x + σ .* x # so we know the true answer is x
 
@@ -37,7 +35,6 @@ function test_solve_shifted_system()
     @test all(isfinite, result)
 
     # Test 4: Check if inv_Cz is close to the known solution x
-    # x = B \ (z ./ (1 + σ))  # Known true solution
     @test isapprox(inv_Cz, x, atol = 1e-6, rtol = 1e-6)
   end
 
