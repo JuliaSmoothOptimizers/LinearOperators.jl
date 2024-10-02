@@ -149,26 +149,23 @@ check_positive_definite(M::AbstractMatrix; kwargs...) =
 
   """
   solve_shifted_system!(B, 
+                        z, 
+                        σ,
                         x, 
-                        σ, 
-                        γ_inv, 
-                        inv_Cx, 
-                        p,
-                        v, 
-                        u)
+                        )
 
-Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ ≥ 0.
+Solves linear system (B + σI) x = z, where B is a forward L-BFGS operator and σ ≥ 0.
 
 ### Parameters
 
-- `B::LBFGSOperator{T,I,F1,F2,F3}`: forward L-BFGS operator.
-- `x::AbstractVector{T}`: The vector representing `-b`.
-- `σ::T`: Nonnegative shift.
-- `inv_Cx::AbstractVector{T}`: A preallocated vector used to store the solution.
+- `B::LBFGSOperator{T,I,F1,F2,F3}`: forward L-BFGS operator, a LinearOperator that models a matrix of dimension nxn;
+- `z::AbstractVector{T}`: The vector of length n.
+- `σ::T`: Nonnegative shift scalar.
+- `x::AbstractVector{T}`: A preallocated vector a vector of length n that is used to store the solution x.
 
 ### Returns
 
-- `inv_Cx::AbstractVector{T}`: The solution vector `x`, the solution to `(B + σI) x = b`.
+- `x::AbstractVector{T}`: The solution vector `x` size n, the solution to `(B + σI) x = b`.
 
 ### Method
 
@@ -180,25 +177,26 @@ Erway, J. B., Jain, V., & Marcia, R. F. (2014). Shifted L-BFGS Systems. Optimiza
 
 function solve_shifted_system!(
   B::LBFGSOperator{T, I, F1, F2, F3},
-  x::AbstractVector{T},
+  z::AbstractVector{T},
   σ::T,
-  inv_Cx::AbstractVector{T},
+  x::AbstractVector{T},
   ) where {T, I, F1, F2, F3}
   data = B.data
   insert = data.insert
   
   γ_inv = 1 / data.scaling_factor
-  inv_c0 = 1 / (γ_inv + σ)
-  @. inv_Cx = inv_c0 * x
+  x_0 = 1 / (γ_inv + σ)
+  @. x = x_0 * z
 
   max_i = 2 * data.mem
   sign_i = 1
+
   for i = 1:max_i
     j = (i + 1) ÷ 2
     k = mod(insert + j - 1, data.mem) + 1
-    data.shifted_u .= ((i % 2) == 0 ? data.b[k] : data.a[k])
+    data.shifted_u .= ((sign_i == -1) ? data.b[k] : data.a[k])
 
-    @. data.shifted_p[:, i] = inv_c0 * data.shifted_u
+    @. data.shifted_p[:, i] = x_0 * data.shifted_u
 
     sign_t = 1
     for t = 1:(i - 1)
@@ -209,9 +207,9 @@ function solve_shifted_system!(
       sign_t = -sign_t
     end
 
-    data.shifted_v[i] = 1 / (1 + ((i % 2) == 0 ? 1 : -1) * dot(data.shifted_u, view(data.shifted_p, :, i)))
-    inv_Cx .+= sign_i  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * x) .* view(data.shifted_p, :, i)
+    data.shifted_v[i] = 1 / (1 - sign_i * dot(data.shifted_u, view(data.shifted_p, :, i)))
+    x .+= sign_i  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * z) .* view(data.shifted_p, :, i)
     sign_i = -sign_i
   end
-  return inv_Cx
+  return x
 end

@@ -46,9 +46,9 @@ function LBFGSData(
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
     1,
     Vector{T}(undef, n),
-    zeros(T, n, 2*mem),
-    zeros(T, 2*mem),
-    zeros(T, n)
+    Array{T}(undef, (n, 2*mem)),
+    Vector{T}(undef, 2*mem),
+    Vector{T}(undef, n)
   )
 end
 
