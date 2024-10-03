@@ -1,4 +1,5 @@
-export check_ctranspose, check_hermitian, check_positive_definite, normest, solve_shifted_system!
+export check_ctranspose, check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!
+import LinearAlgebra.ldiv!
 
 """
   normest(S) estimates the matrix 2-norm of S.
@@ -148,20 +149,20 @@ check_positive_definite(M::AbstractMatrix; kwargs...) =
 
 
   """
-  solve_shifted_system!(B, 
-                        z, 
+  solve_shifted_system!(x,
+                        B, 
+                        b, 
                         σ,
-                        x, 
                         )
 
-Solves linear system (B + σI) x = z, where B is a forward L-BFGS operator and σ ≥ 0.
+Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ ≥ 0.
 
 ### Parameters
 
-- `B::LBFGSOperator{T,I,F1,F2,F3}`: forward L-BFGS operator, a LinearOperator that models a matrix of dimension nxn;
-- `z::AbstractVector{T}`: The vector of length n.
-- `σ::T`: Nonnegative shift scalar.
 - `x::AbstractVector{T}`: A preallocated vector a vector of length n that is used to store the solution x.
+- `B::LBFGSOperator{T,I,F1,F2,F3}`: forward L-BFGS operator, a LinearOperator that models a matrix of dimension nxn;
+- `b::AbstractVector{T}`: The vector of length n.
+- `σ::T`: Nonnegative shift scalar.
 
 ### Returns
 
@@ -174,19 +175,23 @@ The method uses a two-loop recursion-like approach with modifications to handle 
 ### References
 Erway, J. B., Jain, V., & Marcia, R. F. (2014). Shifted L-BFGS Systems. Optimization Methods and Software, 29(5), 992-1004.
 """
-
 function solve_shifted_system!(
-  B::LBFGSOperator{T, I, F1, F2, F3},
-  z::AbstractVector{T},
-  σ::T,
   x::AbstractVector{T},
+  B::LBFGSOperator{T, I, F1, F2, F3},
+  b::AbstractVector{T},
+  σ::T,
   ) where {T, I, F1, F2, F3}
+
+  # check if σ < 0
+  if σ < 0
+    throw(ArgumentError("σ must be nonnegative"))
+  end
   data = B.data
   insert = data.insert
   
   γ_inv = 1 / data.scaling_factor
   x_0 = 1 / (γ_inv + σ)
-  @. x = x_0 * z
+  @. x = x_0 * b
 
   max_i = 2 * data.mem
   sign_i = 1
@@ -208,8 +213,47 @@ function solve_shifted_system!(
     end
 
     data.shifted_v[i] = 1 / (1 - sign_i * dot(data.shifted_u, view(data.shifted_p, :, i)))
-    x .+= sign_i  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * z) .* view(data.shifted_p, :, i)
+    x .+= sign_i  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * b) .* view(data.shifted_p, :, i)
     sign_i = -sign_i
   end
+  return x
+end
+
+
+"""
+    ldiv!(x::AbstractVector{T}, B::LBFGSOperator{T, I, F1, F2, F3}, b::AbstractVector{T}) where {T, I, F1, F2, F3}
+
+Solves the linear system defined by the L-BFGS operator `B` and the right-hand side vector `b`, storing the solution in the vector `x`.
+
+### Arguments:
+
+- `x::AbstractVector{T}`: The solution vector, which will be modified in-place.
+- `B::LBFGSOperator{T, I, F1, F2, F3}`: The L-BFGS operator that defines the linear system.
+- `b::AbstractVector{T}`: The right-hand side vector of the linear system.
+
+### Returns:
+
+- `x::AbstractVector{T}`: The modified solution vector containing the solution to the linear system.
+
+### Examples:
+
+```julia
+
+# Create an L-BFGS operator
+B = LBFGSOperator(10)
+
+# Generate random vectors
+x = rand(10)
+b = rand(10)
+
+# Solve the linear system
+ldiv!(x, B, b)
+
+# The vector `x` now contains the solution
+"""
+
+function ldiv!(x::AbstractVector{T}, B::LBFGSOperator{T, I, F1, F2, F3}, b::AbstractVector{T}) where {T, I, F1, F2, F3}
+  # Call solve_shifted_system! with σ = 0
+  solve_shifted_system!(x, B, b, T(0.0))
   return x
 end
