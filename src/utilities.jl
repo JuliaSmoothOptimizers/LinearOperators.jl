@@ -162,7 +162,7 @@ Solve linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ
 
 ### Returns
 
-- `x::AbstractVector{T}`: The solution vector `x` size n, the solution to `(B + σI) x = b`.
+- `x::AbstractVector{T}`: solution vector `x` of length n.
 
 ### Method
 
