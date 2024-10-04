@@ -156,7 +156,7 @@ Solve linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ
 ### Parameters
 
 - `x::AbstractVector{T}`: preallocated vector of length n that is used to store the solution x.
-- `B::LBFGSOperator{T,I,F1,F2,F3}`: forward L-BFGS operator, a LinearOperator that models a matrix of dimension nxn;
+- `B::LBFGSOperator`: forward L-BFGS operatorthat models a matrix of size n x n.
 - `b::AbstractVector{T}`: The vector of length n.
 - `σ::T`: Nonnegative shift scalar.
 
