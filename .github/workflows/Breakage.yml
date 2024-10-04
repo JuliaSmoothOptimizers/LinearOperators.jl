@@ -54,10 +54,10 @@ jobs:
           VERSION: ${{ matrix.pkgversion }}
         run: |
           set -v
-          mkdir -p ./pr
-          echo "${{ github.event.number }}" > ./pr/NR
-          git clone https://github.com/$URL
           export PKG=$(echo $URL | cut -f2 -d/)
+          mkdir -p ./breakage-$PKG-$VERSION
+          echo "${{ github.event.number }}" > ./breakage-$PKG-$VERSION/NR
+          git clone https://github.com/$URL
           cd $PKG
           if [ $VERSION == "stable" ]; then
             TAG=$(git tag -l "v*" --sort=-creatordate | head -n1)
@@ -94,8 +94,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: breakage-$PKG-$version
-          path: pr/
+          name: breakage-$PKG-$VERSION
+          path: breakage-$PKG-$VERSION/
 
   upload:
     needs: break
@@ -103,14 +103,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
-          name: breakage-*
-          path: pr/
+          path: breakage
+          pattern: breakage-*
           merge-multiple: true
 
       - run: ls
       - run: |
+          mkdir pr
           cd pr
           echo "| Package name | latest | stable |" > MSG
           echo "|--|--|--|" >> MSG
