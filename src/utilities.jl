@@ -189,15 +189,15 @@ for _ = 1:10
 end
 
 # Prepare vectors for the system
-x_sol = zeros(n)   # Preallocated solution vector
+x = zeros(n)   # Preallocated solution vector
 b = rand(n)        # Right-hand side vector
 σ = 0.1            # Small shift value
 
 # Solve the shifted system
-result = solve_shifted_system!(x_sol, B, b, σ)
+result = solve_shifted_system!(x, B, b, σ)
 
 # Check that the solution is close enough (residual test)
-@assert norm(B * x_sol + σ * x_sol - b) / norm(b) < 1e-8
+@assert norm(B * x + σ * x - b) / norm(b) < 1e-8
 ```
 
 ### References
