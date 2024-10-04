@@ -179,7 +179,6 @@ function solve_shifted_system!(
   σ::T,
   ) where {T, I, F1, F2, F3}
 
-  # check if σ < 0
   if σ < 0
     throw(ArgumentError("σ must be nonnegative"))
   end
