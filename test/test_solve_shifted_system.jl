@@ -59,8 +59,6 @@ function test_solve_shifted_system()
     @test isapprox(x_sol, x_H, atol = 1e-6, rtol = 1e-6)
     @test isapprox(x_sol, x_true, atol = 1e-6, rtol = 1e-6)
   end
-
-
 end
 
 test_solve_shifted_system()
