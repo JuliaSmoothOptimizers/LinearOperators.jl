@@ -51,7 +51,6 @@ function test_solve_shifted_system()
     # Setup Test Case 1: Default setup from setup_test_val
     B, H, b, _, x_sol, x_true = setup_test_val(n = 100, M = 5, σ = 0.0)
 
-
     # Solve the system using solve_shifted_system!
     result = ldiv!(x_sol, B, b)
 
