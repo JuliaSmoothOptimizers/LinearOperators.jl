@@ -94,8 +94,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pr-${{ matrix.machine }}-${{ matrix.cloud }}-${{ matrix.region }}-${{ matrix.arch }}-${{ matrix.distro }}-${{ matrix.stage }}-${{ matrix.theater }}
-          path: pr/
+          name: breakage-$PKG-$version
 
   upload:
     needs: break
@@ -105,9 +104,8 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
-          name: pr-*
+          name: breakage-*
           merge-multiple: true
-          path: pr/
 
       - run: ls
       - run: |
