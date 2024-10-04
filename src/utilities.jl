@@ -151,7 +151,7 @@ check_positive_definite(M::AbstractMatrix; kwargs...) =
   """
   solve_shifted_system!(x, B,  b, σ)
 
-Solves linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ ≥ 0.
+Solve linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ ≥ 0.
 
 ### Parameters
 
