@@ -169,7 +169,8 @@ Solve linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ
 The method uses a two-loop recursion-like approach with modifications to handle the shift `σ`.
 
 ### References
-Erway, J. B., Jain, V., & Marcia, R. F. (2014). Shifted L-BFGS Systems. Optimization Methods and Software, 29(5), 992-1004.
+
+Erway, J. B., Jain, V., & Marcia, R. F. Shifted L-BFGS Systems. Optimization Methods and Software, 29(5), pp. 992-1004, 2014.
 """
 function solve_shifted_system!(
   x::AbstractVector{T},
