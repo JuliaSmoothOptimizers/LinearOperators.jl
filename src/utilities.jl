@@ -217,7 +217,7 @@ end
 
 
 """
-    ldiv!(x::AbstractVector{T}, B::LBFGSOperator{T, I, F1, F2, F3}, b::AbstractVector{T}) where {T, I, F1, F2, F3}
+    ldiv!(x, B, b)
 
 Solves the linear system defined by the L-BFGS operator `B` and the right-hand side vector `b`, storing the solution in the vector `x`.
 
