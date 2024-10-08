@@ -16,13 +16,13 @@ function setup_test_val(; M = 5, n = 100, scaling = false, σ = 0.1)
   x = randn(n)
   b = B * x + σ .* x # so we know the true answer is x
 
-  return B, H , b, σ, zeros(n), x
+  return B, H, b, σ, zeros(n), x
 end
 
 function test_solve_shifted_system()
   @testset "solve_shifted_system! Default setup test" begin
     # Setup Test Case 1: Default setup from setup_test_val
-    B,_, b, σ, x_sol, x_true = setup_test_val(n = 100, M = 5)
+    B, _, b, σ, x_sol, x_true = setup_test_val(n = 100, M = 5)
 
     result = solve_shifted_system!(x_sol, B, b, σ)
 
@@ -40,7 +40,7 @@ function test_solve_shifted_system()
   end
   @testset "solve_shifted_system! Negative σ test" begin
     # Setup Test Case 2: Negative σ
-    B,_, b, _, x_sol, _ = setup_test_val(n = 100, M = 5)
+    B, _, b, _, x_sol, _ = setup_test_val(n = 100, M = 5)
     σ = -0.1
 
     # Expect an ArgumentError to be thrown

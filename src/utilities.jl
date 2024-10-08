@@ -1,4 +1,5 @@
-export check_ctranspose, check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!
+export check_ctranspose,
+  check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!
 import LinearAlgebra.ldiv!
 
 """
@@ -147,8 +148,7 @@ end
 check_positive_definite(M::AbstractMatrix; kwargs...) =
   check_positive_definite(LinearOperator(M); kwargs...)
 
-
-  """
+"""
   solve_shifted_system!(x, B,  b, σ)
 
 Solve linear system (B + σI) x = b, where B is a forward L-BFGS operator and σ ≥ 0.
@@ -209,14 +209,13 @@ function solve_shifted_system!(
   B::LBFGSOperator{T, I, F1, F2, F3},
   b::AbstractVector{T},
   σ::T,
-  ) where {T, I, F1, F2, F3}
-
+) where {T, I, F1, F2, F3}
   if σ < 0
     throw(ArgumentError("σ must be nonnegative"))
   end
   data = B.data
   insert = data.insert
-  
+
   γ_inv = 1 / data.scaling_factor
   x_0 = 1 / (γ_inv + σ)
   @. x = x_0 * b
@@ -234,19 +233,19 @@ function solve_shifted_system!(
     sign_t = 1
     for t = 1:(i - 1)
       c0 = dot(view(data.shifted_p, :, t), data.shifted_u)
-      c1= sign_t .*data.shifted_v[t]
+      c1 = sign_t .* data.shifted_v[t]
       c2 = c1 * c0
       view(data.shifted_p, :, i) .+= c2 .* view(data.shifted_p, :, t)
       sign_t = -sign_t
     end
 
     data.shifted_v[i] = 1 / (1 - sign_i * dot(data.shifted_u, view(data.shifted_p, :, i)))
-    x .+= sign_i  *data.shifted_v[i] * (view(data.shifted_p, :, i)' * b) .* view(data.shifted_p, :, i)
+    x .+=
+      sign_i * data.shifted_v[i] * (view(data.shifted_p, :, i)' * b) .* view(data.shifted_p, :, i)
     sign_i = -sign_i
   end
   return x
 end
-
 
 """
     ldiv!(x, B, b)
@@ -279,7 +278,11 @@ ldiv!(x, B, b)
 # The vector `x` now contains the solution
 """
 
-function ldiv!(x::AbstractVector{T}, B::LBFGSOperator{T, I, F1, F2, F3}, b::AbstractVector{T}) where {T, I, F1, F2, F3}
+function ldiv!(
+  x::AbstractVector{T},
+  B::LBFGSOperator{T, I, F1, F2, F3},
+  b::AbstractVector{T},
+) where {T, I, F1, F2, F3}
   # Call solve_shifted_system! with σ = 0
   solve_shifted_system!(x, B, b, T(0.0))
   return x
