@@ -78,6 +78,7 @@ Function           | Description
 `size`             | Return the size of a linear operator
 `symmetric`        | Determine whether the operator is symmetric
 `normest`          | Estimate the 2-norm
+`solve_shifted_system!`          | Solves linear system $(B + \sigma I) x = b$, where $B$ is a forward L-BFGS operator and $\sigma \geq 0$.
 
 
 ## Other Operations on Operators

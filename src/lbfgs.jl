@@ -16,6 +16,9 @@ mutable struct LBFGSData{T, I <: Integer}
   b::Vector{Vector{T}}
   insert::I
   Ax::Vector{T}
+  shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
+  shifted_v::Vector{T}
+  shifted_u::Vector{T}
 end
 
 function LBFGSData(
@@ -43,6 +46,9 @@ function LBFGSData(
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
     1,
     Vector{T}(undef, n),
+    Array{T}(undef, (n, 2*mem)),
+    Vector{T}(undef, 2*mem),
+    Vector{T}(undef, n)
   )
 end
 
