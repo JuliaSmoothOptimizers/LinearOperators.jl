@@ -73,7 +73,7 @@ jobs:
           julia -e 'using Pkg;
             PKG, TAG, VERSION = ENV["PKG"], ENV["TAG"], ENV["VERSION"]
             joburl = joinpath(ENV["GITHUB_SERVER_URL"], ENV["GITHUB_REPOSITORY"], "actions/runs", ENV["GITHUB_RUN_ID"])
-            open("../pr/$PKG-$VERSION", "w") do io
+            open("../breakage-$PKG-$VERSION/$PKG-$VERSION", "w") do io
               try
                 TAG == "no_tag" && error("Not tag for $VERSION")
                 pkg"activate .";
