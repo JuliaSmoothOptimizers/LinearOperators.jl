@@ -111,16 +111,13 @@ jobs:
           pattern: breakage-*
           merge-multiple: true
 
-      - run: ls
+      - run: ls -R
       - run: |
-          mkdir pr
-          cd pr
-          echo "| Package name | latest | stable |" > MSG
-          echo "|--|--|--|" >> MSG
+          echo "| Package name | latest | stable |" > summary.md
+          echo "|--|--|--|" >> summary.md
           count=0
-          for file in ../breakage/*
+          for file in breakage/*
           do
-            # [ "$file" == "NR" ] && continue
             [ "$file" == "MSG" ] && continue
             if [ $count == "0" ]; then
               name=$(echo $file | cut -f1 -d-)
@@ -136,9 +133,14 @@ jobs:
               echo " |"
               count=0
             fi
-          done >> MSG
+          done >> summary.md
 
-      - uses: actions/upload-artifact@v4
+      - name: PR comment with file
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          name: pr
-          path: pr/
+          filePath: summary.md
+
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: pr
+      #     path: pr/
