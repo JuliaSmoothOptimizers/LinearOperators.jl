@@ -47,23 +47,22 @@ end
 # y = ∇f(x_{k+1}) - ∇f(x_k)
 function push!(
   B::DiagonalPSB{T, I, V, F},
-  s0::V,
-  y0::V,
+  s::V,
+  y::V,
 ) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
-  s0Norm = norm(s0, 2)
-  if s0Norm == 0
+  sNorm = norm(s, 2)
+  if sNorm == 0
     error("Cannot update DiagonalQN operator with s=0")
   end
   # sᵀBs = sᵀy can be scaled by ||s||² without changing the update
-  s = (si / s0Norm for si ∈ s0)
   s2 = (si^2 for si ∈ s)
-  y = (yi / s0Norm for yi ∈ y0)
-  trA2 = dot(s2, s2)
-  sT_y = dot(s, y)
-  sT_B_s = dot(s2, B.d)
+  sNorm2 = sNorm^2
+  trA2 = dot(s2, s2) / sNorm2^2
+  sT_y = dot(s, y) / sNorm2
+  sT_B_s = dot(s2, B.d) / sNorm2
   q = sT_y - sT_B_s
   q /= trA2
-  B.d .+= q .* s .^ 2
+  B.d .+= q / sNorm2 .* s .^ 2
   return B
 end
 
@@ -126,25 +125,24 @@ end
 # y = ∇f(x_{k+1}) - ∇f(x_k)
 function push!(
   B::DiagonalAndrei{T, I, V, F},
-  s0::V,
-  y0::V,
+  s::V,
+  y::V,
 ) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
-  s0Norm = norm(s0, 2)
-  if s0Norm == 0
+  sNorm = norm(s, 2)
+  if sNorm == 0
     error("Cannot update DiagonalQN operator with s=0")
   end
   # sᵀBs = sᵀy can be scaled by ||s||² without changing the update
-  s = (si / s0Norm for si ∈ s0)
   s2 = (si^2 for si ∈ s)
-  y = (yi / s0Norm for yi ∈ y0)
-  trA2 = dot(s2, s2)
-  sT_y = dot(s, y)
-  sT_B_s = dot(s2, B.d)
+  sNorm2 = sNorm^2
+  trA2 = dot(s2, s2) / sNorm2^2
+  sT_y = dot(s, y) / sNorm2
+  sT_B_s = dot(s2, B.d) / sNorm2
   q = sT_y - sT_B_s
-  sT_s = dot(s, s)
+  sT_s = dot(s, s) / sNorm2
   q += sT_s
   q /= trA2
-  B.d .+= q .* s .^ 2 .- 1
+  B.d .+= q / sNorm2 .* s .^ 2 .- 1
   return B
 end
 
@@ -199,7 +197,7 @@ function push!(
   s::V,
   y::V,
 ) where {T <: Real, I <: Integer, F, V <: AbstractVector{T}}
-  if all(s .== 0)
+  if all(x -> x == 0, s)
     error("Cannot divide by zero and s .= 0")
   end
   B.d[1] = dot(s, y) / dot(s, s)
