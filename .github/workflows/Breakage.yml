@@ -95,7 +95,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: breakage-$PKG-$VERSION
-          path: breakage/$PKG-$VERSION
+          path: breakage/breakage-$PKG-$VERSION
 
   upload:
     needs: break
@@ -106,7 +106,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: breakage
-          pattern: *-*
+          pattern: breakage-*
           merge-multiple: true
 
       - run: ls
@@ -116,7 +116,7 @@ jobs:
           echo "| Package name | latest | stable |" > MSG
           echo "|--|--|--|" >> MSG
           count=0
-          for file in *
+          for file in ../breakage/*
           do
             # [ "$file" == "NR" ] && continue
             [ "$file" == "MSG" ] && continue
