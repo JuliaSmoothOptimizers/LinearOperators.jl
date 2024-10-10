@@ -97,7 +97,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: breakage
+          name: breakage-${{inputs.context}}-${{inputs.job-index}}
           path: breakage/breakage-*
 
   upload:
