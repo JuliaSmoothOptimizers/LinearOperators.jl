@@ -113,14 +113,15 @@ jobs:
 
       - run: ls -R
       - run: |
+          cd breakage
           echo "| Package name | latest | stable |" > summary.md
           echo "|--|--|--|" >> summary.md
           count=0
-          for file in breakage/*
+          for file in *
           do
             [ "$file" == "MSG" ] && continue
             if [ $count == "0" ]; then
-              name=$(echo $file | cut -f1 -d-)
+              name=$(echo $file | cut -f2 -d-)
               echo -n "| $name | "
             else
               echo -n "| "
@@ -138,7 +139,7 @@ jobs:
       - name: PR comment with file
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: summary.md
+          filePath: breakage/summary.md
 
       # - uses: actions/upload-artifact@v4
       #   with:
