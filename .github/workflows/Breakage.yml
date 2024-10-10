@@ -55,8 +55,8 @@ jobs:
         run: |
           set -v
           export PKG=$(echo $URL | cut -f2 -d/)
-          mkdir -p ./breakage-$PKG-$VERSION
-          echo "${{ github.event.number }}" > ./breakage-$PKG-$VERSION/NR
+          mkdir -p ./breakage
+          # echo "${{ github.event.number }}" > ./breakage-$PKG-$VERSION/NR
           git clone https://github.com/$URL
           cd $PKG
           if [ $VERSION == "stable" ]; then
@@ -73,7 +73,7 @@ jobs:
           julia -e 'using Pkg;
             PKG, TAG, VERSION = ENV["PKG"], ENV["TAG"], ENV["VERSION"]
             joburl = joinpath(ENV["GITHUB_SERVER_URL"], ENV["GITHUB_REPOSITORY"], "actions/runs", ENV["GITHUB_RUN_ID"])
-            open("../breakage-$PKG-$VERSION/$PKG-$VERSION", "w") do io
+            open("../breakage/$PKG-$VERSION", "w") do io
               try
                 TAG == "no_tag" && error("Not tag for $VERSION")
                 pkg"activate .";
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: breakage-$PKG-$VERSION
-          path: breakage-$PKG-$VERSION/
+          path: breakage/$PKG-$VERSION
 
   upload:
     needs: break
@@ -106,7 +106,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: breakage
-          pattern: breakage-*
+          pattern: *-*
           merge-multiple: true
 
       - run: ls
@@ -118,7 +118,7 @@ jobs:
           count=0
           for file in *
           do
-            [ "$file" == "NR" ] && continue
+            # [ "$file" == "NR" ] && continue
             [ "$file" == "MSG" ] && continue
             if [ $count == "0" ]; then
               name=$(echo $file | cut -f1 -d-)
