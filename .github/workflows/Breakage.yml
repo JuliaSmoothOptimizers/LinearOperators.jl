@@ -91,9 +91,6 @@ jobs:
               end;
             end'
 
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-
       - uses: actions/upload-artifact@v4
         with:
           name: breakage-${{ matrix.pkg }}-${{ matrix.pkgversion }}
@@ -114,8 +111,8 @@ jobs:
       - run: ls -R
       - run: |
           cd breakage
-          echo "| Package name | latest | stable |" > summary.md
-          echo "|--|--|--|" >> summary.md
+          echo "| Package name | latest | stable |" > ../summary.md
+          echo "|--|--|--|" >> ../summary.md
           count=0
           for file in *
           do
@@ -134,14 +131,9 @@ jobs:
               echo " |"
               count=0
             fi
-          done >> summary.md
+          done >> ../summary.md
 
       - name: PR comment with file
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: breakage/summary.md
-
-      # - uses: actions/upload-artifact@v4
-      #   with:
-      #     name: pr
-      #     path: pr/
+          filePath: summary.md
