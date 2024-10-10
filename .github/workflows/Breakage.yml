@@ -13,17 +13,17 @@ jobs:
       fail-fast: false
       matrix:
         pkg: [
-          "JuliaSmoothOptimizers/CaNNOLeS.jl",
-          "JuliaSmoothOptimizers/DCISolver.jl",
-          "JuliaSmoothOptimizers/FletcherPenaltySolver.jl",
-          "JuliaSmoothOptimizers/JSOSolvers.jl",
-          "JuliaSmoothOptimizers/Krylov.jl",
-          "JuliaSmoothOptimizers/NLPModels.jl",
-          "JuliaSmoothOptimizers/NLPModelsModifiers.jl",
-          "JuliaSmoothOptimizers/Percival.jl",
-          "JuliaSmoothOptimizers/PROPACK.jl",
-          "JuliaSmoothOptimizers/QuadraticModels.jl",
-          "JuliaSmoothOptimizers/SolverTools.jl"
+          "CaNNOLeS.jl",
+          "DCISolver.jl",
+          "FletcherPenaltySolver.jl",
+          "JSOSolvers.jl",
+          "Krylov.jl",
+          "NLPModels.jl",
+          "NLPModelsModifiers.jl",
+          "Percival.jl",
+          "PROPACK.jl",
+          "QuadraticModels.jl",
+          "SolverTools.jl"
         ]
         pkgversion: [latest, stable]
 
@@ -50,14 +50,13 @@ jobs:
       # Breakage test
       - name: 'Breakage of ${{ matrix.pkg }}, ${{ matrix.pkgversion }} version'
         env:
-          URL: ${{ matrix.pkg }}
+          PKG: ${{ matrix.pkg }}
           VERSION: ${{ matrix.pkgversion }}
         run: |
           set -v
-          export PKG=$(echo $URL | cut -f2 -d/)
           mkdir -p ./breakage
           # echo "${{ github.event.number }}" > ./breakage-$PKG-$VERSION/NR
-          git clone https://github.com/$URL
+          git clone https://github.com/JuliaSmoothOptimizers/$PKG
           cd $PKG
           if [ $VERSION == "stable" ]; then
             TAG=$(git tag -l "v*" --sort=-creatordate | head -n1)
