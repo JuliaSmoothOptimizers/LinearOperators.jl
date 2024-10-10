@@ -28,10 +28,10 @@ allocate:
 macro wrappedallocs(expr)
   argnames = [gensym() for a in expr.args]
   quote
-      function g($(argnames...))
-          @allocated $(Expr(expr.head, argnames...))
-      end
-      $(Expr(:call, :g, [esc(a) for a in expr.args]...))
+    function g($(argnames...))
+      @allocated $(Expr(expr.head, argnames...))
+    end
+    $(Expr(:call, :g, [esc(a) for a in expr.args]...))
   end
 end
 
