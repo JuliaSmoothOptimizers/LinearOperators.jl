@@ -92,13 +92,13 @@ jobs:
               end;
             end'
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
 
       - uses: actions/upload-artifact@v4
         with:
-          name: breakage-$PKG-$VERSION
-          path: breakage/breakage-$PKG-$VERSION
+          name: breakage
+          path: breakage/breakage-*
 
   upload:
     needs: break
