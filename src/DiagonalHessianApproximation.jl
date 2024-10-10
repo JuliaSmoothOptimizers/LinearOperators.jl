@@ -62,7 +62,7 @@ function push!(
   sT_B_s = dot(s2, B.d) / sNorm2
   q = sT_y - sT_B_s
   q /= trA2
-  B.d .+= q / sNorm^2 .* s .^ 2
+  B.d .+= q / sNorm2 .* s .^ 2
   return B
 end
 
