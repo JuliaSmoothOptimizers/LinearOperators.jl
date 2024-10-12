@@ -55,7 +55,6 @@ jobs:
         run: |
           set -v
           mkdir -p ./breakage
-          # echo "${{ github.event.number }}" > ./breakage-$PKG-$VERSION/NR
           git clone https://github.com/JuliaSmoothOptimizers/$PKG
           cd $PKG
           if [ $VERSION == "stable" ]; then
@@ -111,12 +110,11 @@ jobs:
       - run: ls -R
       - run: |
           cd breakage
-          echo "| Package name | latest | stable |" > ../summary.md
-          echo "|--|--|--|" >> ../summary.md
+          echo "| Package name | latest | stable |" > summary.md
+          echo "|--|--|--|" >> summary.md
           count=0
-          for file in *
+          for file in breakage-*
           do
-            [ "$file" == "MSG" ] && continue
             if [ $count == "0" ]; then
               name=$(echo $file | cut -f2 -d-)
               echo -n "| $name | "
@@ -131,9 +129,9 @@ jobs:
               echo " |"
               count=0
             fi
-          done >> ../summary.md
+          done >> summary.md
 
       - name: PR comment with file
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: summary.md
+          filePath: breakage/summary.md
