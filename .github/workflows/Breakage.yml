@@ -7,25 +7,46 @@ on:
   pull_request:
 
 jobs:
+  # Build dynamically the matrix on which the "break" job will run.
+  # The matrix contains the packages that depend on ${{ env.pkg }}.
+  # Job "setup_matrix" outputs variable "matrix", which is in turn
+  # the output of the "getmatrix" step.
+  # The contents of "matrix" is a JSON description of a matrix used
+  # in the next step. It has the form
+  # {
+  #   "pkg": [
+  #     "PROPACK",
+  #     "LLSModels",
+  #     "FletcherPenaltySolver"
+  #   ]
+  # }
+  setup_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.getmatrix.outputs.matrix }}
+    env:
+      pkg: ${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: 1
+          arch: x64
+      - id: getmatrix
+        run: |
+          julia -e 'using Pkg; Pkg.Registry.add(RegistrySpec(url = "https://github.com/JuliaRegistries/General.git"))'
+          julia --project=.breakage -e 'using Pkg; Pkg.update(); Pkg.instantiate()'
+          pkgs=$(julia --project=.breakage .breakage/get_jso_users.jl ${{ env.pkg }})
+          vs='["latest", "stable"]'
+          matrix=$(jq -cn --argjson deps "$pkgs" --argjson vers "$vs" '{pkg: $deps, pkgversion: $vers}')  # don't escape quotes like many posts suggest
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   break:
+    needs: setup_matrix
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        pkg: [
-          "CaNNOLeS.jl",
-          "DCISolver.jl",
-          "FletcherPenaltySolver.jl",
-          "JSOSolvers.jl",
-          "Krylov.jl",
-          "NLPModels.jl",
-          "NLPModelsModifiers.jl",
-          "Percival.jl",
-          "PROPACK.jl",
-          "QuadraticModels.jl",
-          "SolverTools.jl"
-        ]
-        pkgversion: [latest, stable]
+      matrix: ${{ fromJSON(needs.setup_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -55,8 +76,8 @@ jobs:
         run: |
           set -v
           mkdir -p ./breakage
-          git clone https://github.com/JuliaSmoothOptimizers/$PKG
-          cd $PKG
+          git clone https://github.com/JuliaSmoothOptimizers/$PKG.jl.git
+          cd $PKG.jl
           if [ $VERSION == "stable" ]; then
             TAG=$(git tag -l "v*" --sort=-creatordate | head -n1)
             if [ -z "$TAG" ]; then
