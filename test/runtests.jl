@@ -19,7 +19,6 @@ include("gpu/test_S_kwarg.jl")
 include("gpu/jlarrays.jl")
 
 if Sys.isapple() && occursin("arm64", Sys.MACHINE)
-    using Metal
     include("gpu/metal.jl")
 end
 
