@@ -1,5 +1,5 @@
 using Arpack, Test, TestSetExtensions, LinearOperators
-using LinearAlgebra, LDLFactorizations, SparseArrays
+using LinearAlgebra, LDLFactorizations, SparseArrays, JLArrays
 using Zygote
 include("test_aux.jl")
 
@@ -16,3 +16,8 @@ include("test_normest.jl")
 include("test_diag.jl")
 include("test_chainrules.jl")
 include("test_solve_shifted_system.jl")
+include("gpu/test_S_kwarg.jl")
+include("gpu/jlarrays.jl")
+if Sys.isapple() && occursin("arm64", Sys.MACHINE)
+    include("gpu/metal.jl")
+end
