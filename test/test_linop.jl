@@ -350,7 +350,7 @@ function test_linop()
       op = H * opDiagonal(Λ) * H'
       @test check_positive_definite(op)
       @test check_positive_definite(op, semi = true)
-      Λ = collect(eltype(v), 0:(nrow - 1))
+      Λ = collect(eltype(v), 0:(nrow-1))
       op = H * opDiagonal(Λ) * H'
       @test check_positive_definite(op, semi = true)
       A = Matrix(op)
