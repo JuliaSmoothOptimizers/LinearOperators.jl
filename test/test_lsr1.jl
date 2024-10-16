@@ -21,7 +21,7 @@ function test_lsr1()
       @test B.data.insert == 1
 
       # Insert a few {s,y} pairs.
-      for i = 1:(mem + 2)
+      for i = 1:(mem+2)
         s = ones(n) * i
         y = [i; ones(n - 1)]
         push!(B, s, y)
