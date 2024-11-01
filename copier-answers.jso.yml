@@ -1,0 +1,8 @@
+PackageName: "LinearOperators"
+PackageOwner: "JuliaSmoothOptimizers"
+PackageUUID: "5c8ed15e-5a4c-59e4-a42b-c7e8811fb125"
+_src_path: "https://github.com/JuliaSmoothOptimizers/JSOBestieTemplate.jl"
+_commit: "v0.13.0"
+AddBreakage: true
+AddBenchmark: false
+AddBenchmarkCI: true
