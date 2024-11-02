@@ -234,7 +234,7 @@ function push_common!(
       if data.ys[k] != 0
         @. data.a[k] = data.s[k] / data.scaling_factor  # B₀ = I / γ.
 
-        for j = 1:(i-1)
+        for j = 1:(i - 1)
           l = mod(insert + j - 1, data.mem) + 1
           if data.ys[l] != 0
             data.a[k] .+= dot(data.b[l], data.s[k]) .* data.b[l]

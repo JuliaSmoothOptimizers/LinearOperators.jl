@@ -32,7 +32,7 @@ function test_lbfgs()
 
       # Insert a few {s,y} pairs.
       insert = 0
-      for i = 1:(mem+2)
+      for i = 1:(mem + 2)
         s = ones(n) * i
         y = [i; ones(n - 1)]
         if dot(s, y) > 1.0e-20
@@ -100,7 +100,7 @@ function test_lbfgs()
     H = InverseLBFGSOperator(n, mem = mem, damped = true, scaling = false, σ₂ = 0.8, σ₃ = Inf)
 
     insert_B = insert_H = 0
-    for i = 1:(mem+2)
+    for i = 1:(mem + 2)
       s = simple_vector(Float64, n)
       y = simple_vector(Float64, n)
       ys = dot(y, s)
