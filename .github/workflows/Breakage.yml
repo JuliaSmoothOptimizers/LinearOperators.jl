@@ -38,11 +38,18 @@ jobs:
           julia --project=.breakage -e 'using Pkg; Pkg.update(); Pkg.instantiate()'
           pkgs=$(julia --project=.breakage .breakage/get_jso_users.jl ${{ env.pkg }})
           vs='["latest", "stable"]'
+          # Check if pkgs is empty, and set it to a JSON array if necessary
+          if [[ -z "$pkgs" || "$pkgs" == "String[]" ]]; then
+            echo "No packages found; exiting successfully."
+            exit 0
+          fi
+          vs='["latest", "stable"]'
           matrix=$(jq -cn --argjson deps "$pkgs" --argjson vers "$vs" '{pkg: $deps, pkgversion: $vers}')  # don't escape quotes like many posts suggest
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   break:
     needs: setup_matrix
+    if: needs.setup_matrix.result == 'success' && needs.setup_matrix.outputs.matrix != ''
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -94,7 +101,7 @@ jobs:
             joburl = joinpath(ENV["GITHUB_SERVER_URL"], ENV["GITHUB_REPOSITORY"], "actions/runs", ENV["GITHUB_RUN_ID"])
             open("../breakage/breakage-$PKG-$VERSION", "w") do io
               try
-                TAG == "no_tag" && error("Not tag for $VERSION")
+                TAG == "no_tag" && error("No tag for $VERSION")
                 pkg"activate .";
                 pkg"instantiate";
                 pkg"dev ../";
