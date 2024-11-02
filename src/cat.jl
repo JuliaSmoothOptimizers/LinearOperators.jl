@@ -15,7 +15,7 @@ function hcat_prod!(
   β,
 ) where {T, I <: Integer}
   mul!(res, A, view(v, 1:Ancol), α, β)
-  mul!(res, B, view(v, (Ancol+1):nV), α, one(T))
+  mul!(res, B, view(v, (Ancol + 1):nV), α, one(T))
 end
 
 function hcat_ctprod!(
@@ -29,7 +29,7 @@ function hcat_ctprod!(
   β,
 ) where {T, I <: Integer}
   mul!(view(res, 1:Ancol), A, u, α, β)
-  mul!(view(res, (Ancol+1):nV), B, u, α, β)
+  mul!(view(res, (Ancol + 1):nV), B, u, α, β)
 end
 
 function hcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
@@ -74,7 +74,7 @@ function vcat_prod!(
   β,
 ) where {T, I <: Integer}
   mul!(view(res, 1:Anrow), A, u, α, β)
-  mul!(view(res, (Anrow+1):nV), B, u, α, β)
+  mul!(view(res, (Anrow + 1):nV), B, u, α, β)
 end
 
 function vcat_ctprod!(
@@ -88,7 +88,7 @@ function vcat_ctprod!(
   β,
 ) where {T, I <: Integer}
   mul!(res, A, view(v, 1:Anrow), α, β)
-  mul!(res, B, view(v, (Anrow+1):nV), α, one(T))
+  mul!(res, B, view(v, (Anrow + 1):nV), α, one(T))
 end
 
 function vcat(A::AbstractLinearOperator, B::AbstractLinearOperator)

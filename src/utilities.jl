@@ -231,7 +231,7 @@ function solve_shifted_system!(
     @. data.shifted_p[:, i] = x_0 * data.shifted_u
 
     sign_t = 1
-    for t = 1:(i-1)
+    for t = 1:(i - 1)
       c0 = dot(view(data.shifted_p, :, t), data.shifted_u)
       c1 = sign_t .* data.shifted_v[t]
       c2 = c1 * c0
