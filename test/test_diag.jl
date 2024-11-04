@@ -120,6 +120,10 @@ end
   mul!(u, C, v)
   @test (@allocated mul!(u, C, v)) == 0
   @test (@wrappedallocs push!(C, u, v)) == 0
+  D = DiagonalBFGS(d)
+  mul!(u, D, v)
+  @test (@allocated mul!(u, D, v)) == 0
+  @test (@wrappedallocs push!(D, u, v)) == 0
 end
 
 @testset "reset" begin
