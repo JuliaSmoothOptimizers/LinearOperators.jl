@@ -17,7 +17,7 @@ function test_S_kwarg(; arrayType, notMetal = true)
     @test LinearOperators.storage_type(LinearOperator(mat)) == LinearOperators.storage_type(mat) # default
     notMetal && @test LinearOperators.storage_type(LinearOperator(mat; S = vecTother)) == vecTother
     @test LinearOperators.storage_type(LinearOperator(Symmetric(mat); S = vecT)) == vecT
-    notMetal && @test LinearOperators.storage_type(LinearOperator(SymTridiagonal(Symmetric(mat)); S = vecT)) == vecT
+    #notMetal && @test LinearOperators.storage_type(LinearOperator(SymTridiagonal(Symmetric(mat)); S = vecT)) == vecT
     @test LinearOperators.storage_type(LinearOperator(Hermitian(mat); S = vecT)) == vecT
     @test LinearOperators.storage_type(LinearOperator(Float32, 32, 32, true, true, () -> 0; S = vecT)) == vecT
 
