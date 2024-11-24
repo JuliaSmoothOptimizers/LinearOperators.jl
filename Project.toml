@@ -12,24 +12,24 @@ TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [weakdeps]
 AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
 LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
 
 [extensions]
-LinearOperatorsAMDGPUExt = "AMDGPU" 
-LinearOperatorsChainRulesCoreExt = "ChainRulesCore"
+LinearOperatorsAMDGPUExt = "AMDGPU"
 LinearOperatorsCUDAExt = "CUDA"
-LinearOperatorsLDLFactorizationsExt = "LDLFactorizations"
+LinearOperatorsChainRulesCoreExt = "ChainRulesCore"
 LinearOperatorsJLArraysExt = "JLArrays"
+LinearOperatorsLDLFactorizationsExt = "LDLFactorizations"
 LinearOperatorsMetalExt = "Metal"
 
 [compat]
-AMDGPU = "0.6, 0.7, 0.8, 0.9"
-ChainRulesCore = "1"
+AMDGPU = "0.6, 0.7, 0.8, 0.9, 1"
 CUDA = "4, 5"
+ChainRulesCore = "1"
 FastClosures = "0.2, 0.3"
 JLArrays = "0.1"
 LDLFactorizations = "0.9, 0.10"
@@ -43,8 +43,8 @@ julia = "^1.6.0"
 
 [extras]
 AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
-ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
+LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
