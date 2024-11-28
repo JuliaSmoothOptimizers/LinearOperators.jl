@@ -110,6 +110,16 @@ function test_lsr1()
     resid = vals[end]
     @test norm(resid) ≤ sqrt(eps(eltype(B)))
   end
+
+  @testset "LSR1 (s,y) collinear" begin
+    n = 10
+    lsr1 = LSR1Operator(n)
+    s = rand(n)
+    alpha = rand(1) * 1000
+    y = s .* alpha
+    push!(lsr1, s, y)
+    Matrix(lsr1) != I
+  end
 end
 
 test_lsr1()
