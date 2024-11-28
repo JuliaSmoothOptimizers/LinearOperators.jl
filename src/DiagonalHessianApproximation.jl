@@ -1,4 +1,4 @@
-export DiagonalPSB, DiagonalAndrei, SpectralGradient
+export DiagonalPSB, DiagonalAndrei, SpectralGradient, DiagonalBFGS
 
 """
     DiagonalPSB(d)
@@ -201,5 +201,61 @@ function push!(
     error("Cannot divide by zero and s .= 0")
   end
   B.d[1] = dot(s, y) / dot(s, s)
+  return B
+end
+
+"""
+    DiagonalBFGS(d)
+
+A diagonal approximation of the BFGS update inspired by 
+Marnissi, Y., Chouzenoux, E., Benazza-Benyahia, A., & Pesquet, J. C. (2020). 
+Majorize–minimize adapted Metropolis–Hastings algorithm.
+https://ieeexplore.ieee.org/abstract/document/9050537. 
+
+# Arguments
+
+- `d::AbstractVector`: initial diagonal approximation.
+"""
+mutable struct DiagonalBFGS{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
+               AbstractDiagonalQuasiNewtonOperator{T}
+  d::V # Diagonal of the operator
+  nrow::I
+  ncol::I
+  symmetric::Bool
+  hermitian::Bool
+  prod!::F
+  tprod!::F
+  ctprod!::F
+  nprod::I
+  ntprod::I
+  nctprod::I
+  args5::Bool
+  use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
+  allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
+end
+
+@doc (@doc DiagonalBFGS) function DiagonalBFGS(d::AbstractVector{T}) where {T <: Real}
+  prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
+  n = length(d)
+  DiagonalBFGS(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true)
+end
+
+# update function
+# s = x_{k+1} - x_k
+# y = ∇f(x_{k+1}) - ∇f(x_k)
+function push!(
+  B::DiagonalBFGS{T, I, V, F},
+  s0::V,
+  y0::V,
+) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
+  s0Norm = norm(s0, 2)
+  if s0Norm == 0
+    error("Cannot update DiagonalQN operator with s=0")
+  end
+  # sᵀBs = sᵀy can be scaled by ||s||² without changing the update
+  s = (si / s0Norm for si ∈ s0)
+  y = (yi / s0Norm for yi ∈ y0)
+  sT_y = dot(s, y)
+  B.d .= sum(abs.(y)) / sT_y .* abs.(y) 
   return B
 end
