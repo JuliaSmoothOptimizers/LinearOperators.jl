@@ -22,7 +22,7 @@ mutable struct LBFGSData{T, I <: Integer}
 end
 
 function LBFGSData(
-  T::DataType,
+  T::Type,
   n::I;
   mem::I = 5,
   scaling::Bool = true,
@@ -106,7 +106,7 @@ storage_type(op::LBFGSOperator{T}) where {T} = Vector{T}
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function InverseLBFGSOperator(T::DataType, n::I; kwargs...) where {I <: Integer}
+function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = true, kwargs...)
@@ -166,7 +166,7 @@ InverseLBFGSOperator(n::Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwarg
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function LBFGSOperator(T::DataType, n::I; kwargs...) where {I <: Integer}
+function LBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
   lbfgs_data = LBFGSData(T, n; inverse = false, kwargs...)

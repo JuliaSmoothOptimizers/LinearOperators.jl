@@ -16,7 +16,7 @@ mutable struct LSR1Data{T, I <: Integer}
 end
 
 function LSR1Data(
-  T::DataType,
+  T::Type,
   n::I;
   mem::I = 5,
   scaling::Bool = true,
@@ -92,7 +92,7 @@ storage_type(op::LSR1Operator{T}) where {T} = Vector{T}
 Construct a limited-memory SR1 approximation in forward form. If the type `T` is
 omitted, then `Float64` is used.
 """
-function LSR1Operator(T::DataType, n::I; kwargs...) where {I <: Integer}
+function LSR1Operator(T::Type, n::I; kwargs...) where {I <: Integer}
   lsr1_data = LSR1Data(T, n; kwargs...)
 
   function lsr1_multiply(q::AbstractVector, data::LSR1Data, x::AbstractArray, α, β::T2) where {T2}

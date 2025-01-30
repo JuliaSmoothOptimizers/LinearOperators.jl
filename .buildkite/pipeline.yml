@@ -2,7 +2,7 @@ steps:
   - label: "Nvidia GPUs -- LinearOperators.jl"
     plugins:
       - JuliaCI/julia#v1:
-          version: 1.8
+          version: "1.10"
     agents:
       queue: "juliagpu"
       cuda: "*"
@@ -31,4 +31,3 @@ steps:
       include("test/gpu/test_S_kwarg.jl")
       include("test/gpu/amdgpu.jl")'
     timeout_in_minutes: 30
-
