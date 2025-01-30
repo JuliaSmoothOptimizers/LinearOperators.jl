@@ -1,12 +1,12 @@
 # Deprecated use of positional argument mem
-@deprecate LBFGSOperator(T::DataType, n::Int, mem::Int; kwargs...) LBFGSOperator(
+@deprecate LBFGSOperator(T::Type, n::Int, mem::Int; kwargs...) LBFGSOperator(
   T,
   n;
   mem = mem,
   kwargs...,
 ) false
 @deprecate LBFGSOperator(n::Int, mem::Int; kwargs...) LBFGSOperator(n; mem = mem, kwargs...) false
-@deprecate InverseLBFGSOperator(T::DataType, n::Int, mem::Int; kwargs...) InverseLBFGSOperator(
+@deprecate InverseLBFGSOperator(T::Type, n::Int, mem::Int; kwargs...) InverseLBFGSOperator(
   T,
   n;
   mem = mem,
@@ -17,7 +17,7 @@
   mem = mem,
   kwargs...,
 ) false
-@deprecate LSR1Operator(T::DataType, n::Int, mem::Int; kwargs...) LSR1Operator(
+@deprecate LSR1Operator(T::Type, n::Int, mem::Int; kwargs...) LSR1Operator(
   T,
   n;
   mem = mem,

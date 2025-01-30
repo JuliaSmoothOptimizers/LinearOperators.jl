@@ -50,7 +50,7 @@ end
 Identity operator of order `n` and of data type `T` (defaults to `Float64`).
 Change `S` to use LinearOperators on GPU.
 """
-function opEye(T::DataType, n::Int; S = Vector{T})
+function opEye(T::Type, n::Int; S = Vector{T})
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, n)
   LinearOperator{T}(n, n, true, true, prod!, prod!, prod!, S = S)
 end
@@ -66,7 +66,7 @@ Rectangular identity operator of size `nrow`x`ncol` and of data type `T`
 (defaults to `Float64`).
 Change `S` to use LinearOperators on GPU.
 """
-function opEye(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
+function opEye(T::Type, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   if nrow == ncol
     return opEye(T, nrow; S = S)
   end
@@ -92,7 +92,7 @@ Operator of all ones of size `nrow`-by-`ncol` of data type `T` (defaults to
 `Float64`).
 Change `S` to use LinearOperators on GPU.
 """
-function opOnes(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
+function opOnes(T::Type, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpOnes!(res, v, α, β)
   LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, S = S)
 end
@@ -115,7 +115,7 @@ Zero operator of size `nrow`-by-`ncol`, of data type `T` (defaults to
 `Float64`).
 Change `S` to use LinearOperators on GPU.
 """
-function opZeros(T::DataType, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
+function opZeros(T::Type, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpZeros!(res, v, α, β)
   LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, S = S)
 end

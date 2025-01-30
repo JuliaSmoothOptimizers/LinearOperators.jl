@@ -72,7 +72,7 @@ function LinearOperator{T}(
   nprod::I,
   ntprod::I,
   nctprod::I;
-  S::DataType = Vector{T},
+  S::Type = Vector{T},
 ) where {T, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   nargs = get_nargs(prod!)
@@ -107,13 +107,13 @@ LinearOperator{T}(
   prod!,
   tprod!,
   ctprod!;
-  S::DataType = Vector{T},
+  S::Type = Vector{T},
 ) where {T, I <: Integer} =
   LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, S = S)
 
 # create operator from other operators with +, *, vcat,...
 function CompositeLinearOperator(
-  T::DataType,
+  T::Type,
   nrow::I,
   ncol::I,
   symmetric::Bool,
@@ -122,7 +122,7 @@ function CompositeLinearOperator(
   tprod!::Ft,
   ctprod!::Fct,
   args5::Bool;
-  S::DataType = Vector{T},
+  S::Type = Vector{T},
 ) where {I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   allocated5 = true
