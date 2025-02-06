@@ -9,6 +9,13 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
   B = CUDA.rand(10, 10)
   C = CUDA.rand(20, 20)
   M = BlockDiagonalOperator(A, B, C)
+  v = CUDA.rand(5)
+
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(transpose(A))
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
+  @test LinearOperators.storage_type(Diagonal(v)) == typeof(v)
+  
 
   v = CUDA.rand(35)
   y = M * v
