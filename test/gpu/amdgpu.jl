@@ -6,8 +6,6 @@ using LinearOperators, AMDGPU
   B = ROCArray(rand(Float32, 10, 10))
   C = ROCArray(rand(Float32, 20, 20))
   M = BlockDiagonalOperator(A, B, C)
-  v = ROCArray(rand(5))
-
 
   v = ROCArray(rand(Float32, 35))
   y = M * v
