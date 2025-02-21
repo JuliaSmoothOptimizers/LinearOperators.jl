@@ -245,17 +245,16 @@ end
 # y = ∇f(x_{k+1}) - ∇f(x_k)
 function push!(
   B::DiagonalBFGS{T, I, V, F},
-  s0::V,
-  y0::V,
+  s::V,
+  y::V,
 ) where {T <: Real, I <: Integer, V <: AbstractVector{T}, F}
-  s0Norm = norm(s0, 2)
-  if s0Norm == 0
+  sNorm = norm(s, 2)
+  if sNorm == 0
     error("Cannot update DiagonalQN operator with s=0")
   end
-  # sᵀBs = sᵀy can be scaled by ||s||² without changing the update
-  s = (si / s0Norm for si ∈ s0)
-  y = (yi / s0Norm for yi ∈ y0)
-  sT_y = dot(s, y)
-  B.d .= sum(abs.(y)) / sT_y .* abs.(y) 
+  sNorm2 = sNorm^2
+  sT_y = dot(s, y) / sNorm2
+  B.d .= abs.(y)
+  B.d .*= sum(B.d) / sT_y
   return B
 end
