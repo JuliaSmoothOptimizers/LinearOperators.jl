@@ -174,6 +174,11 @@ storage_type(op::AbstractLinearOperator) = error("please implement storage_type 
 storage_type(op::LinearOperator) = typeof(op.Mv5)
 storage_type(M::AbstractMatrix{T}) where {T} = Vector{T}
 
+# Lazy wrappers
+storage_type(op::Adjoint) = storage_type(parent(op))
+storage_type(op::Transpose) = storage_type(parent(op))
+storage_type(op::Diagonal) = typeof(parent(op))
+
 """
   reset!(op)
 
