@@ -36,7 +36,7 @@ function normest(S, tol = -1, maxiter = 100)
 
   x ./= e
   e_0 = zero(e)
-  Sx = zeros(eltype(S), n)
+  Sx = zeros(eltype(S), m)
 
   while abs(e - e_0) > tol * e
     e_0 = e
