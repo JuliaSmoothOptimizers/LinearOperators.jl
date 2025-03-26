@@ -1,4 +1,4 @@
-export LSR1Operator, diag  #, InverseLSR1Operator
+export LSR1Operator, diag
 
 "A data type to hold information relative to LSR1 operators."
 mutable struct LSR1Data{T, I <: Integer}
@@ -20,9 +20,7 @@ function LSR1Data(
   n::I;
   mem::I = 5,
   scaling::Bool = true,
-  inverse::Bool = false,
 ) where {I <: Integer}
-  inverse && @warn "inverse LSR1 operator not yet implemented"
   LSR1Data{T, I}(
     max(mem, 1),
     scaling,
@@ -49,7 +47,6 @@ mutable struct LSR1Operator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewtonO
   prod!::F     # apply the operator to a vector
   tprod!::Ft    # apply the transpose operator to a vector
   ctprod!::Fct   # apply the transpose conjugate operator to a vector
-  inverse::Bool
   data::LSR1Data{T, I}
   nprod::I
   ntprod::I
@@ -64,7 +61,6 @@ LSR1Operator{T}(
   prod!::F,
   tprod!::Ft,
   ctprod!::Fct,
-  inverse::Bool,
   data::LSR1Data{T, I},
 ) where {T, I <: Integer, F, Ft, Fct} = LSR1Operator{T, I, F, Ft, Fct}(
   nrow,
@@ -74,7 +70,6 @@ LSR1Operator{T}(
   prod!,
   tprod!,
   ctprod!,
-  inverse,
   data,
   0,
   0,
@@ -116,7 +111,7 @@ function LSR1Operator(T::Type, n::I; kwargs...) where {I <: Integer}
   end
 
   prod! = @closure (res, x, α, β) -> lsr1_multiply(res, lsr1_data, x, α, β)
-  return LSR1Operator{T}(n, n, true, true, prod!, nothing, nothing, false, lsr1_data)
+  return LSR1Operator{T}(n, n, true, true, prod!, nothing, nothing, lsr1_data)
 end
 
 LSR1Operator(n::I; kwargs...) where {I <: Integer} = LSR1Operator(Float64, n; kwargs...)
@@ -197,7 +192,6 @@ function diag(op::LSR1Operator{T}) where {T}
 end
 
 function diag!(op::LSR1Operator{T}, d) where {T}
-  op.inverse && throw("only the diagonal of a forward L-SR1 approximation is available")
   data = op.data
 
   fill!(d, 1)
