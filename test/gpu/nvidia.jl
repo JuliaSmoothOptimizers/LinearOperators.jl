@@ -8,7 +8,7 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
   A = CUDA.rand(5, 5)
   B = CUDA.rand(10, 10)
   C = CUDA.rand(20, 20)
-  M = BlockDiagonalOperator(A, B, C)  
+  M = BlockDiagonalOperator(A, B, C)
 
   v = CUDA.rand(35)
   y = M * v
