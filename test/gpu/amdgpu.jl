@@ -11,5 +11,10 @@ using LinearOperators, AMDGPU
   y = M * v
   @test y isa ROCArray{Float32}
 
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(transpose(A))
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
+  @test LinearOperators.storage_type(Diagonal(v)) == typeof(v)
+
   @testset "AMDGPU S kwarg" test_S_kwarg(arrayType = ROCArray)
 end

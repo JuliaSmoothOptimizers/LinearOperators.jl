@@ -13,5 +13,11 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
   v = CUDA.rand(35)
   y = M * v
   @test y isa CuVector{Float32}
+
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(transpose(A))
+  @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
+  @test LinearOperators.storage_type(Diagonal(v)) == typeof(v)
+
   @testset "Nvidia S kwarg" test_S_kwarg(arrayType = CuArray)
 end
