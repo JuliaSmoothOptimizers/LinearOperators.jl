@@ -15,12 +15,7 @@ mutable struct LSR1Data{T, I <: Integer}
   tmp::Vector{T}
 end
 
-function LSR1Data(
-  T::Type,
-  n::I;
-  mem::I = 5,
-  scaling::Bool = true,
-) where {I <: Integer}
+function LSR1Data(T::Type, n::I; mem::I = 5, scaling::Bool = true) where {I <: Integer}
   LSR1Data{T, I}(
     max(mem, 1),
     scaling,
