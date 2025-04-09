@@ -16,6 +16,5 @@ using LinearOperators, AMDGPU
   @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
   @test LinearOperators.storage_type(Diagonal(v)) == typeof(v)
 
-
   @testset "AMDGPU S kwarg" test_S_kwarg(arrayType = ROCArray)
 end
