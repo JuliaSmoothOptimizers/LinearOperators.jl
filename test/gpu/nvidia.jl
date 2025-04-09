@@ -19,6 +19,5 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
   @test LinearOperators.storage_type(A) == LinearOperators.storage_type(adjoint(A))
   @test LinearOperators.storage_type(Diagonal(v)) == typeof(v)
 
-
   @testset "Nvidia S kwarg" test_S_kwarg(arrayType = CuArray)
 end
