@@ -17,8 +17,7 @@ function simple_matrix_test_helper(S, ϵ_norm, ϵ)
 end
 
 function simple_matrix_test(ϵ)
-  (nrow, ncol) = (10, 10)
-  for (nrow, ncol) in [(10, 10), (5, 5), (3, 3)]
+  for (nrow, ncol) in [(10, 10), (5, 5), (3, 3), (3, 5), (5, 3), (5, 10), (10, 5)]
     ϵ_norm = eps(Float64)
     A1 = simple_matrix(ComplexF64, nrow, ncol)
     simple_matrix_test_helper(A1, ϵ_norm, ϵ)
