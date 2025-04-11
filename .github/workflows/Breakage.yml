@@ -1,6 +1,11 @@
 # Ref: https://securitylab.github.com/research/github-actions-preventing-pwn-requests
 name: Breakage
 
+# allow breakage/upload when a PR comes from a fork
+permissions:
+  contents: write
+  pull-requests: write
+
 # read-only repo token
 # no access to secrets
 on:
