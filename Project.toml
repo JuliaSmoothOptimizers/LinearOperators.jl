@@ -27,7 +27,7 @@ LinearOperatorsLDLFactorizationsExt = "LDLFactorizations"
 LinearOperatorsMetalExt = "Metal"
 
 [compat]
-AMDGPU = "0.6, 0.7, 0.8, 0.9, 1"
+AMDGPU = "0.6, 0.7, 0.8, 0.9, 1, 2"
 CUDA = "4, 5"
 ChainRulesCore = "1"
 FastClosures = "0.2, 0.3"
