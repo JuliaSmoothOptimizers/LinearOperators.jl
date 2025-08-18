@@ -1,6 +1,6 @@
 name = "LinearOperators"
 uuid = "5c8ed15e-5a4c-59e4-a42b-c7e8811fb125"
-version = "2.10.0"
+version = "2.11.0"
 
 [deps]
 FastClosures = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
@@ -27,8 +27,8 @@ LinearOperatorsLDLFactorizationsExt = "LDLFactorizations"
 LinearOperatorsMetalExt = "Metal"
 
 [compat]
-AMDGPU = "0.6, 0.7, 0.8, 0.9, 1, 2"
-CUDA = "4, 5"
+AMDGPU = "2"
+CUDA = "5"
 ChainRulesCore = "1"
 FastClosures = "0.2, 0.3"
 JLArrays = "0.1, 0.2"
