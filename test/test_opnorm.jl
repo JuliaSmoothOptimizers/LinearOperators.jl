@@ -28,4 +28,6 @@ function test_opnorm()
         @test ok_bf2 == true
         @test isapprox(σ_bf, BigFloat(3); rtol=1e-12)
     end
-end 
+end
+
+test_opnorm()
