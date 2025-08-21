@@ -1,6 +1,11 @@
 export check_ctranspose,
   check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!
 import LinearAlgebra.ldiv!
+import LinearAlgebra: opnorm       
+using GenericLinearAlgebra
+using TSVD
+
+export opnorm
 
 """
   normest(S) estimates the matrix 2-norm of S.
@@ -286,4 +291,121 @@ function ldiv!(
   # Call solve_shifted_system! with σ = 0
   solve_shifted_system!(x, B, b, T(0.0))
   return x
+end
+
+"""
+  opnorm(B; kwargs...)
+
+Compute the operator 2-norm (largest singular value) of a matrix or linear operator `B`.
+This method dispatches to efficient algorithms depending on the type and size of `B`:
+for small dense matrices, it uses direct LAPACK routines; for larger or structured operators,
+it uses iterative methods (ARPACK or TSVD) to estimate the norm efficiently.
+
+# Arguments
+- `B`: A matrix or linear operator.
+- `kwargs...`: Optional keyword arguments passed to the underlying norm estimation routines.
+
+# Returns
+- The estimated operator 2-norm of `B` (largest singular value or eigenvalue in absolute value).
+"""
+
+function LinearAlgebra.opnorm(B; kwargs...)
+  _opnorm(B, eltype(B); kwargs...)
+end
+
+# This method will be picked if eltype is one of the four types Arpack supports
+# (Float32, Float64, ComplexF32, ComplexF64).
+function _opnorm(
+  B,
+  ::Type{T};
+  kwargs...,
+) where {T <: Union{Float32, Float64, ComplexF32, ComplexF64}}
+  m, n = size(B)
+  return (m == n ? opnorm_eig : opnorm_svd)(B; kwargs...)
+end
+
+# Fallback for everything else
+function _opnorm(B, ::Type{T}; kwargs...) where {T}
+  _, s, _ = tsvd(B)
+  return s[1], true  # return largest singular value
+end
+
+function opnorm_eig(B; max_attempts::Int = 3)
+  n = size(B, 1)
+  # 1) tiny dense Float64: direct LAPACK
+  if n ≤ 5
+    return maximum(abs, eigen(Matrix(B)).values), true
+  end
+
+  # 2) iterative ARPACK
+  nev, ncv = 1, max(20, 2*1 + 1)
+  attempt, λ, have_eig = 0, zero(eltype(B)), false
+
+  while !(have_eig || attempt >= max_attempts)
+    attempt += 1
+    try
+      # Estimate largest eigenvalue in absolute value
+      d, nconv, niter, nmult, resid =
+        eigs(B; nev = nev, ncv = ncv, which = :LM, ritzvec = false, check = 1)
+
+      # Check if eigenvalue has converged
+      have_eig = nconv == 1
+      if have_eig
+        λ = abs(d[1])  # Take absolute value of the largest eigenvalue
+        break  # Exit loop if successful
+      else
+        # Increase NCV for the next attempt if convergence wasn't achieved
+        ncv = min(2 * ncv, n)
+      end
+    catch e
+      if occursin("XYAUPD_Exception", string(e)) && ncv < n
+        @warn "Arpack error: $e. Increasing NCV to $ncv and retrying."
+        ncv = min(2 * ncv, n)  # Increase NCV but don't exceed matrix size
+      else
+        rethrow(e)  # Re-raise if it's a different error
+      end
+    end
+  end
+
+  return λ, have_eig
+end
+
+function opnorm_svd(J; max_attempts::Int = 3)
+  m, n = size(J)
+  # 1) tiny dense Float64: direct LAPACK
+  if min(m, n) ≤ 5
+    return maximum(svd(Matrix(J)).S), true
+  end
+
+  # 2) iterative ARPACK‐SVD
+  nsv, ncv = 1, 10
+  attempt, σ, have_svd = 0, zero(eltype(J)), false
+  n = min(m, n)
+
+  while !(have_svd || attempt >= max_attempts)
+    attempt += 1
+    try
+      # Estimate largest singular value
+      s, nconv, niter, nmult, resid = svds(J; nsv = nsv, ncv = ncv, ritzvec = false, check = 1)
+
+      # Check if singular value has converged
+      have_svd = nconv >= 1
+      if have_svd
+        σ = maximum(s.S)  # Take the largest singular value
+        break  # Exit loop if successful
+      else
+        # Increase NCV for the next attempt if convergence wasn't achieved
+        ncv = min(2 * ncv, n)
+      end
+    catch e
+      if occursin("XYAUPD_Exception", string(e)) && ncv < n
+        @warn "Arpack error: $e. Increasing NCV to $ncv and retrying."
+        ncv = min(2 * ncv, n)  # Increase NCV but don't exceed matrix size
+      else
+        rethrow(e)  # Re-raise if it's a different error
+      end
+    end
+  end
+
+  return σ, have_svd
 end
