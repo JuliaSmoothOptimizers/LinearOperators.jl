@@ -187,14 +187,12 @@ function LBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
     data.scaling && (q ./= data.scaling_factor)
 
     # B = B₀ + Σᵢ (bᵢbᵢ' - aᵢaᵢ').
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         ax = dot(data.a[k], x)
         bx = dot(data.b[k], x)
-        for j ∈ eachindex(q)
-          q[j] += bx * data.b[k][j] - ax * data.a[k][j]
-        end
+        @. q += bx .* data.b[k] - ax .* data.a[k]
       end
     end
     if β == zero(T2)
