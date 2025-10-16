@@ -124,27 +124,23 @@ function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
     q = data.Ax # tmp vector
     q .= x
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert - i - 1, data.mem) + 1
       if data.ys[k] != 0
         αk = dot(data.s[k], q) / data.ys[k]
         data.α[k] = αk
-        for j ∈ eachindex(q)
-          q[j] -= αk * data.y[k][j]
-        end
+        @. q -= αk * data.y[k]
       end
     end
 
     data.scaling && (q .*= data.scaling_factor)
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         αk = data.α[k]
         β = αk - dot(data.y[k], q) / data.ys[k]
-        for j ∈ eachindex(q)
-          q[j] += β * data.s[k][j]
-        end
+        @. q += β * data.s[k]
       end
     end
     if βm == zero(T2)
@@ -227,12 +223,12 @@ function push_common!(
   if !op.inverse
     @. data.b[insert] = y / sqrt(ys)
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
         @. data.a[k] = data.s[k] / data.scaling_factor  # B₀ = I / γ.
 
-        for j = 1:(i - 1)
+        @inbounds for j = 1:(i - 1)
           l = mod(insert + j - 1, data.mem) + 1
           if data.ys[l] != 0
             data.a[k] .+= dot(data.b[l], data.s[k]) .* data.b[l]
@@ -379,12 +375,10 @@ function diag!(op::LBFGSOperator{T}, d) where {T}
   fill!(d, 1)
   data.scaling && (d ./= data.scaling_factor)
 
-  for i = 1:(data.mem)
+  @inbounds for i = 1:(data.mem)
     k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      for j = 1:(op.nrow)
-        d[j] = d[j] + data.b[k][j]^2 - data.a[k][j]^2
-      end
+      @. d += data.b[k].^2 - data.a[k].^2
     end
   end
   return d
