@@ -139,16 +139,7 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   if m2 != n1
     throw(LinearOperatorException("shape mismatch"))
   end
-  S = promote_type(storage_type(op1), storage_type(op2))
-  if !isconcretetype(S)
-    if isconcretetype(storage_type(op1))
-      S = storage_type(op1)
-    elseif isconcretetype(storage_type(op2))
-      S = storage_type(op2)
-    else
-      S = Vector{T}
-    end
-  end
+  S = _select_storage_type(op1, op2, T)
   #tmp vector for products
   vtmp = fill!(S(undef, m2), zero(T))
   utmp = fill!(S(undef, n1), zero(T))
@@ -217,16 +208,7 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   symm = (issymmetric(op1) && issymmetric(op2))
   herm = (ishermitian(op1) && ishermitian(op2))
   args5 = (has_args5(op1) && has_args5(op2))
-  S = promote_type(storage_type(op1), storage_type(op2))
-  if !isconcretetype(S)
-    if isconcretetype(storage_type(op1))
-      S = storage_type(op1)
-    elseif isconcretetype(storage_type(op2))
-      S = storage_type(op2)
-    else
-      S = Vector{T}
-    end
-  end
+  S = _select_storage_type(op1, op2, T)
   return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S = S)
 end
 
