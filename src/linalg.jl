@@ -28,14 +28,14 @@ function opInverse(M::AbstractMatrix{T}; symm = false, herm = false) where {T}
   prod! = @closure (res, v, α, β) -> mulFact!(res, M, v, α, β)
   tprod! = @closure (res, u, α, β) -> mulFact!(res, transpose(M), u, α, β)
   ctprod! = @closure (res, w, α, β) -> mulFact!(res, adjoint(M), w, α, β)
-  LinearOperator{T}(size(M, 2), size(M, 1), symm, herm, prod!, tprod!, ctprod!)
+  LinearOperator{T, Vector{T}}(size(M, 2), size(M, 1), symm, herm, prod!, tprod!, ctprod!)
 end
 
 """
     opCholesky(M, [check=false])
 
 Inverse of a Hermitian and positive definite matrix as a linear operator
-using its Cholesky factorization. 
+using its Cholesky factorization.
 The factorization is computed only once.
 The optional `check` argument will perform cheap hermicity and definiteness
 checks.
@@ -53,7 +53,7 @@ function opCholesky(M::AbstractMatrix; check::Bool = false)
   tprod! = @closure (res, u, α, β) -> tmulFact!(res, LL, u, α, β)  # M.' = conj(M)
   ctprod! = @closure (res, w, α, β) -> mulFact!(res, LL, w, α, β)
   S = eltype(LL)
-  LinearOperator{S}(m, m, isreal(M), true, prod!, tprod!, ctprod!)
+  LinearOperator{S, Vector{S}}(m, m, isreal(M), true, prod!, tprod!, ctprod!)
   #TODO: use iterative refinement.
 end
 
@@ -64,7 +64,7 @@ Inverse of a symmetric matrix as a linear operator using its LDLᵀ factorizatio
 if it exists. The factorization is computed only once. The optional `check`
 argument will perform a cheap hermicity check.
 
-If M is sparse and real, then only the upper triangle should be stored in order to use 
+If M is sparse and real, then only the upper triangle should be stored in order to use
 [`LDLFactorizations.jl`](https://github.com/JuliaSmoothOptimizers/LDLFactorizations.jl):
 
     using LDLFactorizations
@@ -91,7 +91,7 @@ The result is `x -> (I - 2 h hᵀ) x`.
 function opHouseholder(h::AbstractVector{T}) where {T}
   n = length(h)
   prod! = @closure (res, v, α, β) -> mulHouseholder!(res, h, v, α, β)  # tprod will be inferred
-  LinearOperator{T}(n, n, isreal(h), true, prod!, nothing, prod!)
+  LinearOperator{T, Vector{T}}(n, n, isreal(h), true, prod!, nothing, prod!)
 end
 
 function mulHermitian!(res, d, L, v, α, β::T) where {T}
@@ -113,7 +113,7 @@ function opHermitian(d::AbstractVector{S}, A::AbstractMatrix{T}) where {S, T}
   L = tril(A, -1)
   U = promote_type(S, T)
   prod! = @closure (res, v, α, β) -> mulHermitian!(res, d, L, v, α, β)
-  LinearOperator{U}(m, m, isreal(A), true, prod!, nothing, nothing)
+  LinearOperator{U, Vector{U}}(m, m, isreal(A), true, prod!, nothing, nothing)
 end
 
 """
