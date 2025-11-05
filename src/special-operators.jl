@@ -165,7 +165,7 @@ function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T, I <: Integ
 end
 
 function mulRestrict!(res, I, v, α, β)
-  res .= v[I]
+  res .= view(v, I)
 end
 
 function multRestrict!(res, I, u, α, β)
@@ -291,5 +291,5 @@ function BlockDiagonalOperator(ops...; S = promote_type(storage_type.(ops)...))
   symm = all((issymmetric(op) for op ∈ ops))
   herm = all((ishermitian(op) for op ∈ ops))
   args5 = all((has_args5(op) for op ∈ ops))
-  CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5, S = S)
+  CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5, S)
 end

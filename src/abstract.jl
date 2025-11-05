@@ -128,9 +128,9 @@ function CompositeLinearOperator(
   prod!::F,
   tprod!::Ft,
   ctprod!::Fct,
-  args5::Bool;
-  S::Type = Vector{T},
-) where {I <: Integer, F, Ft, Fct}
+  args5::Bool,
+  ::Type{S},
+) where {S, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   allocated5 = true
   use_prod5! = true
@@ -152,6 +152,20 @@ function CompositeLinearOperator(
     allocated5,
   )
 end
+
+# backward compatibility (not inferrable)
+CompositeLinearOperator(
+  T::Type,
+  nrow::I,
+  ncol::I,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+  args5::Bool;
+  S::Type = Vector{T}) where {I <: Integer, F, Ft, Fct} =
+  CompositeLinearOperator(T, nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, args5, S)
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod
