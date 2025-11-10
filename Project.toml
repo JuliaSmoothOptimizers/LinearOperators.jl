@@ -3,6 +3,7 @@ uuid = "5c8ed15e-5a4c-59e4-a42b-c7e8811fb125"
 version = "2.11.0"
 
 [deps]
+Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
 FastClosures = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -30,6 +31,7 @@ LinearOperatorsMetalExt = "Metal"
 
 [compat]
 AMDGPU = "2"
+Arpack = "0.5.4"
 CUDA = "5"
 ChainRulesCore = "1"
 FastClosures = "0.2, 0.3"

@@ -4,7 +4,7 @@ import LinearAlgebra.ldiv!
 import LinearAlgebra: opnorm       
 using GenericLinearAlgebra
 using TSVD
-
+using Arpack
 export opnorm
 
 """
