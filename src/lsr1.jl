@@ -161,12 +161,12 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
   for i = 1:(data.mem)
     k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      data.a[k] .= data.y[k] - data.s[k] / data.scaling_factor  # = y - B₀ * s
+      @. data.a[k] = data.y[k] - data.s[k] / data.scaling_factor  # = y - B₀ * s
       for j = 1:(i - 1)
         l = mod(data.insert + j - 2, data.mem) + 1
         if data.ys[l] != 0
           as = dot(data.a[l], data.s[k]) / data.as[l]
-          data.a[k] .-= as * data.a[l]
+          @. data.a[k] -= as * data.a[l]
         end
       end
       data.as[k] = dot(data.a[k], data.s[k])
