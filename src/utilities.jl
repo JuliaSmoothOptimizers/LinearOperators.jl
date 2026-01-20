@@ -303,7 +303,9 @@ it uses iterative methods (ARPACK or TSVD) to estimate the norm efficiently.
 - `kwargs...`: Optional keyword arguments passed to the underlying norm estimation routines.
 
 # Returns
-- The estimated operator 2-norm of `B` (largest singular value or eigenvalue in absolute value).
+- A tuple `(norm, success)` where:
+    - `norm` is the estimated operator 2-norm of `B` (largest singular value or eigenvalue in absolute value).
+    - `success` is a boolean indicating whether the iterative method (if used) reported successful convergence.
 """
 
 function estimate_opnorm(B; kwargs...)
@@ -322,7 +324,8 @@ function _estimate_opnorm(
 end
 
 function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
-  _, s, _ = tsvd(B)
+  # Use rank-1 truncated SVD to get only the largest singular value
+  _, s, _ = tsvd(B, 1)
   return s[1], true
 end
 
@@ -334,7 +337,7 @@ function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   end
 
   # 2) iterative ARPACK
-  nev, ncv = 1, max(20, 2*1 + 1)
+  nev, ncv = 1, max(20, 2*nev + 1)
   attempt, λ, have_eig = 0, zero(eltype(B)), false
 
   while !(have_eig || attempt >= max_attempts)
@@ -396,5 +399,8 @@ function opnorm_svd(J; max_attempts::Int = 3, tiny_dense_threshold = 5)
     end
   end
 
+  if !have_svd
+    error("opnorm_svd failed to converge after $max_attempts attempts.")
+  end
   return σ, have_svd
 end
