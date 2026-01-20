@@ -203,6 +203,7 @@ result = solve_shifted_system!(x, B, b, σ)
 
 # Check that the solution is close enough (residual test)
 @assert norm(B * x + σ * x - b) / norm(b) < 1e-8
+```
 
 ### References
 
@@ -265,8 +266,8 @@ Solves the linear system Bx = b.
 
 - `x::AbstractVector{T}`: The modified solution vector containing the solution to the linear system.
 
-### Examples:
-
+### Example:
+```julia
 
 # Create an L-BFGS operator
 B = LBFGSOperator(10)
@@ -279,6 +280,7 @@ b = rand(10)
 ldiv!(x, B, b)
 
 # The vector `x` now contains the solution
+```
 """
 
 function ldiv!(
@@ -313,95 +315,130 @@ function estimate_opnorm(B; kwargs...)
   _estimate_opnorm(B, eltype(B); kwargs...)
 end
 
-# This method will be picked if eltype is one of the four types Arpack supports
-# (Float32, Float64, ComplexF32, ComplexF64).
+# 1. Fallback for Integer/Generic types (Uses TSVD)
+function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
+  _, s, _ = tsvd(B, 1)
+  return s[1], true
+end
+
+# 2. Optimized Dispatch for Float/Complex (Uses ARPACK)
 function _estimate_opnorm(
   B,
   ::Type{T};
   kwargs...,
 ) where {T <: Union{Float32, Float64, ComplexF32, ComplexF64}}
-  m, n = size(B)
-  return (m == n ? opnorm_eig : opnorm_svd)(B; kwargs...)
-end
 
-function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
-  # Use rank-1 truncated SVD to get only the largest singular value
-  _, s, _ = tsvd(B, 1)
-  return s[1], true
+  # Only use Eigenvalue solver if we are CERTAIN B is Hermitian.
+  # Otherwise, we must use SVD to be mathematically correct.
+  if ishermitian(B)
+    return opnorm_eig(B; kwargs...)
+  else
+    return opnorm_svd(B; kwargs...)
+  end
 end
 
 function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   n = size(B, 1)
-  # 1) tiny dense matrix: direct LAPACK
+
+  # Tiny dense optimization
   if n ≤ tiny_dense_threshold
     return maximum(abs, eigen(Matrix(B)).values), true
   end
 
-  # 2) iterative ARPACK
-  nev, ncv = 1, max(20, 2*nev + 1)
-  attempt, λ, have_eig = 0, zero(eltype(B)), false
+  # Setup ARPACK parameters
+  nev = 1
+  ncv = max(20, 2*nev + 1)
 
-  while !(have_eig || attempt >= max_attempts)
-    attempt += 1
+  for attempt = 1:max_attempts
     try
-      d, nconv, niter, nmult, resid =
-        eigs(B; nev = nev, ncv = ncv, which = :LM, ritzvec = false, check = 1)
+      d, nconv, _, _, _ = eigs(B; nev = nev, ncv = ncv, which = :LM, ritzvec = false, check = 1)
 
-      have_eig = nconv == 1
-      if have_eig
-        λ = abs(d[1])
-        break
-      else
-        ncv = min(2 * ncv, n)
+      # SUCCESS: If converged, return immediately
+      if nconv == 1
+        return abs(d[1]), true
       end
+
+      # FAILURE (Silent): If we get here, nconv != 1. 
+      # We simply fall through to the "Retry Logic" at the bottom.
+
     catch e
-      if occursin("XYAUPD_Exception", string(e)) && ncv < n
-        @warn "Arpack error: $e. Increasing NCV to $ncv and retrying."
-        ncv = min(2 * ncv, n)
+      # FAILURE (Exception): Check if it's an ARPACK error we can retry
+      if e isa Arpack.ARPACKException ||
+         occursin("ARPACK", string(e)) ||
+         occursin("AUPD", string(e))
+        if ncv >= n
+          @warn "ARPACK failed and NCV cannot be increased further." exception=e
+          rethrow(e)
+        end
+        # If we can retry, we swallow the error and fall through to "Retry Logic"
       else
         rethrow(e)
       end
     end
+
+    # --- SHARED RETRY LOGIC ---
+    # Both "Silent Failure" and "Exception" end up here.
+    if attempt < max_attempts
+      old_ncv = ncv
+      ncv = min(2 * ncv, n)
+      if ncv > old_ncv
+        @warn "opnorm_eig: increasing NCV from $old_ncv to $ncv and retrying."
+      else
+        break # Cannot increase NCV further, stop trying
+      end
+    end
   end
 
-  return λ, have_eig
+  return NaN, false
 end
 
-function opnorm_svd(J; max_attempts::Int = 3, tiny_dense_threshold = 5)
-  m, n = size(J)
+function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
+  m, n = size(B)
+
   # 1) tiny dense Float64: direct LAPACK
   if min(m, n) ≤ tiny_dense_threshold
-    return maximum(svd(Matrix(J)).S), true
+    return maximum(svd(Matrix(B)).S), true
   end
 
-  # 2) iterative ARPACK-SVD
-  nsv, ncv = 1, 10
-  attempt, σ, have_svd = 0, zero(eltype(J)), false
-  n = min(m, n)
+  min_dim = min(m, n)
 
-  while !(have_svd || attempt >= max_attempts)
-    attempt += 1
+  # Setup ARPACK parameters
+  nsv = 1
+  ncv = 10
+
+  for attempt = 1:max_attempts
     try
-      s, nconv, niter, nmult, resid = svds(J; nsv = nsv, ncv = ncv, ritzvec = false, check = 1)
-      have_svd = nconv >= 1
-      if have_svd
-        σ = maximum(s.S)
-        break
-      else
-        ncv = min(2 * ncv, n)
+      s, nconv, _, _, _ = svds(B; nsv = nsv, ncv = ncv, ritzvec = false, check = 1)
+
+      if nconv >= 1
+        return maximum(s.S), true
       end
+
     catch e
-      if occursin("XYAUPD_Exception", string(e)) && ncv < n
-        @warn "Arpack error: $e. Increasing NCV to $ncv and retrying."
-        ncv = min(2 * ncv, n)
+      # Robust Error Check
+      if e isa Arpack.ARPACKException ||
+         occursin("ARPACK", string(e)) ||
+         occursin("AUPD", string(e))
+        if ncv >= min_dim
+          @warn "ARPACK failed and NCV cannot be increased further." exception=e
+          rethrow(e)
+        end
       else
         rethrow(e)
       end
     end
+
+    # Retry Logic
+    if attempt < max_attempts
+      old_ncv = ncv
+      ncv = min(2 * ncv, min_dim)
+      if ncv > old_ncv
+        @warn "opnorm_svd: increasing NCV from $old_ncv to $ncv and retrying."
+      else
+        break
+      end
+    end
   end
 
-  if !have_svd
-    error("opnorm_svd failed to converge after $max_attempts attempts.")
-  end
-  return σ, have_svd
+  return NaN, false
 end
