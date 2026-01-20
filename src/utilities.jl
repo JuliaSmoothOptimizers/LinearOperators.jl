@@ -4,6 +4,7 @@ import LinearAlgebra.ldiv!
 using GenericLinearAlgebra
 using TSVD
 using Arpack
+import Arpack: eigs, svds
 export estimate_opnorm
 
 """
@@ -174,7 +175,7 @@ The method uses a two-loop recursion-like approach with modifications to handle 
 
 ### Example
 
-
+```julia
 using Random
 
 # Problem setup
@@ -331,7 +332,7 @@ end
 
 function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   n = size(B, 1)
-  # 1) tiny dense Float64: direct LAPACK
+  # 1) tiny dense matrix: direct LAPACK
   if n ≤ tiny_dense_threshold
     return maximum(abs, eigen(Matrix(B)).values), true
   end
@@ -373,7 +374,7 @@ function opnorm_svd(J; max_attempts::Int = 3, tiny_dense_threshold = 5)
     return maximum(svd(Matrix(J)).S), true
   end
 
-  # 2) iterative ARPACK‐SVD
+  # 2) iterative ARPACK-SVD
   nsv, ncv = 1, 10
   attempt, σ, have_svd = 0, zero(eltype(J)), false
   n = min(m, n)
