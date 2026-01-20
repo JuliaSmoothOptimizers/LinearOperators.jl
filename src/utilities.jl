@@ -1,11 +1,10 @@
 export check_ctranspose,
   check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!
 import LinearAlgebra.ldiv!
-import LinearAlgebra: opnorm       
 using GenericLinearAlgebra
 using TSVD
 using Arpack
-export opnorm
+export estimate_opnorm
 
 """
   normest(S) estimates the matrix 2-norm of S.
@@ -175,7 +174,7 @@ The method uses a two-loop recursion-like approach with modifications to handle 
 
 ### Example
 
-```julia
+
 using Random
 
 # Problem setup
@@ -203,7 +202,6 @@ result = solve_shifted_system!(x, B, b, σ)
 
 # Check that the solution is close enough (residual test)
 @assert norm(B * x + σ * x - b) / norm(b) < 1e-8
-```
 
 ### References
 
@@ -268,7 +266,6 @@ Solves the linear system Bx = b.
 
 ### Examples:
 
-```julia
 
 # Create an L-BFGS operator
 B = LBFGSOperator(10)
@@ -294,9 +291,9 @@ function ldiv!(
 end
 
 """
-  opnorm(B; kwargs...)
+  estimate_opnorm(B; kwargs...)
 
-Compute the operator 2-norm (largest singular value) of a matrix or linear operator `B`.
+Compute the estimate of the operator 2-norm (largest singular value) of a matrix or linear operator `B`.
 This method dispatches to efficient algorithms depending on the type and size of `B`:
 for small dense matrices, it uses direct LAPACK routines; for larger or structured operators,
 it uses iterative methods (ARPACK or TSVD) to estimate the norm efficiently.
@@ -309,13 +306,13 @@ it uses iterative methods (ARPACK or TSVD) to estimate the norm efficiently.
 - The estimated operator 2-norm of `B` (largest singular value or eigenvalue in absolute value).
 """
 
-function LinearAlgebra.opnorm(B; kwargs...)
-  _opnorm(B, eltype(B); kwargs...)
+function estimate_opnorm(B; kwargs...)
+  _estimate_opnorm(B, eltype(B); kwargs...)
 end
 
 # This method will be picked if eltype is one of the four types Arpack supports
 # (Float32, Float64, ComplexF32, ComplexF64).
-function _opnorm(
+function _estimate_opnorm(
   B,
   ::Type{T};
   kwargs...,
@@ -324,16 +321,15 @@ function _opnorm(
   return (m == n ? opnorm_eig : opnorm_svd)(B; kwargs...)
 end
 
-# Fallback for everything else
-function _opnorm(B, ::Type{T}; kwargs...) where {T}
+function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
   _, s, _ = tsvd(B)
-  return s[1], true  # return largest singular value
+  return s[1], true
 end
 
-function opnorm_eig(B; max_attempts::Int = 3)
+function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   n = size(B, 1)
   # 1) tiny dense Float64: direct LAPACK
-  if n ≤ 5
+  if n ≤ tiny_dense_threshold
     return maximum(abs, eigen(Matrix(B)).values), true
   end
 
@@ -344,25 +340,22 @@ function opnorm_eig(B; max_attempts::Int = 3)
   while !(have_eig || attempt >= max_attempts)
     attempt += 1
     try
-      # Estimate largest eigenvalue in absolute value
       d, nconv, niter, nmult, resid =
         eigs(B; nev = nev, ncv = ncv, which = :LM, ritzvec = false, check = 1)
 
-      # Check if eigenvalue has converged
       have_eig = nconv == 1
       if have_eig
-        λ = abs(d[1])  # Take absolute value of the largest eigenvalue
-        break  # Exit loop if successful
+        λ = abs(d[1])
+        break
       else
-        # Increase NCV for the next attempt if convergence wasn't achieved
         ncv = min(2 * ncv, n)
       end
     catch e
       if occursin("XYAUPD_Exception", string(e)) && ncv < n
         @warn "Arpack error: $e. Increasing NCV to $ncv and retrying."
-        ncv = min(2 * ncv, n)  # Increase NCV but don't exceed matrix size
+        ncv = min(2 * ncv, n)
       else
-        rethrow(e)  # Re-raise if it's a different error
+        rethrow(e)
       end
     end
   end
@@ -370,10 +363,10 @@ function opnorm_eig(B; max_attempts::Int = 3)
   return λ, have_eig
 end
 
-function opnorm_svd(J; max_attempts::Int = 3)
+function opnorm_svd(J; max_attempts::Int = 3, tiny_dense_threshold = 5)
   m, n = size(J)
   # 1) tiny dense Float64: direct LAPACK
-  if min(m, n) ≤ 5
+  if min(m, n) ≤ tiny_dense_threshold
     return maximum(svd(Matrix(J)).S), true
   end
 
@@ -385,24 +378,20 @@ function opnorm_svd(J; max_attempts::Int = 3)
   while !(have_svd || attempt >= max_attempts)
     attempt += 1
     try
-      # Estimate largest singular value
       s, nconv, niter, nmult, resid = svds(J; nsv = nsv, ncv = ncv, ritzvec = false, check = 1)
-
-      # Check if singular value has converged
       have_svd = nconv >= 1
       if have_svd
-        σ = maximum(s.S)  # Take the largest singular value
-        break  # Exit loop if successful
+        σ = maximum(s.S)
+        break
       else
-        # Increase NCV for the next attempt if convergence wasn't achieved
         ncv = min(2 * ncv, n)
       end
     catch e
       if occursin("XYAUPD_Exception", string(e)) && ncv < n
         @warn "Arpack error: $e. Increasing NCV to $ncv and retrying."
-        ncv = min(2 * ncv, n)  # Increase NCV but don't exceed matrix size
+        ncv = min(2 * ncv, n)
       else
-        rethrow(e)  # Re-raise if it's a different error
+        rethrow(e)
       end
     end
   end
