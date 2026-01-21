@@ -298,7 +298,7 @@ end
 
 Compute the estimate of the operator 2-norm (largest singular value) of a matrix or linear operator `B`.
 This method dispatches to efficient algorithms depending on the type and size of `B`:
-for small dense matrices, it uses direct LAPACK routines; for larger or structured operators,
+for small dense matrices, it uses direct LAPACK routines; for larger matrices or abstract operators,
 it uses iterative methods (ARPACK or TSVD) to estimate the norm efficiently.
 
 # Arguments
