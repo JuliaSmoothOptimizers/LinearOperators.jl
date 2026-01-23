@@ -378,7 +378,7 @@ function diag!(op::LBFGSOperator{T}, d) where {T}
   @inbounds for i = 1:(data.mem)
     k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      @. d += data.b[k].^2 - data.a[k].^2
+      @. d += data.b[k] .^ 2 - data.a[k] .^ 2
     end
   end
   return d
