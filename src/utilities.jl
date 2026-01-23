@@ -315,7 +315,7 @@ function estimate_opnorm(B; kwargs...)
   _estimate_opnorm(B, eltype(B); kwargs...)
 end
 
-# 1. Fallback for Integer/Generic types (Uses TSVD)
+# 1. Fallback for Generic types (Uses TSVD)
 function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
   _, s, _ = tsvd(B, 1)
   return s[1], true
