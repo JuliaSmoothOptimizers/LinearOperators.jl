@@ -129,7 +129,7 @@ function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
       if data.ys[k] != 0
         αk = dot(data.s[k], q) / data.ys[k]
         data.α[k] = αk
-        @. q -= αk * data.y[k]
+        q .-= αk .* data.y[k]
       end
     end
 
@@ -140,7 +140,7 @@ function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
       if data.ys[k] != 0
         αk = data.α[k]
         β = αk - dot(data.y[k], q) / data.ys[k]
-        @. q += β * data.s[k]
+        q .+= β .* data.s[k]
       end
     end
     if βm == zero(T2)
@@ -188,7 +188,7 @@ function LBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
       if data.ys[k] != 0
         ax = dot(data.a[k], x)
         bx = dot(data.b[k], x)
-        @. q += bx .* data.b[k] - ax .* data.a[k]
+        q .+= bx .* data.b[k] .- ax .* data.a[k]
       end
     end
     if β == zero(T2)
@@ -221,12 +221,12 @@ function push_common!(
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    @. data.b[insert] = y / sqrt(ys)
+    data.b[insert] .= y ./ sqrt(ys)
 
     @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
-        @. data.a[k] = data.s[k] / data.scaling_factor  # B₀ = I / γ.
+        data.a[k] .= data.s[k] ./ data.scaling_factor  # B₀ = I / γ.
 
         @inbounds for j = 1:(i - 1)
           l = mod(insert + j - 1, data.mem) + 1
@@ -303,7 +303,7 @@ function push!(
     damp = true
   end
   if damp
-    @. y = θ * y + (1 - θ) * Bs  # damped y
+    y = θ .* y .+ (1 - θ) .* Bs  # damped y
     ys = θ * ys + (1 - θ) * sBs
   end
 
@@ -328,7 +328,7 @@ function push!(
   σ₃ = op.data.σ₃
 
   # Powell's damped update strategy
-  @. Bs = -α * g
+  Bs .= -α .* g
   sBs = dot(s, Bs)
   damp = false
   if ys < (1 - σ₂) * sBs
@@ -339,7 +339,7 @@ function push!(
     damp = true
   end
   if damp
-    @. y = θ * y + (1 - θ) * Bs  # damped y
+    y .= θ .* y .+ (1 - θ) .* Bs  # damped y
     ys = θ * ys + (1 - θ) * sBs
   end
 
@@ -378,7 +378,7 @@ function diag!(op::LBFGSOperator{T}, d) where {T}
   @inbounds for i = 1:(data.mem)
     k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      @. d += data.b[k] .^ 2 - data.a[k] .^ 2
+      d .+= data.b[k] .^ 2 .- data.a[k] .^ 2
     end
   end
   return d
