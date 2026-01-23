@@ -83,11 +83,13 @@ function test_lsr1()
     n = 100
     mem = 20
     B = LSR1Operator(n, mem = mem)
+    nallocs = 0
     for _ = 1:2:n
       s = rand(n)
       y = rand(n)
-      push!(B, s, y)
+      nallocs += @allocated push!(B, s, y)
     end
+    @test nallocs == 0
     x = rand(n)
     res = similar(x)
     mul!(res, B, x)  # warmup
