@@ -94,9 +94,11 @@ function ShiftedOperator(
   )
 end
 
-function ShiftedOperator(H::OpH, σ::T = zero(eltype(H))) where {T, OpH}
+function ShiftedOperator(H::OpH, σ_in::Number = zero(eltype(H))) where {OpH}
+  T = promote_type(eltype(H), typeof(σ_in))
 
-  data = ShiftedData(H, σ)
+  data = ShiftedData(H, σ_in)
+  σ = convert(T, σ_in)
 
   prod! = (y, x, α, β) -> shifted_prod!(y, data, x, α, β)
   tprod! = (y, x, α, β) -> shifted_tprod!(y, data, x, α, β)
@@ -129,4 +131,11 @@ end
 function adjoint(op::ShiftedOperator)
   # (H + σI)ᴴ = Hᴴ + conj(σ)I
   return ShiftedOperator(adjoint(op.data.H), conj(op.data.σ))
+end
+
+function reset!(op::ShiftedOperator)
+  op.nprod = 0
+  op.ntprod = 0
+  op.nctprod = 0
+  return op
 end

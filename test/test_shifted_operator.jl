@@ -85,4 +85,22 @@
     @test !(y1 ≈ y2)
     @test y2 ≈ (H_dense + 10.0*I) * x
   end
+  @testset "Type Promotion" begin
+    # H is Float32
+    H = LinearOperator(rand(Float32, 5, 5))
+
+    # σ is Float64
+    σ = 1.0 # default Float64
+
+    op = ShiftedOperator(H, σ)
+
+    # The operator itself should be Float64 (promoted)
+    @test eltype(op) == Float64
+    @test op.data.σ isa Float64
+
+    # Ensure operations return the promoted type
+    x = rand(Float32, 5)
+    y = op * x
+    @test eltype(y) == Float64
+  end
 end
