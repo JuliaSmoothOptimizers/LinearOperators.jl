@@ -42,7 +42,7 @@ function shifted_ctprod!(y, data::ShiftedData, x, α, β)
   mul!(y, adjoint(data.H), x, α, β)
 
   # y = y + (α * conj(σ)) * x
-  if !iszero(data.σ)
+  if !(iszero(data.σ) && iszero(α))
     axpy!(α * conj(data.σ), x, y)
   end
   return y
