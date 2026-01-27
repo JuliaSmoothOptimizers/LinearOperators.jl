@@ -5,6 +5,7 @@ mutable struct LSR1Data{T, I <: Integer}
   mem::I
   scaling::Bool
   scaling_factor::T
+  upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ |σᵢ|‖aᵢ‖₂².
   s::Vector{Vector{T}}
   y::Vector{Vector{T}}
   ys::Vector{T}
@@ -19,6 +20,7 @@ function LSR1Data(T::Type, n::I; mem::I = 5, scaling::Bool = true) where {I <: I
   LSR1Data{T, I}(
     max(mem, 1),
     scaling,
+    convert(T, 1),
     convert(T, 1),
     [zeros(T, n) for _ = 1:mem],
     [zeros(T, n) for _ = 1:mem],
@@ -152,7 +154,11 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
   data.ys[data.insert] = ys
 
   # update scaling factor
-  data.scaling && (data.scaling_factor = ys / yy)
+  data.upper_bound = convert(typeof(data.upper_bound), 1)
+  if data.scaling 
+    (data.scaling_factor = ys / yy)
+    !iszero(data.scaling_factor) && (data.upper_bound = 1 / op.data.scaling_factor)
+  end
 
   # update next insertion position
   data.insert = mod(data.insert, data.mem) + 1
@@ -170,6 +176,8 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
         end
       end
       data.as[k] = dot(data.a[k], data.s[k])
+
+      !iszero(data.as[k]) && (data.upper_bound += norm(data.a[k])^2/abs(data.as[k]))
     end
   end
 
