@@ -39,7 +39,7 @@ function LBFGSData(
     damped,
     convert(T, σ₂),
     convert(T, σ₃),
-    T(1),
+    convert(T, 1),
     [zeros(T, n) for _ = 1:mem],
     [zeros(T, n) for _ = 1:mem],
     zeros(T, mem),
@@ -220,9 +220,9 @@ function push_common!(
   data.y[insert] .= y
   data.ys[insert] = ys
   if op.data.scaling 
-    data.upper_bound -= 1 / op.data.scaling_factor
+    !iszero(data.scaling_factor) && (data.upper_bound -= 1 / op.data.scaling_factor)
     op.data.scaling_factor = ys / dot(y, y)
-    data.upper_bound += 1 / op.data.scaling_factor
+    !iszero(data.scaling_factor) && (data.upper_bound += 1 / op.data.scaling_factor)
   end
 
   # Update arrays a and b used in forward products.
