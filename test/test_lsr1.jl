@@ -37,7 +37,7 @@ function test_lsr1()
       @test norm(B * v - v) < rtol
 
       # Test upper bound
-      @test opnorm(Matrix(B)) ≤ B.data.upper_bound
+      @test opnorm(Matrix(B)) ≤ B.data.opnorm_upper_bound
     end
 
     # test against full SR1 without scaling
@@ -68,7 +68,7 @@ function test_lsr1()
     end
 
     # Test upper bound
-    @test opnorm(B) ≤ LB.data.upper_bound
+    @test opnorm(B) ≤ LB.data.opnorm_upper_bound
   end
 
   @testset ExtendedTestSet "Different precision" begin

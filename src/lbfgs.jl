@@ -8,7 +8,7 @@ mutable struct LBFGSData{T, I <: Integer}
   damped::Bool
   σ₂::T
   σ₃::T
-  upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ ‖bᵢ‖₂²
+  opnorm_upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ ‖bᵢ‖₂²
   s::Vector{Vector{T}}
   y::Vector{Vector{T}}
   ys::Vector{T}
@@ -220,16 +220,16 @@ function push_common!(
   data.y[insert] .= y
   data.ys[insert] = ys
   if op.data.scaling 
-    !iszero(data.scaling_factor) && (data.upper_bound -= 1 / op.data.scaling_factor)
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound -= 1 / op.data.scaling_factor)
     op.data.scaling_factor = ys / dot(y, y)
-    !iszero(data.scaling_factor) && (data.upper_bound += 1 / op.data.scaling_factor)
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound += 1 / op.data.scaling_factor)
   end
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    data.upper_bound -= norm(data.b[insert])^2
+    data.opnorm_upper_bound -= norm(data.b[insert])^2
     data.b[insert] .= y ./ sqrt(ys)
-    data.upper_bound += norm(data.b[insert])^2
+    data.opnorm_upper_bound += norm(data.b[insert])^2
 
     @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
