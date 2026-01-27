@@ -157,7 +157,7 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
   data.upper_bound = convert(typeof(data.upper_bound), 1)
   if data.scaling 
     (data.scaling_factor = ys / yy)
-    !iszero(data.scaling_factor) && (data.upper_bound = 1 / op.data.scaling_factor)
+    !iszero(data.scaling_factor) && (data.upper_bound = 1 / abs(op.data.scaling_factor))
   end
 
   # update next insertion position
