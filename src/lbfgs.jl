@@ -15,6 +15,7 @@ mutable struct LBFGSData{T, I <: Integer}
   α::Vector{T}
   a::Vector{Vector{T}}
   b::Vector{Vector{T}}
+  norm_b::Vector{T}
   insert::I
   Ax::Vector{T}
   shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
@@ -46,6 +47,7 @@ function LBFGSData(
     inverse ? zeros(T, mem) : zeros(T, 0),
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
+    inverse ? Vector{T}(undef, 0) : zeros(T, mem),
     1,
     Vector{T}(undef, n),
     Array{T}(undef, (n, 2 * mem)),
@@ -227,9 +229,10 @@ function push_common!(
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    data.opnorm_upper_bound -= norm(data.b[insert])^2
+    data.opnorm_upper_bound -= data.norm_b[insert]
     data.b[insert] .= y ./ sqrt(ys)
-    data.opnorm_upper_bound += norm(data.b[insert])^2
+    data.norm_b[insert] = norm(data.b[insert])
+    data.opnorm_upper_bound += data.norm_b[insert]
 
     @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
