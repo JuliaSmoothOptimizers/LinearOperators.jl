@@ -120,7 +120,7 @@ use_prod5!(op::ShiftedOperator) = true
 
 isallocated5(op::ShiftedOperator) = true
 
-storage_type(op::ShiftedOperator{T}) where {T} = Vector{T}
+storage_type(op::ShiftedOperator{T}) where {T} = storage_type(op.data.opH)
 
 function transpose(op::ShiftedOperator)
   # (H + σI)ᵀ = Hᵀ + σI
