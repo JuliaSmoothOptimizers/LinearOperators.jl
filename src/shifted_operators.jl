@@ -30,7 +30,7 @@ function shifted_tprod!(y, data::ShiftedData, x, α, β)
   mul!(y, transpose(data.H), x, α, β)
 
   # y = y + (α * σ) * x
-  if !iszero(data.σ)
+  if !(iszero(data.σ) && iszero(α))
     axpy!(α * data.σ, x, y)
   end
   return y
