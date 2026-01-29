@@ -51,8 +51,7 @@ end
 """
     ShiftedOperator(H, σ=0)
 
-Constructs a linear operator representing `op = H + σI`.
-
+Construct a linear operator representing `op = H + σI`.
 """
 mutable struct ShiftedOperator{T, OpH, F, Ft, Fct} <: AbstractLinearOperator{T}
   nrow::Int
