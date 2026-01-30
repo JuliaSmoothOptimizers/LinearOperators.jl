@@ -315,21 +315,25 @@ function estimate_opnorm(B; kwargs...)
   _estimate_opnorm(B, eltype(B); kwargs...)
 end
 
-# 1. Fallback for Generic types (Uses TSVD)
 function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
   _, s, _ = tsvd(B, 1)
   return s[1], true
 end
 
-# 2. Optimized Dispatch for Float/Complex (Uses ARPACK)
+function _estimate_opnorm(
+  B::Union{Hermitian, Symmetric{<:Real}},
+  ::Type{T};
+  kwargs...,
+) where {T <: Union{Float32, Float64, ComplexF32, ComplexF64}}
+  return opnorm_eig(B; kwargs...)
+end
+
 function _estimate_opnorm(
   B,
   ::Type{T};
   kwargs...,
 ) where {T <: Union{Float32, Float64, ComplexF32, ComplexF64}}
 
-  # Only use Eigenvalue solver if we are CERTAIN B is Hermitian.
-  # Otherwise, we must use SVD to be mathematically correct.
   if ishermitian(B)
     return opnorm_eig(B; kwargs...)
   else
@@ -340,12 +344,10 @@ end
 function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   n = size(B, 1)
 
-  # Tiny dense optimization
   if n ≤ tiny_dense_threshold
     return maximum(abs, eigen(Matrix(B)).values), true
   end
 
-  # Setup ARPACK parameters
   nev = 1
   ncv = max(20, 2*nev + 1)
 
@@ -353,16 +355,11 @@ function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
     try
       d, nconv, _, _, _ = eigs(B; nev = nev, ncv = ncv, which = :LM, ritzvec = false, check = 1)
 
-      # SUCCESS: If converged, return immediately
       if nconv == 1
         return abs(d[1]), true
       end
 
-      # FAILURE (Silent): If we get here, nconv != 1. 
-      # We simply fall through to the "Retry Logic" at the bottom.
-
     catch e
-      # FAILURE (Exception): Check if it's an ARPACK error we can retry
       if e isa Arpack.ARPACKException ||
          occursin("ARPACK", string(e)) ||
          occursin("AUPD", string(e))
@@ -370,21 +367,18 @@ function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
           @warn "ARPACK failed and NCV cannot be increased further." exception=e
           rethrow(e)
         end
-        # If we can retry, we swallow the error and fall through to "Retry Logic"
       else
         rethrow(e)
       end
     end
 
-    # --- SHARED RETRY LOGIC ---
-    # Both "Silent Failure" and "Exception" end up here.
     if attempt < max_attempts
       old_ncv = ncv
       ncv = min(2 * ncv, n)
       if ncv > old_ncv
         @warn "opnorm_eig: increasing NCV from $old_ncv to $ncv and retrying."
       else
-        break # Cannot increase NCV further, stop trying
+        break
       end
     end
   end
@@ -395,14 +389,12 @@ end
 function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   m, n = size(B)
 
-  # 1) tiny dense Float64: direct LAPACK
   if min(m, n) ≤ tiny_dense_threshold
     return maximum(svd(Matrix(B)).S), true
   end
 
   min_dim = min(m, n)
 
-  # Setup ARPACK parameters
   nsv = 1
   ncv = 10
 
@@ -415,7 +407,6 @@ function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
       end
 
     catch e
-      # Robust Error Check
       if e isa Arpack.ARPACKException ||
          occursin("ARPACK", string(e)) ||
          occursin("AUPD", string(e))
@@ -428,7 +419,6 @@ function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
       end
     end
 
-    # Retry Logic
     if attempt < max_attempts
       old_ncv = ncv
       ncv = min(2 * ncv, min_dim)
