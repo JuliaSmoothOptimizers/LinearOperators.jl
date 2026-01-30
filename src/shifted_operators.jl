@@ -67,37 +67,11 @@ mutable struct ShiftedOperator{T, OpH, F, Ft, Fct} <: AbstractLinearOperator{T}
   nctprod::Int  # Internal counter for adjoint products
 end
 
-# Internal Constructor
-function ShiftedOperator(
-  nrow::Int,
-  ncol::Int,
-  symmetric::Bool,
-  hermitian::Bool,
-  prod!::F,
-  tprod!::Ft,
-  ctprod!::Fct,
-  data::ShiftedData{T, OpH},
-) where {T, OpH, F, Ft, Fct}
-  return ShiftedOperator{T, OpH, F, Ft, Fct}(
-    nrow,
-    ncol,
-    symmetric,
-    hermitian,
-    prod!,
-    tprod!,
-    ctprod!,
-    data,
-    0,
-    0,
-    0,
-  )
-end
-
 function ShiftedOperator(H::OpH, σ_in::Number = zero(eltype(H))) where {OpH}
-  T = promote_type(eltype(H), typeof(σ_in))
+  T = eltype(H)
+  σ = convert(T, σ_in)  # Enforces that σ matches the element type of H
 
-  data = ShiftedData(H, σ_in)
-  σ = convert(T, σ_in)
+  data = ShiftedData(H, σ)
 
   prod! = (y, x, α, β) -> shifted_prod!(y, data, x, α, β)
   tprod! = (y, x, α, β) -> shifted_tprod!(y, data, x, α, β)
@@ -106,31 +80,21 @@ function ShiftedOperator(H::OpH, σ_in::Number = zero(eltype(H))) where {OpH}
   n = size(H, 1)
 
   is_sym = issymmetric(H)
-  is_herm = ishermitian(H) && isreal(σ)
+  is_herm = ishermitian(H)
 
-  return ShiftedOperator(n, n, is_sym, is_herm, prod!, tprod!, ctprod!, data)
+  return ShiftedOperator(n, n, is_sym, is_herm, prod!, tprod!, ctprod!, data, 0, 0, 0)
 end
 
 size(op::ShiftedOperator) = (op.nrow, op.ncol)
 issymmetric(op::ShiftedOperator) = op.symmetric
-ishermitian(op::ShiftedOperator) = op.hermitian
+ishermitian(op::ShiftedOperator) = op.hermitian && isreal(op.data.σ)
 
 has_args5(op::ShiftedOperator) = true
 use_prod5!(op::ShiftedOperator) = true
 
 isallocated5(op::ShiftedOperator) = true
 
-storage_type(op::ShiftedOperator{T}) where {T} = storage_type(op.data.opH)
-
-function transpose(op::ShiftedOperator)
-  # (H + σI)ᵀ = Hᵀ + σI
-  return ShiftedOperator(transpose(op.data.H), op.data.σ)
-end
-
-function adjoint(op::ShiftedOperator)
-  # (H + σI)ᴴ = Hᴴ + conj(σ)I
-  return ShiftedOperator(adjoint(op.data.H), conj(op.data.σ))
-end
+storage_type(op::ShiftedOperator{T}) where {T} = storage_type(op.data.H)
 
 function reset!(op::ShiftedOperator)
   op.nprod = 0
