@@ -1,6 +1,6 @@
 export ShiftedOperator
 
-"A data type to hold information relative to Shifted operators."
+"A data type to hold information relative to shifted operators."
 mutable struct ShiftedData{T, OpH}
   H::OpH
   σ::T
