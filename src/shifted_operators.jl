@@ -18,7 +18,7 @@ function shifted_prod!(y, data::ShiftedData, x, α, β)
   mul!(y, data.H, x, α, β)
 
   # y = y + (α * σ) * x
-  if !(iszero(data.σ) && iszero(α))
+  if !(iszero(data.σ) || iszero(α))
     axpy!(α * data.σ, x, y)
   end
   return y
@@ -30,19 +30,19 @@ function shifted_tprod!(y, data::ShiftedData, x, α, β)
   mul!(y, transpose(data.H), x, α, β)
 
   # y = y + (α * σ) * x
-  if !(iszero(data.σ) && iszero(α))
+  if !(iszero(data.σ) || iszero(α))
     axpy!(α * data.σ, x, y)
   end
   return y
 end
 
-# Conjugate Transpose (Adjoint) product: y = α(Hᴴ + conj(σ)I)x + βy
+# Conjugate transpose (adjoint) product: y = α(Hᴴ + conj(σ)I)x + βy
 function shifted_ctprod!(y, data::ShiftedData, x, α, β)
   # y = α * Hᴴ * x + β * y
   mul!(y, adjoint(data.H), x, α, β)
 
   # y = y + (α * conj(σ)) * x
-  if !(iszero(data.σ) && iszero(α))
+  if !(iszero(data.σ) || iszero(α))
     axpy!(α * conj(data.σ), x, y)
   end
   return y
