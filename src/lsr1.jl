@@ -155,7 +155,7 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
 
   # update scaling factor
   data.opnorm_upper_bound = convert(typeof(data.opnorm_upper_bound), 1)
-  if data.scaling 
+  if data.scaling
     (data.scaling_factor = ys / yy)
     !iszero(data.scaling_factor) && (data.opnorm_upper_bound = 1 / abs(op.data.scaling_factor))
   end
