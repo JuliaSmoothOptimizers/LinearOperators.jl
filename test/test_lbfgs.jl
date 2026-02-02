@@ -138,7 +138,6 @@ function test_lbfgs()
     # Test upper bound
     @test opnorm(Matrix(B)) ≤ B.data.opnorm_upper_bound
 
-
     # test against full BFGS without scaling
     mem = n
     LB = LBFGSOperator(n, mem = mem, damped = true, scaling = false)
@@ -158,7 +157,6 @@ function test_lbfgs()
 
     # Test upper bound
     @test opnorm(Matrix(B)) ≤ LB.data.opnorm_upper_bound
-
   end
 
   @testset ExtendedTestSet "Different precision" begin

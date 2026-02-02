@@ -221,7 +221,7 @@ function push_common!(
   data.s[insert] .= s
   data.y[insert] .= y
   data.ys[insert] = ys
-  if op.data.scaling 
+  if op.data.scaling
     !iszero(data.scaling_factor) && (data.opnorm_upper_bound -= 1 / op.data.scaling_factor)
     op.data.scaling_factor = ys / dot(y, y)
     !iszero(data.scaling_factor) && (data.opnorm_upper_bound += 1 / op.data.scaling_factor)
