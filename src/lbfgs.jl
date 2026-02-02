@@ -8,12 +8,14 @@ mutable struct LBFGSData{T, I <: Integer}
   damped::Bool
   σ₂::T
   σ₃::T
+  opnorm_upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ ‖bᵢ‖₂²
   s::Vector{Vector{T}}
   y::Vector{Vector{T}}
   ys::Vector{T}
   α::Vector{T}
   a::Vector{Vector{T}}
   b::Vector{Vector{T}}
+  norm_b::Vector{T}
   insert::I
   Ax::Vector{T}
   shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
@@ -38,12 +40,14 @@ function LBFGSData(
     damped,
     convert(T, σ₂),
     convert(T, σ₃),
+    convert(T, 1),
     [zeros(T, n) for _ = 1:mem],
     [zeros(T, n) for _ = 1:mem],
     zeros(T, mem),
     inverse ? zeros(T, mem) : zeros(T, 0),
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
+    inverse ? Vector{T}(undef, 0) : zeros(T, mem),
     1,
     Vector{T}(undef, n),
     Array{T}(undef, (n, 2 * mem)),
@@ -217,11 +221,18 @@ function push_common!(
   data.s[insert] .= s
   data.y[insert] .= y
   data.ys[insert] = ys
-  op.data.scaling && (op.data.scaling_factor = ys / dot(y, y))
+  if op.data.scaling 
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound -= 1 / op.data.scaling_factor)
+    op.data.scaling_factor = ys / dot(y, y)
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound += 1 / op.data.scaling_factor)
+  end
 
   # Update arrays a and b used in forward products.
   if !op.inverse
+    data.opnorm_upper_bound -= data.norm_b[insert]
     data.b[insert] .= y ./ sqrt(ys)
+    data.norm_b[insert] = norm(data.b[insert])
+    data.opnorm_upper_bound += data.norm_b[insert]
 
     @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
