@@ -80,7 +80,7 @@ function ShiftedOperator(H::OpH, σ_in::Number = zero(eltype(H))) where {OpH}
   n = size(H, 1)
 
   is_sym = issymmetric(H)
-  is_herm = ishermitian(H)
+  is_herm = ishermitian(H) && isreal(σ)
 
   return ShiftedOperator(n, n, is_sym, is_herm, prod!, tprod!, ctprod!, data, 0, 0, 0)
 end

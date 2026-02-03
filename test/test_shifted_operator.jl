@@ -43,6 +43,9 @@
     σ = 1.0 + 2.0im
     op = ShiftedOperator(H_op, σ)
 
+    @test !issymmetric(op)
+    @test !ishermitian(op)
+
     A_ref = H_dense + σ * I
     x = rand(ComplexF64, n)
 
@@ -69,6 +72,22 @@
     @test y2 ≈ (H_dense + 10.0*I) * x
   end
 
+  @testset "Mutation (Dynamic Hermitian Check)" begin
+    n = 3
+    H_dense = rand(ComplexF64, n, n)
+    H_dense = H_dense + H_dense' 
+    H_op = LinearOperator(H_dense; symmetric=false, hermitian=true)
+
+    σ = 2.0
+    op = ShiftedOperator(H_op, σ)
+    @test ishermitian(op)
+
+    op.data.σ = 2.0 + 1.0im
+    @test !ishermitian(op)
+    
+    op.data.σ = 3.0
+    @test ishermitian(op)
+  end
   @testset "Strict Type Constraint" begin
     H = LinearOperator(rand(Float32, 5, 5))
     σ = 1.0
