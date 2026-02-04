@@ -88,6 +88,7 @@
     op.data.σ = 3.0
     @test ishermitian(op)
   end
+
   @testset "Strict Type Constraint" begin
     H = LinearOperator(rand(Float32, 5, 5))
     σ = 1.0
