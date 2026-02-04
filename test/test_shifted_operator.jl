@@ -116,9 +116,9 @@
     op_zero = ShiftedOperator(H, 0.0)
     mul!(y, transpose(op_zero), x)
     
-    @test isallocated5(op) == true
-
-    @test storage_type(op) == storage_type(H)
+    @test LinearOperators.isallocated5(op) == true
+  
+    @test LinearOperators.storage_type(op) == LinearOperators.storage_type(H)
     
     op.nprod = 10
     reset!(op)
