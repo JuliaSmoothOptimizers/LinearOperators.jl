@@ -75,8 +75,8 @@
   @testset "Mutation (Dynamic Hermitian Check)" begin
     n = 3
     H_dense = rand(ComplexF64, n, n)
-    H_dense = H_dense + H_dense' 
-    H_op = LinearOperator(H_dense; symmetric=false, hermitian=true)
+    H_dense = H_dense + H_dense'
+    H_op = LinearOperator(H_dense; symmetric = false, hermitian = true)
 
     σ = 2.0
     op = ShiftedOperator(H_op, σ)
@@ -84,7 +84,7 @@
 
     op.data.σ = 2.0 + 1.0im
     @test !ishermitian(op)
-    
+
     op.data.σ = 3.0
     @test ishermitian(op)
   end
@@ -109,17 +109,17 @@
     y = zeros(n)
     op = ShiftedOperator(H, 2.0)
 
-    mul!(y, transpose(op), x, 0.5, 1.0) 
-    
+    mul!(y, transpose(op), x, 0.5, 1.0)
+
     mul!(y, transpose(op), x, 0.0, 1.0)
 
     op_zero = ShiftedOperator(H, 0.0)
     mul!(y, transpose(op_zero), x)
-    
+
     @test LinearOperators.isallocated5(op) == true
-  
+
     @test LinearOperators.storage_type(op) == LinearOperators.storage_type(H)
-    
+
     op.nprod = 10
     reset!(op)
     @test op.nprod == 0
