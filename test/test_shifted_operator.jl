@@ -101,4 +101,27 @@
     y = op * x
     @test eltype(y) == Float32
   end
+
+  @testset "Coverage & Utilities" begin
+    n = 5
+    H = LinearOperator(rand(n, n))
+    x = rand(n)
+    y = zeros(n)
+    op = ShiftedOperator(H, 2.0)
+
+    mul!(y, transpose(op), x, 0.5, 1.0) 
+    
+    mul!(y, transpose(op), x, 0.0, 1.0)
+
+    op_zero = ShiftedOperator(H, 0.0)
+    mul!(y, transpose(op_zero), x)
+    
+    @test isallocated5(op) == true
+
+    @test storage_type(op) == storage_type(H)
+    
+    op.nprod = 10
+    reset!(op)
+    @test op.nprod == 0
+  end
 end
