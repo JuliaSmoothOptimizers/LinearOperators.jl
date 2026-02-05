@@ -1,3 +1,6 @@
+using TSVD
+using Arpack
+using GenericLinearAlgebra
 @testset "estimate_opnorm type stability and dispatch" begin
   for T in [Float32, Float64, ComplexF32, ComplexF64]
     @testset "Type $T" begin
