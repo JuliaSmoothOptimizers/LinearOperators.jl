@@ -297,7 +297,7 @@ This method dispatches to efficient algorithms depending on the type and size of
 for small dense matrices, it uses direct LAPACK routines; for larger matrices or abstract operators,
 it uses iterative methods (ARPACK or TSVD) to estimate the norm efficiently.
 
-**Note:** This function requires `Arpack.jl` and `TSVD.jl` to be loaded.
+**Note:** This function allocates memory. It requires `Arpack.jl` and `TSVD.jl` (and `GenericLinearAlgebra.jl` for generic types) to be loaded.
 
 # Arguments
 - `B`: A matrix or linear operator.
