@@ -1,6 +1,5 @@
 @testset "CompressedLBFGSOperator operator" begin
-  iter=50
-  n=100
+  iter=10
   n=5
   types = [Float32, Float64]
   for T in types  

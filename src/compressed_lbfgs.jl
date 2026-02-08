@@ -78,8 +78,6 @@ mutable struct CompressedLBFGSData{T, M<:AbstractMatrix{T}, V<:AbstractVector{T}
   inverse_intermediate_2::LowerTriangular{T,M} # 2mem * 2mem
   intermediary_vector::V # 2mem
   sol::V # 2mem
-
-  nprod::I
 end
 
 """
@@ -106,9 +104,7 @@ function CompressedLBFGSData(n::I; mem::I=5, T=Float64, M=default_matrix_type(; 
   intermediary_vector = V(undef, 2*mem)
   sol = V(undef, 2*mem)
 
-  nprod = 0
-
-  return CompressedLBFGSData{T,M,V,I}(mem, n, k, α, Sₖ, Yₖ, Dₖ, Lₖ, chol_matrix, intermediate_diagonal, intermediate_1, intermediate_2, inverse_intermediate_1, inverse_intermediate_2, intermediary_vector, sol, nprod)
+  return CompressedLBFGSData{T,M,V,I}(mem, n, k, α, Sₖ, Yₖ, Dₖ, Lₖ, chol_matrix, intermediate_diagonal, intermediate_1, intermediate_2, inverse_intermediate_1, inverse_intermediate_2, intermediary_vector, sol)
 end
 
 mutable struct CompressedLBFGSOperator{T, M<:AbstractMatrix{T}, V<:AbstractVector{T}, F, I <: Integer}  <: AbstractQuasiNewtonOperator{T}
@@ -121,6 +117,9 @@ mutable struct CompressedLBFGSOperator{T, M<:AbstractMatrix{T}, V<:AbstractVecto
   prod!::F    # apply the operator to a vector
   tprod!::F    # apply the transpose operator to a vector
   ctprod!::F   # apply the transpose conjugate operator to a vector
+  nprod::I
+  ntprod::I
+  nctprod::I
 end
 
 function CompressedLBFGSOperator(n::I; mem::I=5, T=Float64, M=default_matrix_type(; T), V=default_vector_type(; T)) where {I <: Integer}
@@ -142,7 +141,7 @@ function CompressedLBFGSOperator(n::I; mem::I=5, T=Float64, M=default_matrix_typ
 
   F = typeof(prod!)
   
-  return CompressedLBFGSOperator{T,M,V,F,I}(nrow, ncol, symmetric, hermitian, Bv, data, prod!, prod!, prod!)
+  return CompressedLBFGSOperator{T,M,V,F,I}(nrow, ncol, symmetric, hermitian, Bv, data, prod!, prod!, prod!, 0, 0, 0)
 end
 
 has_args5(op::CompressedLBFGSOperator) = true
@@ -234,14 +233,17 @@ function precompile_iterated_structure!(data::CompressedLBFGSData)
   mul!(view(data.intermediate_2, data.k+1:2*data.k, 1:data.k), view(data.Lₖ, 1:data.k, 1:data.k), view(data.intermediate_diagonal, 1:data.k, 1:data.k))
   view(data.intermediate_2, data.k+1:2*data.k, 1:data.k) .= view(data.intermediate_2, data.k+1:2*data.k, 1:data.k) .* -1
   
-  view(data.inverse_intermediate_1, 1:2*data.k, 1:2*data.k) .= inv(data.intermediate_1[1:2*data.k, 1:2*data.k])
-  view(data.inverse_intermediate_2, 1:2*data.k, 1:2*data.k) .= inv(data.intermediate_2[1:2*data.k, 1:2*data.k])
+  view(data.inverse_intermediate_1, 1:2*data.k, 1:2*data.k) .= inv(view(data.intermediate_1, 1:2*data.k, 1:2*data.k))
+  view(data.inverse_intermediate_2, 1:2*data.k, 1:2*data.k) .= inv(view(data.intermediate_2, 1:2*data.k, 1:2*data.k))
 end
 
 # Algorithm 3.2 (p15)
-LinearAlgebra.mul!(Bv::V, op::CompressedLBFGSOperator{T,M,V}, v::V) where {T,M,V<:AbstractVector{T}} = LinearAlgebra.mul!(Bv, op.data, v)
+function LinearAlgebra.mul!(Bv::V, op::CompressedLBFGSOperator{T,M,V}, v::V) where {T,M,V<:AbstractVector{T}}
+  op.nprod += 1
+  return LinearAlgebra.mul!(Bv, op.data, v)
+end
+
 function LinearAlgebra.mul!(Bv::V, data::CompressedLBFGSData{T,M,V}, v::V) where {T,M,V<:AbstractVector{T}}
-  data.nprod += 1
   # step 1-4 and 6 mainly done by Base.push!
   # step 5
   mul!(view(data.sol, 1:data.k), transpose(view(data.Yₖ, :, 1:data.k)), v)
@@ -265,6 +267,6 @@ end
 Resets the CompressedLBFGS data of the given operator.
 """
 function reset!(op::CompressedLBFGSOperator) 
-  op.data.nprod = 0
+  op.nprod = 0
   return op
 end
