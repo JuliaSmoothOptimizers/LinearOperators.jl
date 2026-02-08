@@ -22,6 +22,7 @@ include("DiagonalHessianApproximation.jl")
 include("linalg.jl")
 include("special-operators.jl")
 include("TimedOperators.jl")
+include("shifted_operators.jl")
 
 # Utilities
 include("utilities.jl")
