@@ -71,7 +71,7 @@ function LinearOperator{T, S}(
   ctprod!::Fct,
   nprod::I,
   ntprod::I,
-  nctprod::I
+  nctprod::I,
 ) where {T, S, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   nargs = get_nargs(prod!)
@@ -99,8 +99,30 @@ function LinearOperator{T, S}(
 end
 
 # backward compatibility (not inferrable; use LinearOperator{T, S} if you want something inferrable)
-LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, nprod, ntprod, nctprod; S::Type = Vector{T}) where {T} =
-  LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, nprod, ntprod, nctprod)
+LinearOperator{T}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!,
+  nprod,
+  ntprod,
+  nctprod;
+  S::Type = Vector{T},
+) where {T} = LinearOperator{T, S}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!,
+  nprod,
+  ntprod,
+  nctprod,
+)
 
 LinearOperator{T, S}(
   nrow::I,
@@ -109,13 +131,21 @@ LinearOperator{T, S}(
   hermitian::Bool,
   prod!,
   tprod!,
-  ctprod!
+  ctprod!,
 ) where {T, S, I <: Integer} =
   LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
 
 # backward compatibility (not inferrable)
-LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!; S::Type = Vector{T}) where {T} =
-  LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
+LinearOperator{T}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!;
+  S::Type = Vector{T},
+) where {T} = LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
 
 # create operator from other operators with +, *, vcat,...
 # TODO: this is not a type, so it should not be uppercase
@@ -164,7 +194,8 @@ CompositeLinearOperator(
   tprod!::Ft,
   ctprod!::Fct,
   args5::Bool;
-  S::Type = Vector{T}) where {I <: Integer, F, Ft, Fct} =
+  S::Type = Vector{T},
+) where {I <: Integer, F, Ft, Fct} =
   CompositeLinearOperator(T, nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, args5, S)
 
 nprod(op::AbstractLinearOperator) = op.nprod
