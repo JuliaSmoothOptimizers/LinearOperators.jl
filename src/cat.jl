@@ -48,7 +48,7 @@ function hcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   S = promote_type(storage_type(A), storage_type(B))
   isconcretetype(S) ||
     throw(LinearOperatorException("storage types cannot be promoted to a concrete type"))
-  CompositeLinearOperator(T, nrow, ncol, false, false, prod!, tprod!, ctprod!, args5, S = S)
+  CompositeLinearOperator(T, nrow, ncol, false, false, prod!, tprod!, ctprod!, args5, S)
 end
 
 function hcat(ops::AbstractLinearOperator...)
@@ -107,7 +107,7 @@ function vcat(A::AbstractLinearOperator, B::AbstractLinearOperator)
   S = promote_type(storage_type(A), storage_type(B))
   isconcretetype(S) ||
     throw(LinearOperatorException("storage types cannot be promoted to a concrete type"))
-  CompositeLinearOperator(T, nrow, ncol, false, false, prod!, tprod!, ctprod!, args5, S = S)
+  CompositeLinearOperator(T, nrow, ncol, false, false, prod!, tprod!, ctprod!, args5, S)
 end
 
 function vcat(ops::AbstractLinearOperator...)
