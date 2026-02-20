@@ -148,7 +148,7 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
   args5 = (has_args5(op1) && has_args5(op2))
-  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5, S = S)
+  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5, S)
 end
 
 ## Matrix times operator.
@@ -208,8 +208,10 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   symm = (issymmetric(op1) && issymmetric(op2))
   herm = (ishermitian(op1) && ishermitian(op2))
   args5 = (has_args5(op1) && has_args5(op2))
-  S = _select_storage_type(op1, op2, T)
-  return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S = S)
+  S = promote_type(storage_type(op1), storage_type(op2))
+  isconcretetype(S) ||
+    throw(LinearOperatorException("storage types cannot be promoted to a concrete type"))
+  return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S)
 end
 
 # Operator + matrix.

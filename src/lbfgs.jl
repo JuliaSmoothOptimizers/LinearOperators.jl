@@ -8,12 +8,14 @@ mutable struct LBFGSData{T, I <: Integer}
   damped::Bool
   σ₂::T
   σ₃::T
+  opnorm_upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ ‖bᵢ‖₂²
   s::Vector{Vector{T}}
   y::Vector{Vector{T}}
   ys::Vector{T}
   α::Vector{T}
   a::Vector{Vector{T}}
   b::Vector{Vector{T}}
+  norm_b::Vector{T}
   insert::I
   Ax::Vector{T}
   shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
@@ -38,12 +40,14 @@ function LBFGSData(
     damped,
     convert(T, σ₂),
     convert(T, σ₃),
+    convert(T, 1),
     [zeros(T, n) for _ = 1:mem],
     [zeros(T, n) for _ = 1:mem],
     zeros(T, mem),
     inverse ? zeros(T, mem) : zeros(T, 0),
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
+    inverse ? Vector{T}(undef, 0) : zeros(T, mem),
     1,
     Vector{T}(undef, n),
     Array{T}(undef, (n, 2 * mem)),
@@ -124,27 +128,23 @@ function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
     q = data.Ax # tmp vector
     q .= x
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert - i - 1, data.mem) + 1
       if data.ys[k] != 0
         αk = dot(data.s[k], q) / data.ys[k]
         data.α[k] = αk
-        for j ∈ eachindex(q)
-          q[j] -= αk * data.y[k][j]
-        end
+        q .-= αk .* data.y[k]
       end
     end
 
     data.scaling && (q .*= data.scaling_factor)
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         αk = data.α[k]
         β = αk - dot(data.y[k], q) / data.ys[k]
-        for j ∈ eachindex(q)
-          q[j] += β * data.s[k][j]
-        end
+        q .+= β .* data.s[k]
       end
     end
     if βm == zero(T2)
@@ -187,14 +187,12 @@ function LBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
     data.scaling && (q ./= data.scaling_factor)
 
     # B = B₀ + Σᵢ (bᵢbᵢ' - aᵢaᵢ').
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         ax = dot(data.a[k], x)
         bx = dot(data.b[k], x)
-        for j ∈ eachindex(q)
-          q[j] += bx * data.b[k][j] - ax * data.a[k][j]
-        end
+        q .+= bx .* data.b[k] .- ax .* data.a[k]
       end
     end
     if β == zero(T2)
@@ -223,18 +221,25 @@ function push_common!(
   data.s[insert] .= s
   data.y[insert] .= y
   data.ys[insert] = ys
-  op.data.scaling && (op.data.scaling_factor = ys / dot(y, y))
+  if op.data.scaling
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound -= 1 / op.data.scaling_factor)
+    op.data.scaling_factor = ys / dot(y, y)
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound += 1 / op.data.scaling_factor)
+  end
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    @. data.b[insert] = y / sqrt(ys)
+    data.opnorm_upper_bound -= data.norm_b[insert]
+    data.b[insert] .= y ./ sqrt(ys)
+    data.norm_b[insert] = norm(data.b[insert])
+    data.opnorm_upper_bound += data.norm_b[insert]
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
-        @. data.a[k] = data.s[k] / data.scaling_factor  # B₀ = I / γ.
+        data.a[k] .= data.s[k] ./ data.scaling_factor  # B₀ = I / γ.
 
-        for j = 1:(i - 1)
+        @inbounds for j = 1:(i - 1)
           l = mod(insert + j - 1, data.mem) + 1
           if data.ys[l] != 0
             data.a[k] .+= dot(data.b[l], data.s[k]) .* data.b[l]
@@ -309,7 +314,7 @@ function push!(
     damp = true
   end
   if damp
-    @. y = θ * y + (1 - θ) * Bs  # damped y
+    y = θ .* y .+ (1 - θ) .* Bs  # damped y
     ys = θ * ys + (1 - θ) * sBs
   end
 
@@ -334,7 +339,7 @@ function push!(
   σ₃ = op.data.σ₃
 
   # Powell's damped update strategy
-  @. Bs = -α * g
+  Bs .= -α .* g
   sBs = dot(s, Bs)
   damp = false
   if ys < (1 - σ₂) * sBs
@@ -345,7 +350,7 @@ function push!(
     damp = true
   end
   if damp
-    @. y = θ * y + (1 - θ) * Bs  # damped y
+    y .= θ .* y .+ (1 - θ) .* Bs  # damped y
     ys = θ * ys + (1 - θ) * sBs
   end
 
@@ -381,12 +386,10 @@ function diag!(op::LBFGSOperator{T}, d) where {T}
   fill!(d, 1)
   data.scaling && (d ./= data.scaling_factor)
 
-  for i = 1:(data.mem)
+  @inbounds for i = 1:(data.mem)
     k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      for j = 1:(op.nrow)
-        d[j] = d[j] + data.b[k][j]^2 - data.a[k][j]^2
-      end
+      d .+= data.b[k] .^ 2 .- data.a[k] .^ 2
     end
   end
   return d

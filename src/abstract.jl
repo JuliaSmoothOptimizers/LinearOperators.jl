@@ -43,7 +43,7 @@ to combine or otherwise alter them. They can be combined with
 other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
-mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct, S} <: AbstractLinearOperator{T}
+mutable struct LinearOperator{T, S, I <: Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
   nrow::I
   ncol::I
   symmetric::Bool
@@ -61,7 +61,7 @@ mutable struct LinearOperator{T, I <: Integer, F, Ft, Fct, S} <: AbstractLinearO
   allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
-function LinearOperator{T}(
+function LinearOperator{T, S}(
   nrow::I,
   ncol::I,
   symmetric::Bool,
@@ -71,16 +71,15 @@ function LinearOperator{T}(
   ctprod!::Fct,
   nprod::I,
   ntprod::I,
-  nctprod::I;
-  S::Type = Vector{T},
-) where {T, I <: Integer, F, Ft, Fct}
+  nctprod::I,
+) where {T, S, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   nargs = get_nargs(prod!)
   args5 = (nargs == 4)
   (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments"))
   allocated5 = args5 ? true : false
   use_prod5! = args5 ? true : false
-  return LinearOperator{T, I, F, Ft, Fct, S}(
+  return LinearOperator{T, S, I, F, Ft, Fct}(
     nrow,
     ncol,
     symmetric,
@@ -99,19 +98,57 @@ function LinearOperator{T}(
   )
 end
 
+# backward compatibility (not inferrable; use LinearOperator{T, S} if you want something inferrable)
 LinearOperator{T}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!,
+  nprod,
+  ntprod,
+  nctprod;
+  S::Type = Vector{T},
+) where {T} = LinearOperator{T, S}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!,
+  nprod,
+  ntprod,
+  nctprod,
+)
+
+LinearOperator{T, S}(
   nrow::I,
   ncol::I,
   symmetric::Bool,
   hermitian::Bool,
   prod!,
   tprod!,
+  ctprod!,
+) where {T, S, I <: Integer} =
+  LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
+
+# backward compatibility (not inferrable)
+LinearOperator{T}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
   ctprod!;
   S::Type = Vector{T},
-) where {T, I <: Integer} =
-  LinearOperator{T}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0, S = S)
+) where {T} = LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
 
 # create operator from other operators with +, *, vcat,...
+# TODO: this is not a type, so it should not be uppercase
 function CompositeLinearOperator(
   T::Type,
   nrow::I,
@@ -121,13 +158,13 @@ function CompositeLinearOperator(
   prod!::F,
   tprod!::Ft,
   ctprod!::Fct,
-  args5::Bool;
-  S::Type = Vector{T},
-) where {I <: Integer, F, Ft, Fct}
+  args5::Bool,
+  ::Type{S},
+) where {S, I <: Integer, F, Ft, Fct}
   Mv5, Mtu5 = S(undef, 0), S(undef, 0)
   allocated5 = true
   use_prod5! = true
-  return LinearOperator{T, I, F, Ft, Fct, S}(
+  return LinearOperator{T, S, I, F, Ft, Fct}(
     nrow,
     ncol,
     symmetric,
@@ -145,6 +182,21 @@ function CompositeLinearOperator(
     allocated5,
   )
 end
+
+# backward compatibility (not inferrable)
+CompositeLinearOperator(
+  T::Type,
+  nrow::I,
+  ncol::I,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+  args5::Bool;
+  S::Type = Vector{T},
+) where {I <: Integer, F, Ft, Fct} =
+  CompositeLinearOperator(T, nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, args5, S)
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod

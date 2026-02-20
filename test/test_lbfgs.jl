@@ -65,6 +65,9 @@ function test_lbfgs()
       @test H.data.scaling_factor == 1.0
       @test norm(B * v - v) < rtol
       @test norm(H * v - v) < rtol
+
+      # test upper bound
+      @test opnorm(Matrix(B)) ≤ B.data.opnorm_upper_bound
     end
 
     # test against full BFGS without scaling
@@ -94,6 +97,9 @@ function test_lbfgs()
       @test norm(Matrix(LB) - B) < rtol * norm(B)
       @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
     end
+
+    # Test upper bound
+    @test opnorm(B) ≤ LB.data.opnorm_upper_bound
 
     # test damped L-BFGS
     B = LBFGSOperator(n, mem = mem, damped = true, scaling = false, σ₂ = 0.8, σ₃ = Inf)
@@ -129,6 +135,9 @@ function test_lbfgs()
 
     @test norm(Matrix(H * B) - Matrix(1.0I, n, n)) <= rtol
 
+    # Test upper bound
+    @test opnorm(Matrix(B)) ≤ B.data.opnorm_upper_bound
+
     # test against full BFGS without scaling
     mem = n
     LB = LBFGSOperator(n, mem = mem, damped = true, scaling = false)
@@ -145,6 +154,9 @@ function test_lbfgs()
       @test norm(Matrix(LB) - B) < rtol * norm(B)
       @test norm(diag(LB) - diag(B)) < rtol * norm(diag(B))
     end
+
+    # Test upper bound
+    @test opnorm(Matrix(B)) ≤ LB.data.opnorm_upper_bound
   end
 
   @testset ExtendedTestSet "Different precision" begin
