@@ -139,9 +139,12 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   if m2 != n1
     throw(LinearOperatorException("shape mismatch"))
   end
-  S = promote_type(storage_type(op1), storage_type(op2))
-  isconcretetype(S) ||
-    throw(LinearOperatorException("storage types cannot be promoted to a concrete type"))
+  S = _select_storage_type(op1, op2, T)
+  # Ensure that the selected storage type is concrete; fall back to a
+  # standard vector storage when promotion yields a non-concrete type.
+  if !isconcretetype(S)
+    S = Vector{T}
+  end
   #tmp vector for products
   vtmp = fill!(S(undef, m2), zero(T))
   utmp = fill!(S(undef, n1), zero(T))
