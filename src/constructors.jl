@@ -92,7 +92,7 @@ The 3-args `mul!` also works when applying the operator on a matrix.
 !!! tip
     In performance-sensitive applications, it may be advisable to use
 
-        LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!=nothing, ctprod!=nothing)
+        LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod! = nothing, ctprod! = nothing)
 
     instead.
 """
