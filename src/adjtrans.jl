@@ -59,7 +59,7 @@ end
 
 const AdjTrans = Union{AdjointLinearOperator, TransposeLinearOperator}
 
-size(A::AdjTrans) = size(A.parent)[[2; 1]]
+size(A::AdjTrans) = reverse(size(A.parent))
 size(A::AdjTrans, d::Int) = size(A.parent, 3 - d)
 size(A::ConjugateLinearOperator) = size(A.parent)
 size(A::ConjugateLinearOperator, d::Int) = size(A.parent, d)
