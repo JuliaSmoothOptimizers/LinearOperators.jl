@@ -133,10 +133,11 @@ function mul!(
     increase_nprod!(p)
   end
   conj!(res)
+  vc = eltype(v) <: Real ? v : conj.(v)  # avoid unnecessary allocations if v has real elements
   if use_p5!
-    tprod!(res, conj.(v), conj(α), conj(β))
+    tprod!(res, vc, conj(α), conj(β))
   else
-    prod3!(res, tprod!, conj.(v), conj(α), conj(β), p.Mtu5)
+    prod3!(res, tprod!, vc, conj(α), conj(β), p.Mtu5)
   end
   conj!(res)
 end
@@ -199,10 +200,11 @@ function mul!(
     increase_nprod!(p)
   end
   conj!(res)
+  vc = eltype(v) <: Real ? v : conj.(v)  # avoid unnecessary allocations when v has real elements
   if use_p5!
-    ctprod!(res, conj.(v), conj(α), conj(β))
+    ctprod!(res, vc, conj(α), conj(β))
   else
-    prod3!(res, ctprod!, conj.(v), conj(α), conj(β), p.Mtu5)
+    prod3!(res, ctprod!, vc, conj(α), conj(β), p.Mtu5)
   end
   conj!(res)
 end
@@ -234,7 +236,8 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
-  mul!(res, p, conj.(v), α, β)
+  vc = eltype(v) <: Real ? v : conj.(v)  # avoid unnecessary allocations if v has real elements
+  mul!(res, p, vc, α, β)
   conj!(res)
 end
 
@@ -246,7 +249,7 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
-  mul!(res, p, v, α, β)   # this gets called for A'*v when v is real, so we can skip the conjugation
+  mul!(res, p, v, α, β)   # we can skip `conj.(v)` since it has real elements (this avoids unnecessary allocations)
   conj!(res)
 end
 
