@@ -20,26 +20,23 @@ positive definite.
 """
 mutable struct DiagonalPSB{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
-  d::V # Diagonal of the operator
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F
-  tprod!::F
-  ctprod!::F
+  const d::V # Diagonal of the operator
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F
+  const tprod!::F
+  const ctprod!::F
   nprod::I
   ntprod::I
   nctprod::I
-  args5::Bool
-  use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
-  allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
 @doc (@doc DiagonalPSB) function DiagonalPSB(d::AbstractVector{T}) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   n = length(d)
-  DiagonalPSB(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true)
+  DiagonalPSB(d, n, n, true, true, prod, prod, prod, 0, 0, 0)
 end
 
 # update function
@@ -98,26 +95,23 @@ positive definite.
 """
 mutable struct DiagonalAndrei{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
-  d::V # Diagonal of the operator
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F
-  tprod!::F
-  ctprod!::F
+  const d::V # Diagonal of the operator
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F
+  const tprod!::F
+  const ctprod!::F
   nprod::I
   ntprod::I
   nctprod::I
-  args5::Bool
-  use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
-  allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
 @doc (@doc DiagonalAndrei) function DiagonalAndrei(d::AbstractVector{T}) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   n = length(d)
-  DiagonalAndrei(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true)
+  DiagonalAndrei(d, n, n, true, true, prod, prod, prod, 0, 0, 0)
 end
 
 # update function
@@ -155,20 +149,17 @@ https://doi.org/10.18637/jss.v060.i03
 """
 mutable struct SpectralGradient{T <: Real, I <: Integer, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
-  d::Vector{T} # Diagonal coefficient of the operator (multiple of the identity)
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F
-  tprod!::F
-  ctprod!::F
+  const d::Vector{T} # Diagonal coefficient of the operator (multiple of the identity)
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F
+  const tprod!::F
+  const ctprod!::F
   nprod::I
   ntprod::I
   nctprod::I
-  args5::Bool
-  use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
-  allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
 """
@@ -186,7 +177,7 @@ function SpectralGradient(σ::T, n::I) where {T <: Real, I <: Integer}
   @assert σ > 0
   d = [σ]
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
-  SpectralGradient(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true)
+  SpectralGradient(d, n, n, true, true, prod, prod, prod, 0, 0, 0)
 end
 
 # update function
@@ -207,10 +198,10 @@ end
 """
     DiagonalBFGS(d)
 
-A diagonal approximation of the BFGS update inspired by 
-Marnissi, Y., Chouzenoux, E., Benazza-Benyahia, A., & Pesquet, J. C. (2020). 
+A diagonal approximation of the BFGS update inspired by
+Marnissi, Y., Chouzenoux, E., Benazza-Benyahia, A., & Pesquet, J. C. (2020).
 Majorize–minimize adapted Metropolis–Hastings algorithm.
-https://ieeexplore.ieee.org/abstract/document/9050537. 
+https://ieeexplore.ieee.org/abstract/document/9050537.
 
 # Arguments
 
@@ -218,26 +209,23 @@ https://ieeexplore.ieee.org/abstract/document/9050537.
 """
 mutable struct DiagonalBFGS{T <: Real, I <: Integer, V <: AbstractVector{T}, F} <:
                AbstractDiagonalQuasiNewtonOperator{T}
-  d::V # Diagonal of the operator
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F
-  tprod!::F
-  ctprod!::F
+  const d::V # Diagonal of the operator
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F
+  const tprod!::F
+  const ctprod!::F
   nprod::I
   ntprod::I
   nctprod::I
-  args5::Bool
-  use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
-  allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
 end
 
 @doc (@doc DiagonalBFGS) function DiagonalBFGS(d::AbstractVector{T}) where {T <: Real}
   prod = (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   n = length(d)
-  DiagonalBFGS(d, n, n, true, true, prod, prod, prod, 0, 0, 0, true, true, true)
+  DiagonalBFGS(d, n, n, true, true, prod, prod, prod, 0, 0, 0)
 end
 
 # update function

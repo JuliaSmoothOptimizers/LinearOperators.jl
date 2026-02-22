@@ -5,10 +5,10 @@ export TimedLinearOperator
 mutable struct TimedLinearOperator{T, OP <: AbstractLinearOperator{T}, F, Ft, Fct} <:
                AbstractLinearOperator{T}
   timer::TimerOutput
-  op::OP
-  prod!::F
-  tprod!::Ft
-  ctprod!::Fct
+  const op::OP
+  const prod!::F
+  const tprod!::Ft
+  const ctprod!::Fct
 end
 
 TimedLinearOperator{T}(

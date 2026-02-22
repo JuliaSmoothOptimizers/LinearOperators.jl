@@ -2,7 +2,7 @@ export ShiftedOperator
 
 "A data type to hold information relative to shifted operators."
 mutable struct ShiftedData{T, OpH}
-  H::OpH
+  const H::OpH
   σ::T
   function ShiftedData{T, OpH}(H::OpH, σ::T) where {T, OpH}
     size(H, 1) == size(H, 2) || throw(DimensionMismatch("Operator H must be square."))
@@ -54,14 +54,14 @@ end
 Construct a linear operator representing `op = H + σI`.
 """
 mutable struct ShiftedOperator{T, OpH, F, Ft, Fct} <: AbstractLinearOperator{T}
-  nrow::Int
-  ncol::Int
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F      # Closure for op * x
-  tprod!::Ft    # Closure for transpose(op) * x
-  ctprod!::Fct  # Closure for adjoint(op) * x
-  data::ShiftedData{T, OpH}
+  const nrow::Int
+  const ncol::Int
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F      # Closure for op * x
+  const tprod!::Ft    # Closure for transpose(op) * x
+  const ctprod!::Fct  # Closure for adjoint(op) * x
+  const data::ShiftedData{T, OpH}
   nprod::Int    # Internal counter for products
   ntprod::Int   # Internal counter for transpose products
   nctprod::Int  # Internal counter for adjoint products
@@ -90,7 +90,6 @@ issymmetric(op::ShiftedOperator) = op.symmetric
 ishermitian(op::ShiftedOperator) = op.hermitian && isreal(op.data.σ)
 
 has_args5(op::ShiftedOperator) = true
-use_prod5!(op::ShiftedOperator) = true
 
 isallocated5(op::ShiftedOperator) = true
 
