@@ -234,6 +234,18 @@ function mul!(
 end
 
 function mul!(
+  res::AbstractVector,
+  op::ConjugateLinearOperator{T, S},
+  v::AbstractVector{<:Real},
+  α,
+  β,
+) where {T, S}
+  p = op.parent
+  mul!(res, p, v, α, β)   # this gets called for A'*v when v is real, so we can skip the conjugation
+  conj!(res)
+end
+
+function mul!(
   res::AbstractMatrix,
   op::ConjugateLinearOperator{T, S},
   v::AbstractMatrix,
