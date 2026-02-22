@@ -12,15 +12,15 @@ hermitian. Change `S` to use LinearOperators on GPU.
 
     instead.
 """
-function LinearOperator(
-  M::AbstractMatrix{T};
-  S = storage_type(M),
-  kwargs...,
-) where {T}
+function LinearOperator(M::AbstractMatrix{T}; S = storage_type(M), kwargs...) where {T}
   return LinearOperator{T, S}(M; kwargs...)
 end
 
-function LinearOperator{T, S}(M::AbstractMatrix{T}; symmetric = defaultsymmetric(M), hermitian = defaulthermitian(M)) where {T, S}
+function LinearOperator{T, S}(
+  M::AbstractMatrix{T};
+  symmetric = defaultsymmetric(M),
+  hermitian = defaulthermitian(M),
+) where {T, S}
   nrow, ncol = size(M)
   prod! = @closure (res, v, α, β) -> mul!(res, M, v, α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(M), u, α, β)
