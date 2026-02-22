@@ -112,7 +112,7 @@ function mul!(
     if hasmethod(ctprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
       return ctprod!(res, v, α, β)
     else
-      iszero(β) || (p.Mtu !== nothing) || allocate_vectors_args3!(p)
+      iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
       return prod3!(res, ctprod!, v, α, β, p.Mtu)
     end
   end
@@ -135,7 +135,7 @@ function mul!(
   if hasmethod(tprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
     tprod!(res, conj.(v), conj(α), conj(β))
   else
-    iszero(β) || (p.Mtu !== nothing) || allocate_vectors_args3!(p)
+    iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
     prod3!(res, tprod!, conj.(v), conj(α), conj(β), p.Mtu)
   end
   conj!(res)
@@ -179,7 +179,7 @@ function mul!(
     if hasmethod(tprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
       return tprod!(res, v, α, β)
     else
-      iszero(β) || (p.Mtu !== nothing) || allocate_vectors_args3!(p)
+      iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
       return prod3!(res, tprod!, v, α, β, p.Mtu)
     end
   end
@@ -202,7 +202,7 @@ function mul!(
   if hasmethod(ctprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
     ctprod!(res, conj.(v), conj(α), conj(β))
   else
-    iszero(β) || (p.Mtu !== nothing) || allocate_vectors_args3!(p)
+    iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
     prod3!(res, ctprod!, conj.(v), conj(α), conj(β), p.Mtu)
   end
   conj!(res)

@@ -26,7 +26,7 @@ function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVec
   if hasmethod(op.prod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
     op.prod!(res, v, α, β)
   else
-    iszero(β) || (op.Mv !== nothing) || allocate_vectors_args3!(op)
+    iszero(β) || !isempty(op.Mv) || allocate_vectors_args3!(op)
     prod3!(res, op.prod!, v, α, β, op.Mv)
   end
 end

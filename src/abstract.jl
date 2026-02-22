@@ -54,8 +54,8 @@ mutable struct LinearOperator{T, S, I <: Integer, F, Ft, Fct} <: AbstractLinearO
   nprod::I
   ntprod::I
   nctprod::I
-  Mv::Union{S, Nothing}
-  Mtu::Union{S, Nothing}
+  Mv::S
+  Mtu::S
 end
 
 function LinearOperator{T, S}(
@@ -81,8 +81,8 @@ function LinearOperator{T, S}(
     nprod,
     ntprod,
     nctprod,
-    nothing,
-    nothing,
+    S(undef, 0),
+    S(undef, 0),
   )
 end
 
@@ -161,7 +161,7 @@ No additional vectors are generated when using the 3-args `mul!`.
 """
 has_args5(op::AbstractLinearOperator) = get_nargs(op.prod!) == 4
 
-isallocated5(op::LinearOperator) = !(isnothing(op.Mv) || isnothing(op.Mtu))
+isallocated5(op::LinearOperator) = !(isempty(op.Mv) || isempty(op.Mtu))
 
 has_args5(op::AbstractMatrix) = true  # Needed for BlockDiagonalOperator
 
