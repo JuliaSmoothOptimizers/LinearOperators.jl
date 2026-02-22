@@ -137,7 +137,7 @@ LinearOperator{T, S}(
   symmetric::Bool,
   hermitian::Bool,
   prod!,
-  tprod!,
+  tprod! = nothing,
   ctprod! = nothing,
 ) where {T, S, I <: Integer} =
   LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
