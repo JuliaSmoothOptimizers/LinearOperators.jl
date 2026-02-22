@@ -26,9 +26,9 @@ Creates a linear operator instrumented with timers from TimerOutputs.
 """
 function TimedLinearOperator(op::AbstractLinearOperator{T}) where {T}
   timer = TimerOutput()
-  prod!(res, x, α, β) = @timeit timer "prod" op.prod!(res, x, α, β)
-  tprod!(res, x, α, β) = @timeit timer "tprod" op.tprod!(res, x, α, β)
-  ctprod!(res, x, α, β) = @timeit timer "ctprod" op.ctprod!(res, x, α, β)
+  prod!(res, x, α, β) = @timeit timer "prod" mul!(res, op, x, α, β)
+  tprod!(res, x, α, β) = @timeit timer "tprod" mul!(res, transpose(op),x, α, β)
+  ctprod!(res, x, α, β) = @timeit timer "ctprod" mul!(res, op', x, α, β)
   TimedLinearOperator{T}(timer, op, prod!, tprod!, ctprod!)
 end
 
@@ -42,7 +42,6 @@ for fn ∈ (
   :issymmetric,
   :ishermitian,
   :has_args5,
-  :use_prod5!,
   :isallocated5,
   :allocate_vectors_args3!,
   :nprod,

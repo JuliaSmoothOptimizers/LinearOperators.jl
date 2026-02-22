@@ -154,10 +154,10 @@ the 5-args `mul!`.
 No additional vectors are generated when using the 3-args `mul!`.
 
 !!! warning
-    `has_nargs5` can be very slow. A better option is to use Julia's `hasmethod`
+    `has_args5` can be very slow. A better option is to use Julia's `hasmethod`
     at points in the code where the concrete types of objects used in `mul!` are known.
 
-    `has_nargs5` may be removed in a future release.
+    `has_args5` may be removed in a future release.
 """
 has_args5(op::AbstractLinearOperator) = get_nargs(op.prod!) == 4
 

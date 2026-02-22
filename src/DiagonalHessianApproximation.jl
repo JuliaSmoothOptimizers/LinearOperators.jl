@@ -246,3 +246,10 @@ function push!(
   B.d .*= sum(B.d) / sT_y
   return B
 end
+
+for op in (DiagonalPSB, DiagonalAndrei, SpectralGradient, DiagonalBFGS)
+  @eval begin
+    isallocated5(::$op) = true
+    has_args5(::$op) = true
+  end
+end
