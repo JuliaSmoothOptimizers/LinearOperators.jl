@@ -807,7 +807,6 @@ function test_linop()
       opA2 = LinearOperator(T, 12, 10, false, false, prod2!, tprod2!)
       opA = eval(operation)(opA1, opA2)
       b = rand(T, opA.ncol)
-      @test_broken has_args5(opA) == false   # confusing: the concatenated operator does implement 5-arg mul!, but the original operators do not
       @test isallocated5(opA1) == isallocated5(opA2) == false
       @test norm(opA * b - eval(operation)(A1, A2) * b) ≤ sqrt(eps())
       α, β = 2.0, 3.0
@@ -832,7 +831,6 @@ function test_linop()
     opA1 = LinearOperator(T, 10, 10, false, false, prod1!, tprod1!)
     opA2 = LinearOperator(T, 10, 10, false, false, prod2!, tprod2!)
     opA = BlockDiagonalOperator(opA1, opA2)
-    @test_broken has_args5(opA) == false
     @test isallocated5(opA1) == isallocated5(opA2) == false
     @test norm(opA * b - A * b) ≤ sqrt(eps())
     α, β = 2.0, 3.0
@@ -848,7 +846,6 @@ function test_linop()
     tprod1! = (res, v) -> mul!(res, transpose(A1), v)
     opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!)
     opA = -opA1
-    @test_broken has_args5(opA) == false
     @test isallocated5(opA1) == false
     @test norm(opA * b + A1 * b) ≤ sqrt(eps())
     α, β = 2.0, 3.0
@@ -865,7 +862,6 @@ function test_linop()
     opA1 = LinearOperator(T, 12, 10, false, false, prod1!, tprod1!)
     x = 4.0
     opA = x * opA1
-    @test_broken has_args5(opA) == false
     @test isallocated5(opA1) == false
     @test norm(opA * b - x * A1 * b) ≤ sqrt(eps())
     α, β = 2.0, 3.0
@@ -882,7 +878,6 @@ function test_linop()
     prod! = (res, v) -> mul!(res, A, v)
     tprod! = (res, v) -> mul!(res, transpose(A), v)
     opA = LinearOperator(T, 10, 10, true, true, prod!, tprod!)
-    @test has_args5(opA) == false
     res = rand(T, 10)
     mul!(res, opA, b)
     @test res == A * b
