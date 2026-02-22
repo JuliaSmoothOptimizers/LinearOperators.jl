@@ -124,6 +124,13 @@ LinearOperator{T}(
   nctprod,
 )
 
+"""
+    LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod! = nothing) where {T, S}
+
+Construct a linear operator with a specific temporary array storage type `S`, which should typically have element type `T`.
+
+This is an inferrable variant of constructors that supply `S` as a keyword argument, and is recommended for performance-sensitive applications.
+"""
 LinearOperator{T, S}(
   nrow::I,
   ncol::I,
@@ -131,7 +138,7 @@ LinearOperator{T, S}(
   hermitian::Bool,
   prod!,
   tprod!,
-  ctprod!,
+  ctprod! = nothing,
 ) where {T, S, I <: Integer} =
   LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
 
