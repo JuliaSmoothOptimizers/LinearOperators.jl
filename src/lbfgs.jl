@@ -228,10 +228,10 @@ function push_common!(
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    data.opnorm_upper_bound -= data.norm_b[insert]
+    data.opnorm_upper_bound -= data.norm_b[insert]^2
     data.b[insert] .= y ./ sqrt(ys)
     data.norm_b[insert] = norm(data.b[insert])
-    data.opnorm_upper_bound += data.norm_b[insert]
+    data.opnorm_upper_bound += data.norm_b[insert]^2
 
     @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
