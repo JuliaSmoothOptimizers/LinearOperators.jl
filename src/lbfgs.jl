@@ -2,25 +2,25 @@ export LBFGSOperator, InverseLBFGSOperator, diag, diag!
 
 "A data type to hold information relative to LBFGS operators."
 mutable struct LBFGSData{T, I <: Integer}
-  mem::I
-  scaling::Bool
+  const mem::I
+  const scaling::Bool
   scaling_factor::T
-  damped::Bool
+  const damped::Bool
   σ₂::T
   σ₃::T
   opnorm_upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ ‖bᵢ‖₂²
-  s::Vector{Vector{T}}
-  y::Vector{Vector{T}}
-  ys::Vector{T}
-  α::Vector{T}
-  a::Vector{Vector{T}}
-  b::Vector{Vector{T}}
-  norm_b::Vector{T}
+  const s::Vector{Vector{T}}
+  const y::Vector{Vector{T}}
+  const ys::Vector{T}
+  const α::Vector{T}
+  const a::Vector{Vector{T}}
+  const b::Vector{Vector{T}}
+  const norm_b::Vector{T}
   insert::I
-  Ax::Vector{T}
-  shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
-  shifted_v::Vector{T}
-  shifted_u::Vector{T}
+  const Ax::Vector{T}
+  const shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
+  const shifted_v::Vector{T}
+  const shifted_u::Vector{T}
 end
 
 function LBFGSData(
@@ -60,15 +60,15 @@ LBFGSData(n::I; kwargs...) where {I <: Integer} = LBFGSData(Float64, n; kwargs..
 
 "A type for limited-memory BFGS approximations."
 mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewtonOperator{T}
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F    # apply the operator to a vector
-  tprod!::Ft    # apply the transpose operator to a vector
-  ctprod!::Fct   # apply the transpose conjugate operator to a vector
-  inverse::Bool
-  data::LBFGSData{T, I}
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F    # apply the operator to a vector
+  const tprod!::Ft    # apply the transpose operator to a vector
+  const ctprod!::Fct   # apply the transpose conjugate operator to a vector
+  const inverse::Bool
+  const data::LBFGSData{T, I}
   nprod::I
   ntprod::I
   nctprod::I
@@ -100,7 +100,6 @@ LBFGSOperator{T}(
 )
 
 has_args5(op::LBFGSOperator) = true
-use_prod5!(op::LBFGSOperator) = true
 isallocated5(op::LBFGSOperator) = true
 storage_type(op::LBFGSOperator{T}) where {T} = Vector{T}
 
@@ -229,10 +228,10 @@ function push_common!(
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    data.opnorm_upper_bound -= data.norm_b[insert]
+    data.opnorm_upper_bound -= data.norm_b[insert]^2
     data.b[insert] .= y ./ sqrt(ys)
     data.norm_b[insert] = norm(data.b[insert])
-    data.opnorm_upper_bound += data.norm_b[insert]
+    data.opnorm_upper_bound += data.norm_b[insert]^2
 
     @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1

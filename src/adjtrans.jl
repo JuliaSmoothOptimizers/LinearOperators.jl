@@ -59,20 +59,13 @@ end
 
 const AdjTrans = Union{AdjointLinearOperator, TransposeLinearOperator}
 
-size(A::AdjTrans) = size(A.parent)[[2; 1]]
+size(A::AdjTrans) = reverse(size(A.parent))
 size(A::AdjTrans, d::Int) = size(A.parent, 3 - d)
 size(A::ConjugateLinearOperator) = size(A.parent)
 size(A::ConjugateLinearOperator, d::Int) = size(A.parent, d)
 
-for f in [
-  :ishermitian,
-  :issymmetric,
-  :has_args5,
-  :use_prod5!,
-  :isallocated5,
-  :allocate_vectors_args3!,
-  :storage_type,
-]
+for f in
+    [:ishermitian, :issymmetric, :has_args5, :isallocated5, :allocate_vectors_args3!, :storage_type]
   @eval begin
     $f(A::AdjTrans) = $f(A.parent)
     $f(A::ConjugateLinearOperator) = $f(A.parent)
@@ -102,19 +95,19 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
-  use_p5! = use_prod5!(p)
-  has_args5(op) || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (length(v) == size(p, 1) && length(res) == size(p, 2)) ||
     throw(LinearOperatorException("shape mismatch"))
   if ishermitian(p)
     return mul!(res, p, v, α, β)
   end
-  if p.ctprod! !== nothing
+  ctprod! = p.ctprod!
+  if ctprod! !== nothing
     increase_nctprod!(p)
-    if use_p5!
-      return p.ctprod!(res, v, α, β)
+    if hasmethod(ctprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
+      return ctprod!(res, v, α, β)
     else
-      return prod3!(res, p.ctprod!, v, α, β, p.Mtu5)
+      iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
+      return prod3!(res, ctprod!, v, α, β, p.Mtu)
     end
   end
   tprod! = p.tprod!
@@ -133,10 +126,12 @@ function mul!(
     increase_nprod!(p)
   end
   conj!(res)
-  if use_p5!
-    tprod!(res, conj.(v), conj(α), conj(β))
+  vc = eltype(v) <: Real ? v : conj.(v)  # avoid unnecessary allocations if v has real elements
+  if hasmethod(tprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
+    tprod!(res, vc, conj(α), conj(β))
   else
-    prod3!(res, tprod!, conj.(v), conj(α), conj(β), p.Mtu5)
+    iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
+    prod3!(res, tprod!, vc, conj(α), conj(β), p.Mtu)
   end
   conj!(res)
 end
@@ -168,24 +163,24 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
-  use_p5! = use_prod5!(p)
-  has_args5(op) || (α == 1 && β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (length(v) == size(p, 1) && length(res) == size(p, 2)) ||
     throw(LinearOperatorException("shape mismatch"))
   if issymmetric(p)
     return mul!(res, p, v, α, β)
   end
-  if p.tprod! !== nothing
+  tprod! = p.tprod!
+  if tprod! !== nothing
     increase_ntprod!(p)
-    if use_p5!
-      return p.tprod!(res, v, α, β)
+    if hasmethod(tprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
+      return tprod!(res, v, α, β)
     else
-      return prod3!(res, p.tprod!, v, α, β, p.Mtu5)
+      iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
+      return prod3!(res, tprod!, v, α, β, p.Mtu)
     end
   end
   increment_ctprod = true
   ctprod! = p.ctprod!
-  if p.ctprod! === nothing
+  if ctprod! === nothing
     if ishermitian(p)
       increment_ctprod = false
       ctprod! = p.prod!
@@ -199,10 +194,12 @@ function mul!(
     increase_nprod!(p)
   end
   conj!(res)
-  if use_p5!
-    ctprod!(res, conj.(v), conj(α), conj(β))
+  vc = eltype(v) <: Real ? v : conj.(v)  # avoid unnecessary allocations when v has real elements
+  if hasmethod(ctprod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
+    ctprod!(res, vc, conj(α), conj(β))
   else
-    prod3!(res, ctprod!, conj.(v), conj(α), conj(β), p.Mtu5)
+    iszero(β) || !isempty(p.Mtu) || allocate_vectors_args3!(p)
+    prod3!(res, ctprod!, vc, conj(α), conj(β), p.Mtu)
   end
   conj!(res)
 end
@@ -234,7 +231,20 @@ function mul!(
   β,
 ) where {T, S}
   p = op.parent
-  mul!(res, p, conj.(v), α, β)
+  vc = eltype(v) <: Real ? v : conj.(v)  # avoid unnecessary allocations if v has real elements
+  mul!(res, p, vc, α, β)
+  conj!(res)
+end
+
+function mul!(
+  res::AbstractVector,
+  op::ConjugateLinearOperator{T, S},
+  v::AbstractVector{<:Real},
+  α,
+  β,
+) where {T, S}
+  p = op.parent
+  mul!(res, p, v, α, β)   # we can skip `conj.(v)` since it has real elements (this avoids unnecessary allocations)
   conj!(res)
 end
 
