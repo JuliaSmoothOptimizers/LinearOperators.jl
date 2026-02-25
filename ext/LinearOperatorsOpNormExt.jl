@@ -7,26 +7,19 @@ using LinearAlgebra
 using GenericLinearAlgebra
 import Arpack: eigs, svds
 
-# Import the function from the main package to add methods to it
 import LinearOperators: estimate_opnorm
 
-function estimate_opnorm(B; kwargs...)
+function estimate_opnorm(B::AbstractLinearOperator; kwargs...)
   _estimate_opnorm(B, eltype(B); kwargs...)
 end
 
+# Fallback for non-standard number types (uses TSVD)
 function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
   _, s, _ = tsvd(B, 1)
   return s[1], true
 end
 
-function _estimate_opnorm(
-  B::Union{Hermitian, Symmetric{<:Real}},
-  ::Type{T};
-  kwargs...,
-) where {T <: Union{Float32, Float64, ComplexF32, ComplexF64}}
-  return opnorm_eig(B; kwargs...)
-end
-
+# Optimized path for standard FloatingPoint/Complex types
 function _estimate_opnorm(
   B,
   ::Type{T};
@@ -42,8 +35,13 @@ end
 function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   n = size(B, 1)
 
+  # Check if we can use direct dense methods (only if B supports conversion to Matrix)
   if n ≤ tiny_dense_threshold
-    return maximum(abs, eigen(Matrix(B)).values), true
+    try
+      return maximum(abs, eigen(Matrix(B)).values), true
+    catch
+      # If Matrix(B) fails or isn't efficient, fall through to iterative
+    end
   end
 
   nev = 1
@@ -88,7 +86,11 @@ function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5)
   m, n = size(B)
 
   if min(m, n) ≤ tiny_dense_threshold
-    return maximum(svd(Matrix(B)).S), true
+    try
+      return maximum(svd(Matrix(B)).S), true
+    catch
+      # Fallback
+    end
   end
 
   min_dim = min(m, n)
