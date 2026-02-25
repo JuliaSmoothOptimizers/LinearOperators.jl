@@ -52,7 +52,7 @@ Change `S` to use LinearOperators on GPU.
 """
 function opEye(T::Type, n::Int; S = Vector{T})
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, n)
-  LinearOperator{T}(n, n, true, true, prod!, prod!, prod!, S = S)
+  LinearOperator{T, S}(n, n, true, true, prod!, prod!, prod!)
 end
 
 opEye(n::Int) = opEye(Float64, n)
@@ -71,7 +71,7 @@ function opEye(T::Type, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
     return opEye(T, nrow; S = S)
   end
   prod! = @closure (res, v, α, β) -> mulOpEye!(res, v, α, β, min(nrow, ncol))
-  return LinearOperator{T}(nrow, ncol, false, false, prod!, prod!, prod!, S = S)
+  return LinearOperator{T, S}(nrow, ncol, false, false, prod!, prod!, prod!)
 end
 
 opEye(nrow::I, ncol::I) where {I <: Integer} = opEye(Float64, nrow, ncol)
@@ -94,7 +94,7 @@ Change `S` to use LinearOperators on GPU.
 """
 function opOnes(T::Type, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpOnes!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, S = S)
+  LinearOperator{T, S}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
 end
 
 opOnes(nrow::I, ncol::I) where {I <: Integer} = opOnes(Float64, nrow, ncol)
@@ -117,7 +117,7 @@ Change `S` to use LinearOperators on GPU.
 """
 function opZeros(T::Type, nrow::I, ncol::I; S = Vector{T}) where {I <: Integer}
   prod! = @closure (res, v, α, β) -> mulOpZeros!(res, v, α, β)
-  LinearOperator{T}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!, S = S)
+  LinearOperator{T, S}(nrow, ncol, nrow == ncol, nrow == ncol, prod!, prod!, prod!)
 end
 
 opZeros(nrow::I, ncol::I) where {I <: Integer} = opZeros(Float64, nrow, ncol)
@@ -138,7 +138,7 @@ Diagonal operator with the vector `d` on its main diagonal.
 function opDiagonal(d::AbstractVector{T}) where {T}
   prod! = @closure (res, v, α, β) -> mulSquareOpDiagonal!(res, d, v, α, β)
   ctprod! = @closure (res, w, α, β) -> mulSquareOpDiagonal!(res, conj.(d), w, α, β)
-  LinearOperator{T}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!, S = typeof(d))
+  LinearOperator{T, typeof(d)}(length(d), length(d), true, isreal(d), prod!, prod!, ctprod!)
 end
 
 function mulOpDiagonal!(res, d, v, α, β::T, n_min) where {T}
@@ -161,11 +161,11 @@ function opDiagonal(nrow::I, ncol::I, d::AbstractVector{T}) where {T, I <: Integ
   prod! = @closure (res, v, α, β) -> mulOpDiagonal!(res, d, v, α, β, n_min)
   tprod! = @closure (res, u, α, β) -> mulOpDiagonal!(res, d, u, α, β, n_min)
   ctprod! = @closure (res, w, α, β) -> mulOpDiagonal!(res, conj.(d), w, α, β, n_min)
-  LinearOperator{T}(nrow, ncol, false, false, prod!, tprod!, ctprod!, S = typeof(d))
+  LinearOperator{T, typeof(d)}(nrow, ncol, false, false, prod!, tprod!, ctprod!)
 end
 
 function mulRestrict!(res, I, v, α, β)
-  res .= v[I]
+  res .= view(v, I)
 end
 
 function multRestrict!(res, I, u, α, β)
@@ -190,9 +190,9 @@ function opRestriction(Idx::LinearOperatorIndexType{I}, ncol::I; S = nothing) wh
   prod! = @closure (res, v, α, β) -> mulRestrict!(res, Idx, v, α, β)
   tprod! = @closure (res, u, α, β) -> multRestrict!(res, Idx, u, α, β)
   if isnothing(S)
-    return LinearOperator{I}(nrow, ncol, false, false, prod!, tprod!, tprod!)
+    return LinearOperator{I, Vector{I}}(nrow, ncol, false, false, prod!, tprod!, tprod!)
   else
-    return LinearOperator{I}(nrow, ncol, false, false, prod!, tprod!, tprod!; S = S)
+    return LinearOperator{I, S}(nrow, ncol, false, false, prod!, tprod!, tprod!)
   end
 end
 
@@ -290,6 +290,5 @@ function BlockDiagonalOperator(ops...; S = promote_type(storage_type.(ops)...))
 
   symm = all((issymmetric(op) for op ∈ ops))
   herm = all((ishermitian(op) for op ∈ ops))
-  args5 = all((has_args5(op) for op ∈ ops))
-  CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5, S = S)
+  LinearOperator{T, S}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!)
 end

@@ -3,22 +3,24 @@ export LSR1Operator, diag
 "A data type to hold information relative to LSR1 operators."
 mutable struct LSR1Data{T, I <: Integer}
   mem::I
-  scaling::Bool
+  const scaling::Bool
   scaling_factor::T
-  s::Vector{Vector{T}}
-  y::Vector{Vector{T}}
-  ys::Vector{T}
-  a::Vector{Vector{T}}
-  as::Vector{T}
+  opnorm_upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ |σᵢ|‖aᵢ‖₂².
+  const s::Vector{Vector{T}}
+  const y::Vector{Vector{T}}
+  const ys::Vector{T}
+  const a::Vector{Vector{T}}
+  const as::Vector{T}
   insert::I
-  Ax::Vector{T}
-  tmp::Vector{T}
+  const Ax::Vector{T}
+  const tmp::Vector{T}
 end
 
 function LSR1Data(T::Type, n::I; mem::I = 5, scaling::Bool = true) where {I <: Integer}
   LSR1Data{T, I}(
     max(mem, 1),
     scaling,
+    convert(T, 1),
     convert(T, 1),
     [zeros(T, n) for _ = 1:mem],
     [zeros(T, n) for _ = 1:mem],
@@ -35,14 +37,14 @@ LSR1Data(n::I; kwargs...) where {I <: Integer} = LSR1Data(Float64, n; kwargs...)
 
 "A type for limited-memory SR1 approximations."
 mutable struct LSR1Operator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewtonOperator{T}
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F     # apply the operator to a vector
-  tprod!::Ft    # apply the transpose operator to a vector
-  ctprod!::Fct   # apply the transpose conjugate operator to a vector
-  data::LSR1Data{T, I}
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F     # apply the operator to a vector
+  const tprod!::Ft    # apply the transpose operator to a vector
+  const ctprod!::Fct   # apply the transpose conjugate operator to a vector
+  const data::LSR1Data{T, I}
   nprod::I
   ntprod::I
   nctprod::I
@@ -72,7 +74,6 @@ LSR1Operator{T}(
 )
 
 has_args5(op::LSR1Operator) = true
-use_prod5!(op::LSR1Operator) = true
 isallocated5(op::LSR1Operator) = true
 storage_type(op::LSR1Operator{T}) where {T} = Vector{T}
 
@@ -136,7 +137,7 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
     sufficient_curvature = abs(ys) ≥ ϵ * yNorm * sNorm
     if sufficient_curvature
       scaling_factor = ys / yy
-      @. data.tmp = y - s / scaling_factor
+      data.tmp .= y .- s ./ scaling_factor
       scaling_condition = norm(data.tmp) >= ϵ * yNorm * sNorm
     end
   end
@@ -152,7 +153,11 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
   data.ys[data.insert] = ys
 
   # update scaling factor
-  data.scaling && (data.scaling_factor = ys / yy)
+  data.opnorm_upper_bound = convert(typeof(data.opnorm_upper_bound), 1)
+  if data.scaling
+    (data.scaling_factor = ys / yy)
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound = 1 / abs(op.data.scaling_factor))
+  end
 
   # update next insertion position
   data.insert = mod(data.insert, data.mem) + 1
@@ -161,15 +166,17 @@ function push!(op::LSR1Operator, s::AbstractVector, y::AbstractVector)
   for i = 1:(data.mem)
     k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      data.a[k] .= data.y[k] - data.s[k] / data.scaling_factor  # = y - B₀ * s
+      data.a[k] .= data.y[k] .- data.s[k] ./ data.scaling_factor  # = y - B₀ * s
       for j = 1:(i - 1)
         l = mod(data.insert + j - 2, data.mem) + 1
         if data.ys[l] != 0
           as = dot(data.a[l], data.s[k]) / data.as[l]
-          data.a[k] .-= as * data.a[l]
+          data.a[k] .-= as .* data.a[l]
         end
       end
       data.as[k] = dot(data.a[k], data.s[k])
+
+      !iszero(data.as[k]) && (data.opnorm_upper_bound += norm(data.a[k])^2/abs(data.as[k]))
     end
   end
 

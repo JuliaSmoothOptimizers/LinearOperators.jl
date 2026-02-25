@@ -2,23 +2,25 @@ export LBFGSOperator, InverseLBFGSOperator, diag, diag!
 
 "A data type to hold information relative to LBFGS operators."
 mutable struct LBFGSData{T, I <: Integer}
-  mem::I
-  scaling::Bool
+  const mem::I
+  const scaling::Bool
   scaling_factor::T
-  damped::Bool
+  const damped::Bool
   σ₂::T
   σ₃::T
-  s::Vector{Vector{T}}
-  y::Vector{Vector{T}}
-  ys::Vector{T}
-  α::Vector{T}
-  a::Vector{Vector{T}}
-  b::Vector{Vector{T}}
+  opnorm_upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ ‖bᵢ‖₂²
+  const s::Vector{Vector{T}}
+  const y::Vector{Vector{T}}
+  const ys::Vector{T}
+  const α::Vector{T}
+  const a::Vector{Vector{T}}
+  const b::Vector{Vector{T}}
+  const norm_b::Vector{T}
   insert::I
-  Ax::Vector{T}
-  shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
-  shifted_v::Vector{T}
-  shifted_u::Vector{T}
+  const Ax::Vector{T}
+  const shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
+  const shifted_v::Vector{T}
+  const shifted_u::Vector{T}
 end
 
 function LBFGSData(
@@ -38,12 +40,14 @@ function LBFGSData(
     damped,
     convert(T, σ₂),
     convert(T, σ₃),
+    convert(T, 1),
     [zeros(T, n) for _ = 1:mem],
     [zeros(T, n) for _ = 1:mem],
     zeros(T, mem),
     inverse ? zeros(T, mem) : zeros(T, 0),
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
     inverse ? Vector{T}(undef, 0) : [zeros(T, n) for _ = 1:mem],
+    inverse ? Vector{T}(undef, 0) : zeros(T, mem),
     1,
     Vector{T}(undef, n),
     Array{T}(undef, (n, 2 * mem)),
@@ -56,15 +60,15 @@ LBFGSData(n::I; kwargs...) where {I <: Integer} = LBFGSData(Float64, n; kwargs..
 
 "A type for limited-memory BFGS approximations."
 mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewtonOperator{T}
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F    # apply the operator to a vector
-  tprod!::Ft    # apply the transpose operator to a vector
-  ctprod!::Fct   # apply the transpose conjugate operator to a vector
-  inverse::Bool
-  data::LBFGSData{T, I}
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F    # apply the operator to a vector
+  const tprod!::Ft    # apply the transpose operator to a vector
+  const ctprod!::Fct   # apply the transpose conjugate operator to a vector
+  const inverse::Bool
+  const data::LBFGSData{T, I}
   nprod::I
   ntprod::I
   nctprod::I
@@ -96,7 +100,6 @@ LBFGSOperator{T}(
 )
 
 has_args5(op::LBFGSOperator) = true
-use_prod5!(op::LBFGSOperator) = true
 isallocated5(op::LBFGSOperator) = true
 storage_type(op::LBFGSOperator{T}) where {T} = Vector{T}
 
@@ -124,27 +127,23 @@ function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
     q = data.Ax # tmp vector
     q .= x
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert - i - 1, data.mem) + 1
       if data.ys[k] != 0
         αk = dot(data.s[k], q) / data.ys[k]
         data.α[k] = αk
-        for j ∈ eachindex(q)
-          q[j] -= αk * data.y[k][j]
-        end
+        q .-= αk .* data.y[k]
       end
     end
 
     data.scaling && (q .*= data.scaling_factor)
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         αk = data.α[k]
         β = αk - dot(data.y[k], q) / data.ys[k]
-        for j ∈ eachindex(q)
-          q[j] += β * data.s[k][j]
-        end
+        q .+= β .* data.s[k]
       end
     end
     if βm == zero(T2)
@@ -187,14 +186,12 @@ function LBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
     data.scaling && (q ./= data.scaling_factor)
 
     # B = B₀ + Σᵢ (bᵢbᵢ' - aᵢaᵢ').
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(data.insert + i - 2, data.mem) + 1
       if data.ys[k] != 0
         ax = dot(data.a[k], x)
         bx = dot(data.b[k], x)
-        for j ∈ eachindex(q)
-          q[j] += bx * data.b[k][j] - ax * data.a[k][j]
-        end
+        q .+= bx .* data.b[k] .- ax .* data.a[k]
       end
     end
     if β == zero(T2)
@@ -223,18 +220,25 @@ function push_common!(
   data.s[insert] .= s
   data.y[insert] .= y
   data.ys[insert] = ys
-  op.data.scaling && (op.data.scaling_factor = ys / dot(y, y))
+  if op.data.scaling
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound -= 1 / op.data.scaling_factor)
+    op.data.scaling_factor = ys / dot(y, y)
+    !iszero(data.scaling_factor) && (data.opnorm_upper_bound += 1 / op.data.scaling_factor)
+  end
 
   # Update arrays a and b used in forward products.
   if !op.inverse
-    @. data.b[insert] = y / sqrt(ys)
+    data.opnorm_upper_bound -= data.norm_b[insert]^2
+    data.b[insert] .= y ./ sqrt(ys)
+    data.norm_b[insert] = norm(data.b[insert])
+    data.opnorm_upper_bound += data.norm_b[insert]^2
 
-    for i = 1:(data.mem)
+    @inbounds for i = 1:(data.mem)
       k = mod(insert + i - 1, data.mem) + 1
       if data.ys[k] != 0
-        @. data.a[k] = data.s[k] / data.scaling_factor  # B₀ = I / γ.
+        data.a[k] .= data.s[k] ./ data.scaling_factor  # B₀ = I / γ.
 
-        for j = 1:(i - 1)
+        @inbounds for j = 1:(i - 1)
           l = mod(insert + j - 1, data.mem) + 1
           if data.ys[l] != 0
             data.a[k] .+= dot(data.b[l], data.s[k]) .* data.b[l]
@@ -309,7 +313,7 @@ function push!(
     damp = true
   end
   if damp
-    @. y = θ * y + (1 - θ) * Bs  # damped y
+    y = θ .* y .+ (1 - θ) .* Bs  # damped y
     ys = θ * ys + (1 - θ) * sBs
   end
 
@@ -334,7 +338,7 @@ function push!(
   σ₃ = op.data.σ₃
 
   # Powell's damped update strategy
-  @. Bs = -α * g
+  Bs .= -α .* g
   sBs = dot(s, Bs)
   damp = false
   if ys < (1 - σ₂) * sBs
@@ -345,7 +349,7 @@ function push!(
     damp = true
   end
   if damp
-    @. y = θ * y + (1 - θ) * Bs  # damped y
+    y .= θ .* y .+ (1 - θ) .* Bs  # damped y
     ys = θ * ys + (1 - θ) * sBs
   end
 
@@ -381,12 +385,10 @@ function diag!(op::LBFGSOperator{T}, d) where {T}
   fill!(d, 1)
   data.scaling && (d ./= data.scaling_factor)
 
-  for i = 1:(data.mem)
+  @inbounds for i = 1:(data.mem)
     k = mod(data.insert + i - 2, data.mem) + 1
     if data.ys[k] != 0
-      for j = 1:(op.nrow)
-        d[j] = d[j] + data.b[k][j]^2 - data.a[k][j]^2
-      end
+      d .+= data.b[k] .^ 2 .- data.a[k] .^ 2
     end
   end
   return d
