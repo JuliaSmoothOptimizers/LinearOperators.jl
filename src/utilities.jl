@@ -1,6 +1,7 @@
 export check_ctranspose,
-  check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!
+  check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!, estimate_opnorm
 import LinearAlgebra.ldiv!
+
 
 """
   normest(S) estimates the matrix 2-norm of S.
@@ -261,8 +262,7 @@ Solves the linear system Bx = b.
 
 - `x::AbstractVector{T}`: The modified solution vector containing the solution to the linear system.
 
-### Examples:
-
+### Example:
 ```julia
 
 # Create an L-BFGS operator
@@ -276,6 +276,7 @@ b = rand(10)
 ldiv!(x, B, b)
 
 # The vector `x` now contains the solution
+```
 """
 
 function ldiv!(
@@ -287,3 +288,28 @@ function ldiv!(
   solve_shifted_system!(x, B, b, T(0.0))
   return x
 end
+
+
+"""
+    estimate_opnorm(B::AbstractLinearOperator; kwargs...)
+
+Compute the estimate of the operator 2-norm (largest singular value) of a linear operator `B`.
+
+This method dispatches to efficient algorithms depending on the properties and size of `B`.
+If `B` wraps a small dense matrix, it may use direct LAPACK routines. For larger operators,
+it uses iterative methods (ARPACK or TSVD) to estimate the norm efficiently.
+
+**Note:** This function allocates memory. It requires `Arpack.jl` and `TSVD.jl` 
+(and `GenericLinearAlgebra.jl` for generic types) to be loaded.
+
+# Arguments
+- `B::AbstractLinearOperator`: The linear operator to analyze.
+- `kwargs...`: Optional keyword arguments passed to the underlying norm estimation routines 
+  (e.g., `max_attempts`, `tiny_dense_threshold`).
+
+# Returns
+- A tuple `(norm, success)` where:
+    - `norm` is the estimated operator 2-norm of `B` (largest singular value or eigenvalue in absolute value).
+    - `success` is a boolean indicating whether the iterative method (if used) reported successful convergence.
+"""
+function estimate_opnorm end
