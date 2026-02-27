@@ -46,13 +46,13 @@ other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
 mutable struct LinearOperator{T, S, I <: Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
-  const nrow::I
-  const ncol::I
-  const symmetric::Bool
-  const hermitian::Bool
-  const prod!::F
-  const tprod!::Ft
-  const ctprod!::Fct
+  nrow::I
+  ncol::I
+  symmetric::Bool
+  hermitian::Bool
+  prod!::F
+  tprod!::Ft
+  ctprod!::Fct
   nprod::I
   ntprod::I
   nctprod::I
@@ -202,11 +202,8 @@ function copyto!(
   dest.nprod = src.nprod
   dest.ntprod = src.ntprod
   dest.nctprod = src.nctprod
-  dest.args5 = src.args5
-  dest.use_prod5! = src.use_prod5!
-  dest.Mv5 = src.Mv5
-  dest.Mtu5 = src.Mtu5
-  dest.allocated5 = src.allocated5
+  dest.Mv = src.Mv
+  dest.Mtu = src.Mtu
   return dest
 end
 
@@ -215,7 +212,7 @@ function copyto!(dest::LinearOperator, src::LinearOperator)
     LinearOperatorException(
       "cannot update a LinearOperator in-place: incompatible element types " *
       "$(eltype(dest)) and $(eltype(src)), or storage types " *
-      "$(typeof(dest.Mv5)) and $(typeof(src.Mv5)). " *
+      "$(typeof(dest.Mv)) and $(typeof(src.Mv)). " *
       "Use assignment (`dest = src`) instead.",
     ),
   )
