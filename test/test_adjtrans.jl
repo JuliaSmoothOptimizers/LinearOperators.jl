@@ -27,9 +27,14 @@ function test_adjtrans()
     v = rand(5) + im * rand(5)
     @test aopA * v == adjoint(A) * v
     @test topA * v == transpose(A) * v
+    v = rand(5)
+    @test aopA * v ≈ adjoint(A) * v
+    @test topA * v ≈ transpose(A) * v
 
     v = rand(3) + im * rand(3)
-    @test copA * v == conj(A) * v
+    @test copA * v ≈ conj(A) * v
+    v = rand(3)
+    @test copA * v ≈ conj(A) * v
   end
 end
 
@@ -74,9 +79,14 @@ function test_derived_adjoint()
     v = rand(5) + im * rand(5)
     @test aopA * v == adjoint(A) * v
     @test topA * v == transpose(A) * v
+    v = rand(5)
+    @test aopA * v ≈ adjoint(A) * v
+    @test topA * v ≈ transpose(A) * v
 
     v = rand(3) + im * rand(3)
-    @test copA * v == conj(A) * v
+    @test copA * v ≈ conj(A) * v
+    v = rand(3)
+    @test copA * v ≈ conj(A) * v
   end
 end
 
@@ -121,9 +131,14 @@ function test_derived_transpose()
     v = rand(5) + im * rand(5)
     @test aopA * v == adjoint(A) * v
     @test topA * v == transpose(A) * v
+    v = rand(5)
+    @test aopA * v ≈ adjoint(A) * v
+    @test topA * v ≈ transpose(A) * v
 
     v = rand(3) + im * rand(3)
-    @test copA * v == conj(A) * v
+    @test copA * v ≈ conj(A) * v
+    v = rand(3)
+    @test copA * v ≈ conj(A) * v
   end
 end
 

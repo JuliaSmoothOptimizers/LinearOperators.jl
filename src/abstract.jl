@@ -7,14 +7,14 @@ export AbstractLinearOperator,
   ishermitian,
   symmetric,
   issymmetric,
-  has_args5,
+  has_args5,     # TODO: deprecate
   isallocated5,
   nprod,
   ntprod,
   nctprod,
   reset!
 
-mutable struct LinearOperatorException <: Exception
+struct LinearOperatorException <: Exception
   msg::AbstractString
 end
 
@@ -44,21 +44,18 @@ other operators, with matrices and with scalars. Operators may
 be transposed and conjugate-transposed using the usual Julia syntax.
 """
 mutable struct LinearOperator{T, S, I <: Integer, F, Ft, Fct} <: AbstractLinearOperator{T}
-  nrow::I
-  ncol::I
-  symmetric::Bool
-  hermitian::Bool
-  prod!::F
-  tprod!::Ft
-  ctprod!::Fct
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F
+  const tprod!::Ft
+  const ctprod!::Fct
   nprod::I
   ntprod::I
   nctprod::I
-  args5::Bool
-  use_prod5!::Bool # true for 5-args mul! and for composite operators created with operators that use the 3-args mul!
-  Mv5::S
-  Mtu5::S
-  allocated5::Bool # true for 5-args mul!, false for 3-args mul! until the vectors are allocated
+  Mv::S
+  Mtu::S
 end
 
 function LinearOperator{T, S}(
@@ -73,12 +70,6 @@ function LinearOperator{T, S}(
   ntprod::I,
   nctprod::I,
 ) where {T, S, I <: Integer, F, Ft, Fct}
-  Mv5, Mtu5 = S(undef, 0), S(undef, 0)
-  nargs = get_nargs(prod!)
-  args5 = (nargs == 4)
-  (args5 == false) || (nargs != 2) || throw(LinearOperatorException("Invalid number of arguments"))
-  allocated5 = args5 ? true : false
-  use_prod5! = args5 ? true : false
   return LinearOperator{T, S, I, F, Ft, Fct}(
     nrow,
     ncol,
@@ -90,11 +81,8 @@ function LinearOperator{T, S}(
     nprod,
     ntprod,
     nctprod,
-    args5,
-    use_prod5!,
-    Mv5,
-    Mtu5,
-    allocated5,
+    S(undef, 0),
+    S(undef, 0),
   )
 end
 
@@ -124,14 +112,21 @@ LinearOperator{T}(
   nctprod,
 )
 
+"""
+    LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod! = nothing) where {T, S}
+
+Construct a linear operator with a specific temporary array storage type `S`, which should typically have element type `T`.
+
+This is an inferrable variant of constructors that supply `S` as a keyword argument, and is recommended for performance-sensitive applications.
+"""
 LinearOperator{T, S}(
   nrow::I,
   ncol::I,
   symmetric::Bool,
   hermitian::Bool,
   prod!,
-  tprod!,
-  ctprod!,
+  tprod! = nothing,
+  ctprod! = nothing,
 ) where {T, S, I <: Integer} =
   LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, 0, 0, 0)
 
@@ -147,56 +142,7 @@ LinearOperator{T}(
   S::Type = Vector{T},
 ) where {T} = LinearOperator{T, S}(nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!)
 
-# create operator from other operators with +, *, vcat,...
-# TODO: this is not a type, so it should not be uppercase
-function CompositeLinearOperator(
-  T::Type,
-  nrow::I,
-  ncol::I,
-  symmetric::Bool,
-  hermitian::Bool,
-  prod!::F,
-  tprod!::Ft,
-  ctprod!::Fct,
-  args5::Bool,
-  ::Type{S},
-) where {S, I <: Integer, F, Ft, Fct}
-  Mv5, Mtu5 = S(undef, 0), S(undef, 0)
-  allocated5 = true
-  use_prod5! = true
-  return LinearOperator{T, S, I, F, Ft, Fct}(
-    nrow,
-    ncol,
-    symmetric,
-    hermitian,
-    prod!,
-    tprod!,
-    ctprod!,
-    0,
-    0,
-    0,
-    args5,
-    use_prod5!,
-    Mv5,
-    Mtu5,
-    allocated5,
-  )
-end
-
-# backward compatibility (not inferrable)
-CompositeLinearOperator(
-  T::Type,
-  nrow::I,
-  ncol::I,
-  symmetric::Bool,
-  hermitian::Bool,
-  prod!::F,
-  tprod!::Ft,
-  ctprod!::Fct,
-  args5::Bool;
-  S::Type = Vector{T},
-) where {I <: Integer, F, Ft, Fct} =
-  CompositeLinearOperator(T, nrow, ncol, symmetric, hermitian, prod!, tprod!, ctprod!, args5, S)
+const CompositeLinearOperator = LinearOperator   # backwards compatibility
 
 nprod(op::AbstractLinearOperator) = op.nprod
 ntprod(op::AbstractLinearOperator) = op.ntprod
@@ -213,18 +159,24 @@ Determine whether the operator can work with the 5-args `mul!`.
 If `false`, storage vectors will be generated at the first call of
 the 5-args `mul!`.
 No additional vectors are generated when using the 3-args `mul!`.
+
+!!! warning
+    `has_args5` can be very slow. A better option is to use Julia's `hasmethod`
+    at points in the code where the concrete types of objects used in `mul!` are known.
+
+    `has_args5` may be removed in a future release.
 """
-has_args5(op::AbstractLinearOperator) = op.args5
-use_prod5!(op::AbstractLinearOperator) = op.use_prod5!
-isallocated5(op::AbstractLinearOperator) = op.allocated5
+has_args5(op::AbstractLinearOperator) = get_nargs(op.prod!) == 4
+
+isallocated5(op::LinearOperator) = !(isempty(op.Mv) || isempty(op.Mtu))
 
 has_args5(op::AbstractMatrix) = true  # Needed for BlockDiagonalOperator
 
 # Alert user of the need for storage_type method definition for arbitrary, user defined operators
 storage_type(op::AbstractLinearOperator) = error("please implement storage_type for $(typeof(op))")
 
-storage_type(op::LinearOperator) = typeof(op.Mv5)
-storage_type(M::AbstractMatrix{T}) where {T} = Vector{T}
+storage_type(::LinearOperator{T, S}) where {T, S} = S
+storage_type(::AbstractMatrix{T}) where {T} = Vector{T}
 
 # Lazy wrappers
 storage_type(op::Adjoint) = storage_type(parent(op))
