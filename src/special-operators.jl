@@ -290,6 +290,5 @@ function BlockDiagonalOperator(ops...; S = promote_type(storage_type.(ops)...))
 
   symm = all((issymmetric(op) for op ∈ ops))
   herm = all((ishermitian(op) for op ∈ ops))
-  args5 = all((has_args5(op) for op ∈ ops))
-  CompositeLinearOperator(T, nrow, ncol, symm, herm, prod!, tprod!, ctprod!, args5, S)
+  LinearOperator{T, S}(nrow, ncol, symm, herm, prod!, tprod!, ctprod!)
 end

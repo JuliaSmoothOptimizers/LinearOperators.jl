@@ -2,33 +2,32 @@ import Base.+, Base.-, Base.*, Base./, LinearAlgebra.mul!
 
 function allocate_vectors_args3!(op::AbstractLinearOperator)
   S = storage_type(op)
-  op.Mv5 = S(undef, op.nrow)
-  op.Mtu5 = (op.nrow == op.ncol) ? op.Mv5 : S(undef, op.ncol)
-  op.allocated5 = true
+  op.Mv = S(undef, op.nrow)
+  op.Mtu = (op.nrow == op.ncol) ? op.Mv : S(undef, op.ncol)
+  return op
 end
 
-function prod3!(res, prod!, v, α, β, Mv5)
-  if β == 0
+function prod3!(res, prod!, v, α, β, Mv)
+  if iszero(β)
     prod!(res, v)
     if α != 1
       res .*= α
     end
   else
-    prod!(Mv5, v)
-    res .= α .* Mv5 .+ β .* res
+    prod!(Mv, v)
+    res .= α .* Mv .+ β .* res
   end
 end
 
 function mul!(res::AbstractVector, op::AbstractLinearOperator{T}, v::AbstractVector, α, β) where {T}
-  use_p5! = use_prod5!(op)
-  has_args5(op) || (β == 0) || isallocated5(op) || allocate_vectors_args3!(op)
   (size(v, 1) == size(op, 2) && size(res, 1) == size(op, 1)) ||
     throw(LinearOperatorException("shape mismatch"))
   increase_nprod!(op)
-  if use_p5!
+  if hasmethod(op.prod!, Tuple{typeof(res), typeof(v), typeof(α), typeof(β)})
     op.prod!(res, v, α, β)
   else
-    prod3!(res, op.prod!, v, α, β, op.Mv5)
+    iszero(β) || !isempty(op.Mv) || allocate_vectors_args3!(op)
+    prod3!(res, op.prod!, v, α, β, op.Mv)
   end
 end
 
@@ -104,8 +103,7 @@ function -(op::AbstractLinearOperator{T}) where {T}
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, -α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, -α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, -α, β)
-  CompositeLinearOperator(
-    T,
+  LinearOperator{T, storage_type(op)}(
     op.nrow,
     op.ncol,
     op.symmetric,
@@ -113,8 +111,6 @@ function -(op::AbstractLinearOperator{T}) where {T}
     prod!,
     tprod!,
     ctprod!,
-    has_args5(op),
-    S = storage_type(op),
   )
 end
 
@@ -156,8 +152,7 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   prod! = @closure (res, v, α, β) -> prod_op!(res, op1, op2, vtmp, v, α, β)
   tprod! = @closure (res, u, α, β) -> prod_op!(res, transpose(op2), transpose(op1), utmp, u, α, β)
   ctprod! = @closure (res, w, α, β) -> prod_op!(res, adjoint(op2), adjoint(op1), wtmp, w, α, β)
-  args5 = (has_args5(op1) && has_args5(op2))
-  CompositeLinearOperator(T, m1, n2, false, false, prod!, tprod!, ctprod!, args5, S)
+  LinearOperator{T, S}(m1, n2, false, false, prod!, tprod!, ctprod!)
 end
 
 ## Matrix times operator.
@@ -170,8 +165,7 @@ function *(op::AbstractLinearOperator, x::Number)
   prod! = @closure (res, v, α, β) -> mul!(res, op, v, x * α, β)
   tprod! = @closure (res, u, α, β) -> mul!(res, transpose(op), u, x * α, β)
   ctprod! = @closure (res, w, α, β) -> mul!(res, adjoint(op), w, x' * α, β)
-  CompositeLinearOperator(
-    T,
+  LinearOperator{T, storage_type(op)}(
     op.nrow,
     op.ncol,
     op.symmetric,
@@ -179,8 +173,6 @@ function *(op::AbstractLinearOperator, x::Number)
     prod!,
     tprod!,
     ctprod!,
-    has_args5(op),
-    S = storage_type(op),
   )
 end
 
@@ -216,7 +208,6 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   ctprod! = @closure (res, w, α, β) -> sum_prod!(res, adjoint(op1), adjoint(op2), w, α, β)
   symm = (issymmetric(op1) && issymmetric(op2))
   herm = (ishermitian(op1) && ishermitian(op2))
-  args5 = (has_args5(op1) && has_args5(op2))
   S = promote_type(storage_type(op1), storage_type(op2))
   if !isconcretetype(S)
     throw(
