@@ -231,23 +231,6 @@ storage_type(op::Adjoint) = storage_type(parent(op))
 storage_type(op::Transpose) = storage_type(parent(op))
 storage_type(op::Diagonal) = typeof(parent(op))
 
-@inline function _select_storage_type(
-  op1::AbstractLinearOperator,
-  op2::AbstractLinearOperator,
-  T::Type,
-)
-  S = promote_type(storage_type(op1), storage_type(op2))
-  if isconcretetype(S)
-    return S
-  elseif isconcretetype(storage_type(op1))
-    return storage_type(op1)
-  elseif isconcretetype(storage_type(op2))
-    return storage_type(op2)
-  else
-    return Vector{T}
-  end
-end
-
 """
   reset!(op)
 

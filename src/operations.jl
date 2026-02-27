@@ -139,11 +139,15 @@ function *(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   if m2 != n1
     throw(LinearOperatorException("shape mismatch"))
   end
-  S = _select_storage_type(op1, op2, T)
-  # Ensure that the selected storage type is concrete; fall back to a
-  # standard vector storage when promotion yields a non-concrete type.
+  S = promote_type(storage_type(op1), storage_type(op2))
   if !isconcretetype(S)
-    S = Vector{T}
+    throw(
+      LinearOperatorException(
+        "storage types $(storage_type(op1)) and $(storage_type(op2)) " *
+        "cannot be promoted to a concrete type. " *
+        "Ensure both operators use compatible storage types (e.g., both GPU or both CPU).",
+      ),
+    )
   end
   #tmp vector for products
   vtmp = fill!(S(undef, m2), zero(T))
@@ -214,8 +218,15 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   herm = (ishermitian(op1) && ishermitian(op2))
   args5 = (has_args5(op1) && has_args5(op2))
   S = promote_type(storage_type(op1), storage_type(op2))
-  isconcretetype(S) ||
-    throw(LinearOperatorException("storage types cannot be promoted to a concrete type"))
+  if !isconcretetype(S)
+    throw(
+      LinearOperatorException(
+        "storage types $(storage_type(op1)) and $(storage_type(op2)) " *
+        "cannot be promoted to a concrete type. " *
+        "Ensure both operators use compatible storage types (e.g., both GPU or both CPU).",
+      ),
+    )
+  end
   return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S)
 end
 
