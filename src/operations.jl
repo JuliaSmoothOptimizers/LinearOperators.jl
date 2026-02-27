@@ -218,7 +218,7 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
       ),
     )
   end
-  return CompositeLinearOperator(T, m1, n1, symm, herm, prod!, tprod!, ctprod!, args5, S)
+  return LinearOperator{T, S}(m1, n1, symm, herm, prod!, tprod!, ctprod!)
 end
 
 # Operator + matrix.
