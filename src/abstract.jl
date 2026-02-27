@@ -189,9 +189,9 @@ broadcastable(op::AbstractLinearOperator) = Ref(op)
 BroadcastStyle(::Type{<:AbstractLinearOperator}) = DefaultArrayStyle{0}()
 
 function copyto!(
-  dest::LinearOperator{T, S, I, F, Ft, Fct},
-  src::LinearOperator{T, S, I, F, Ft, Fct},
-) where {T, S, I <: Integer, F, Ft, Fct}
+  dest::LinearOperator{T, S},
+  src::LinearOperator{T, S},
+) where {T, S}
   dest.nrow = src.nrow
   dest.ncol = src.ncol
   dest.symmetric = src.symmetric
@@ -213,8 +213,10 @@ end
 function copyto!(dest::LinearOperator, src::LinearOperator)
   throw(
     LinearOperatorException(
-      "cannot update a LinearOperator in-place from an incompatible operator type. " *
-      "Use assignment (`op = new_op`) instead.",
+      "cannot update a LinearOperator in-place: incompatible element types " *
+      "$(eltype(dest)) and $(eltype(src)), or storage types " *
+      "$(typeof(dest.Mv5)) and $(typeof(src.Mv5)). " *
+      "Use assignment (`dest = src`) instead.",
     ),
   )
 end
