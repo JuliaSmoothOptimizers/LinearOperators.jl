@@ -157,7 +157,7 @@ function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
   return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, true, lbfgs_data)
 end
 
-InverseLBFGSOperator(n::Int; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
+InverseLBFGSOperator(n::Integer; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
 
 """
     LBFGSOperator(T, n; [mem=5, scaling=true])
