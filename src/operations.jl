@@ -209,15 +209,8 @@ function +(op1::AbstractLinearOperator, op2::AbstractLinearOperator)
   symm = (issymmetric(op1) && issymmetric(op2))
   herm = (ishermitian(op1) && ishermitian(op2))
   S = promote_type(storage_type(op1), storage_type(op2))
-  if !isconcretetype(S)
-    throw(
-      LinearOperatorException(
-        "storage types $(storage_type(op1)) and $(storage_type(op2)) " *
-        "cannot be promoted to a concrete type. " *
-        "Ensure both operators use compatible storage types (e.g., both GPU or both CPU).",
-      ),
-    )
-  end
+  isconcretetype(S) ||
+    throw(LinearOperatorException("storage types cannot be promoted to a concrete type"))
   return LinearOperator{T, S}(m1, n1, symm, herm, prod!, tprod!, ctprod!)
 end
 
