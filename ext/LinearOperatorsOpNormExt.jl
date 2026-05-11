@@ -14,7 +14,9 @@ function estimate_opnorm(B::AbstractLinearOperator; kwargs...)
 end
 
 # Fallback for non-standard number types (uses TSVD)
-function _estimate_opnorm(B, ::Type{T}; kwargs...) where {T}
+function _estimate_opnorm(B, ::Type{T}; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs...) where {T}
+  # max_attempts and tiny_dense_threshold are absorbed here, 
+  # so only TSVD-compatible kwargs get passed forward.
   _, s, _ = tsvd(B, 1; kwargs...)
   return s[1], true
 end
@@ -58,9 +60,7 @@ function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs..
       end
 
     catch e
-      if e isa Arpack.ARPACKException ||
-         occursin("ARPACK", string(e)) ||
-         occursin("AUPD", string(e))
+      if occursin("ARPACK", string(e)) || occursin("AUPD", string(e))
         if ncv >= n
           @warn "ARPACK failed and NCV cannot be increased further." exception=e
           rethrow(e)
@@ -109,9 +109,7 @@ function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs..
       end
 
     catch e
-      if e isa Arpack.ARPACKException ||
-         occursin("ARPACK", string(e)) ||
-         occursin("AUPD", string(e))
+      if occursin("ARPACK", string(e)) || occursin("AUPD", string(e))
         if ncv >= min_dim
           @warn "ARPACK failed and NCV cannot be increased further." exception=e
           rethrow(e)

@@ -1,4 +1,4 @@
-using Arpack, Test, TestSetExtensions, LinearOperators
+using Test, TestSetExtensions, LinearOperators
 using LinearAlgebra, LDLFactorizations, SparseArrays, JLArrays
 using Zygote
 include("test_aux.jl")
