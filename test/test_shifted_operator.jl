@@ -1,4 +1,4 @@
-using Arpack, TSVD, GenericLinearAlgebra
+using TSVD, GenericLinearAlgebra
 @testset "ShiftedOperator Tests" begin
   @testset "Real Symmetric (Float64)" begin
     n = 5
