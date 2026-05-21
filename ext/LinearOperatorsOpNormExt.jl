@@ -13,7 +13,6 @@ function estimate_opnorm(B::AbstractLinearOperator; kwargs...)
   _estimate_opnorm(B, eltype(B); kwargs...)
 end
 
-# Fallback for non-standard number types (uses TSVD)
 function _estimate_opnorm(B, ::Type{T}; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs...) where {T}
   _, s, _ = tsvd(B, 1; kwargs...)
   return s[1], true
