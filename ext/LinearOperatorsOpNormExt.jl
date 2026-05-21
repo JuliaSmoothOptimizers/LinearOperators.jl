@@ -13,7 +13,13 @@ function estimate_opnorm(B::AbstractLinearOperator; kwargs...)
   _estimate_opnorm(B, eltype(B); kwargs...)
 end
 
-function _estimate_opnorm(B, ::Type{T}; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs...) where {T}
+function _estimate_opnorm(
+  B,
+  ::Type{T};
+  max_attempts::Int = 3,
+  tiny_dense_threshold = 5,
+  kwargs...,
+) where {T}
   _, s, _ = tsvd(B, 1; kwargs...)
   return s[1], true
 end
@@ -21,7 +27,7 @@ end
 function _estimate_opnorm(
   B,
   ::Type{T};
-  kwargs...
+  kwargs...,
 ) where {T <: Union{Float32, Float64, ComplexF32, ComplexF64}}
   if ishermitian(B)
     return opnorm_eig(B; kwargs...)
@@ -46,7 +52,8 @@ function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs..
 
   for attempt = 1:max_attempts
     try
-      d, nconv, _, _, _ = eigs(B; nev = nev, ncv = ncv, which = :LM, ritzvec = false, check = 1, kwargs...)
+      d, nconv, _, _, _ =
+        eigs(B; nev = nev, ncv = ncv, which = :LM, ritzvec = false, check = 1, kwargs...)
 
       if nconv == 1
         return abs(d[1]), true

@@ -142,11 +142,16 @@ using TSVD, GenericLinearAlgebra
         we guarantee 100% stable test coverage of our exception handling and retry logic.
         """
     function make_mock_throwing_op(m, n, is_sym, is_herm, err_msg)
-        return LinearOperator(Float64, m, n, is_sym, is_herm,
-            (args...) -> throw(ErrorException(err_msg)),
-            (args...) -> throw(ErrorException(err_msg)),
-            (args...) -> throw(ErrorException(err_msg))
-        )
+      return LinearOperator(
+        Float64,
+        m,
+        n,
+        is_sym,
+        is_herm,
+        (args...) -> throw(ErrorException(err_msg)),
+        (args...) -> throw(ErrorException(err_msg)),
+        (args...) -> throw(ErrorException(err_msg)),
+      )
     end
 
     @testset "Dense Branch Success" begin
