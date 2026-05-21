@@ -81,7 +81,8 @@ function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs..
     end
   end
 
-  return NaN, false
+  T = real(eltype(B))
+  return T(NaN), false
 end
 
 function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs...)
@@ -130,7 +131,8 @@ function opnorm_svd(B; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs..
     end
   end
 
-  return NaN, false
+  T = real(eltype(B))
+  return T(NaN), false
 end
 
 end
