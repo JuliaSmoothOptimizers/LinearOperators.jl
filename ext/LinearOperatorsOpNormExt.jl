@@ -18,7 +18,6 @@ function _estimate_opnorm(B, ::Type{T}; max_attempts::Int = 3, tiny_dense_thresh
   return s[1], true
 end
 
-# Optimized path for standard FloatingPoint/Complex types
 function _estimate_opnorm(
   B,
   ::Type{T};
