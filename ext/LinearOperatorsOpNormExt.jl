@@ -36,7 +36,6 @@ end
 function opnorm_eig(B; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs...)
   n = size(B, 1)
 
-  # Check if we can use direct dense methods (only if B supports conversion to Matrix)
   if n ≤ tiny_dense_threshold
     try
       return maximum(abs, eigen(Matrix(B)).values), true
