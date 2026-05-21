@@ -19,7 +19,6 @@ function _estimate_opnorm(B, ::Type{T}; max_attempts::Int = 3, tiny_dense_thresh
 end
 
 # Optimized path for standard FloatingPoint/Complex types
-# Note: Arpack strictly only supports Float32, Float64, ComplexF32, and ComplexF64.
 function _estimate_opnorm(
   B,
   ::Type{T};
