@@ -314,6 +314,6 @@ This method dispatches to efficient algorithms depending on the properties and s
 # Returns
 - A tuple `(norm, success)` where:
     - `norm` is the estimated operator 2-norm of `B` (largest singular value or eigenvalue in absolute value).
-    - `success` is a boolean indicating whether the iterative method (if used) reported successful convergence.
+    - `success` is a boolean indicating whether the estimate was computed successfully.
 """
 function estimate_opnorm end
