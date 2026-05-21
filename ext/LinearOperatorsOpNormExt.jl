@@ -15,8 +15,6 @@ end
 
 # Fallback for non-standard number types (uses TSVD)
 function _estimate_opnorm(B, ::Type{T}; max_attempts::Int = 3, tiny_dense_threshold = 5, kwargs...) where {T}
-  # max_attempts and tiny_dense_threshold are absorbed here, 
-  # so only TSVD-compatible kwargs get passed forward.
   _, s, _ = tsvd(B, 1; kwargs...)
   return s[1], true
 end
