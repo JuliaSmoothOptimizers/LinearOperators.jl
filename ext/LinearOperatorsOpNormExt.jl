@@ -20,7 +20,6 @@ end
 
 # Optimized path for standard FloatingPoint/Complex types
 # Note: Arpack strictly only supports Float32, Float64, ComplexF32, and ComplexF64.
-# Any other type (like BigFloat or Float16) must use the TSVD fallback above.
 function _estimate_opnorm(
   B,
   ::Type{T};
