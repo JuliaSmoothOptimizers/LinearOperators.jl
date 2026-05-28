@@ -11,14 +11,18 @@ TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [weakdeps]
 AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
+Arpack = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
+GenericLinearAlgebra = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 JLArrays = "27aeb0d3-9eb9-45fb-866b-73c2ecf80fcb"
 LDLFactorizations = "40e66cde-538c-5869-a4ad-c39174c6795b"
 Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
+TSVD = "9449cd9e-2762-5aa3-a617-5413e99d722e"
 
 [extensions]
 LinearOperatorsAMDGPUExt = "AMDGPU"
+LinearOperatorsOpNormExt = ["Arpack", "TSVD", "GenericLinearAlgebra"]
 LinearOperatorsCUDAExt = "CUDA"
 LinearOperatorsChainRulesCoreExt = "ChainRulesCore"
 LinearOperatorsJLArraysExt = "JLArrays"
@@ -27,14 +31,17 @@ LinearOperatorsMetalExt = "Metal"
 
 [compat]
 AMDGPU = "2.2.0"
+Arpack = "0.5.4"
 CUDA = "5.9.6"
 ChainRulesCore = "1"
 FastClosures = "0.3"
+GenericLinearAlgebra = "0.3.19"
 JLArrays = "0.3"
 LDLFactorizations = "0.10"
 LinearAlgebra = "1.10"
 Metal = "1.9.1"
 Printf = "1.10"
 SparseArrays = "1.10"
+TSVD = "0.4.4"
 TimerOutputs = "0.5"
 julia = "1.10"
