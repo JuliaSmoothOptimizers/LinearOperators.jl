@@ -1,5 +1,5 @@
 export check_ctranspose,
-  check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!
+  check_hermitian, check_positive_definite, normest, solve_shifted_system!, ldiv!, estimate_opnorm
 import LinearAlgebra.ldiv!
 
 """
@@ -261,8 +261,7 @@ Solves the linear system Bx = b.
 
 - `x::AbstractVector{T}`: The modified solution vector containing the solution to the linear system.
 
-### Examples:
-
+### Example:
 ```julia
 
 # Create an L-BFGS operator
@@ -276,6 +275,7 @@ b = rand(10)
 ldiv!(x, B, b)
 
 # The vector `x` now contains the solution
+```
 """
 
 function ldiv!(
@@ -287,3 +287,33 @@ function ldiv!(
   solve_shifted_system!(x, B, b, T(0.0))
   return x
 end
+
+"""
+    estimate_opnorm(B::AbstractLinearOperator; kwargs...)
+
+Compute an estimate of the operator 2-norm (largest singular value) of a linear operator `B`.
+
+This method dispatches to efficient algorithms depending on the properties and size of `B`:
+- **Non-standard element types** (e.g., `BigFloat`, `Float16`): Always uses `TSVD.tsvd` as the fallback, since ARPACK only supports standard 32-bit and 64-bit floating-point types.
+- **Small operators** (dimension ≤ `tiny_dense_threshold`): Attempts to convert `B` to a dense `Matrix` and uses direct LAPACK routines (`LinearAlgebra.eigen` if Hermitian, `LinearAlgebra.svd` otherwise).
+- **Large, standard-type operators**:
+    - If `ishermitian(B)`: Uses `Arpack.eigs` to find the eigenvalue with the largest magnitude.
+    - Otherwise: Uses `Arpack.svds` to find the largest singular value.
+
+**Note:** This function allocates memory. It requires `Arpack.jl` and `TSVD.jl` 
+(and `GenericLinearAlgebra.jl` for generic types) to be loaded.
+
+# Arguments
+- `B::AbstractLinearOperator`: The linear operator to analyze.
+
+# Keyword Arguments
+- `max_attempts::Int=3`: Maximum number of retries for iterative solvers if convergence fails, doubling the Krylov subspace dimension (`ncv`) each time.
+- `tiny_dense_threshold::Int=5`: If the minimum dimension of `B` is less than or equal to this threshold, it attempts to use direct dense LAPACK routines.
+- `kwargs...`: Additional optional keyword arguments passed to the underlying iterative routines (`Arpack.eigs`, `Arpack.svds`, or `TSVD.tsvd`).
+
+# Returns
+- A tuple `(norm, success)` where:
+    - `norm` is the estimated operator 2-norm of `B` (largest singular value or eigenvalue in absolute value).
+    - `success` is a boolean indicating whether the estimate was computed successfully.
+"""
+function estimate_opnorm end
