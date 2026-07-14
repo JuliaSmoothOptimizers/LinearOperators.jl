@@ -4,8 +4,7 @@ steps:
       - JuliaCI/julia#v1:
           version: "1.10"
     agents:
-      queue: "juliagpu"
-      cuda: "*"
+      queue: "cuda"
     command: |
       julia --color=yes --project -e '
       using Pkg
@@ -20,8 +19,7 @@ steps:
       - JuliaCI/julia#v1:
           version: "1.10"
     agents:
-      queue: "juliagpu"
-      rocm: "*"
+      queue: "rocm"
       rocmgpu: "*"
     command: |
       julia --color=yes --project -e '
