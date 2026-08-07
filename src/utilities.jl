@@ -206,10 +206,10 @@ Erway, J. B., Jain, V., & Marcia, R. F. Shifted L-BFGS Systems. Optimization Met
 """
 function solve_shifted_system!(
   x::AbstractVector{T},
-  B::LBFGSOperator{T, I, F1, F2, F3},
+  B::LBFGSOperator{T, I, F1, F2, F3, V},
   b::AbstractVector{T},
   σ::T,
-) where {T, I, F1, F2, F3}
+) where {T, I, F1, F2, F3, V}
   if σ < 0
     throw(ArgumentError("σ must be nonnegative"))
   end
@@ -280,9 +280,9 @@ ldiv!(x, B, b)
 
 function ldiv!(
   x::AbstractVector{T},
-  B::LBFGSOperator{T, I, F1, F2, F3},
+  B::LBFGSOperator{T, I, F1, F2, F3, V},
   b::AbstractVector{T},
-) where {T, I, F1, F2, F3}
+) where {T, I, F1, F2, F3, V}
   # Call solve_shifted_system! with σ = 0
   solve_shifted_system!(x, B, b, T(0.0))
   return x

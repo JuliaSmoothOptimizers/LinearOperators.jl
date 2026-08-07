@@ -1,7 +1,14 @@
 export LBFGSOperator, InverseLBFGSOperator, diag, diag!
 
-"A data type to hold information relative to LBFGS operators."
-mutable struct LBFGSData{T, I <: Integer}
+"A data type to hold information relative to LBFGS operators.
+
+`V<:AbstractVector{T}` parameterises the *n-sized* working buffers, so the
+same operator can live on the CPU (`V = Vector{T}`) or on the GPU
+(`V = CuVector{T}`, etc.). The small `mem`-sized bookkeeping arrays
+(`ys`, `α`, `norm_b`) stay on the CPU on purpose — they are indexed by
+scalar `k` inside `lbfgs_multiply` and would force scalar-getindex on a
+GPU array."
+mutable struct LBFGSData{T, I <: Integer, V <: AbstractVector{T}}
   const mem::I
   const scaling::Bool
   scaling_factor::T
@@ -9,22 +16,23 @@ mutable struct LBFGSData{T, I <: Integer}
   σ₂::T
   σ₃::T
   opnorm_upper_bound::T # Upper bound for the operator norm ‖Bₖ‖₂ ≤ ‖B₀‖₂ + ∑ᵢ ‖bᵢ‖₂²
-  const s::Vector{Vector{T}}
-  const y::Vector{Vector{T}}
+  const s::Vector{V}
+  const y::Vector{V}
   const ys::Vector{T}
   const α::Vector{T}
-  const a::Vector{Vector{T}}
-  const b::Vector{Vector{T}}
+  const a::Vector{V}
+  const b::Vector{V}
   const norm_b::Vector{T}
   insert::I
-  const Ax::Vector{T}
+  const Ax::V
   const shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
   const shifted_v::Vector{T}
   const shifted_u::Vector{T}
 end
 
 function LBFGSData(
-  T::Type,
+  ::Type{T},
+  ::Type{V},
   n::I;
   mem::I = 5,
   scaling::Bool = true,
@@ -32,9 +40,10 @@ function LBFGSData(
   inverse::Bool = true,
   σ₂::Float64 = 0.99,
   σ₃::Float64 = 10.0,
-) where {I <: Integer}
+) where {T, I <: Integer, V <: AbstractVector{T}}
   maxmem = max(mem, 1)
-  LBFGSData{T, I}(
+  _zeros(::Type{V}, n) where {V} = fill!(V(undef, n), zero(eltype(V)))
+  LBFGSData{T, I, V}(
     maxmem,
     scaling,
     convert(T, 1),
@@ -42,25 +51,30 @@ function LBFGSData(
     convert(T, σ₂),
     convert(T, σ₃),
     convert(T, 1),
-    [zeros(T, n) for _ = 1:maxmem],
-    [zeros(T, n) for _ = 1:maxmem],
+    [_zeros(V, n) for _ = 1:maxmem],
+    [_zeros(V, n) for _ = 1:maxmem],
     zeros(T, maxmem),
     inverse ? zeros(T, maxmem) : zeros(T, 0),
-    inverse ? Vector{Vector{T}}(undef, 0) : [zeros(T, n) for _ = 1:maxmem],
-    inverse ? Vector{Vector{T}}(undef, 0) : [zeros(T, n) for _ = 1:maxmem],
+    inverse ? V[] : [_zeros(V, n) for _ = 1:maxmem],
+    inverse ? V[] : [_zeros(V, n) for _ = 1:maxmem],
     inverse ? Vector{T}(undef, 0) : zeros(T, maxmem),
     1,
-    Vector{T}(undef, n),
+    V(undef, n),
     Array{T}(undef, (n, 2 * maxmem)),
     Vector{T}(undef, 2 * maxmem),
     Vector{T}(undef, n),
   )
 end
 
+# Backwards-compatible: default to CPU `Vector{T}`.
+LBFGSData(T::Type, n::I; kwargs...) where {I <: Integer} =
+  LBFGSData(T, Vector{T}, n; kwargs...)
+
 LBFGSData(n::I; kwargs...) where {I <: Integer} = LBFGSData(Float64, n; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewtonOperator{T}
+mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct, V <: AbstractVector{T}} <:
+               AbstractQuasiNewtonOperator{T}
   const nrow::I
   const ncol::I
   const symmetric::Bool
@@ -69,7 +83,7 @@ mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct} <: AbstractQuasiNewton
   const tprod!::Ft    # apply the transpose operator to a vector
   const ctprod!::Fct   # apply the transpose conjugate operator to a vector
   const inverse::Bool
-  const data::LBFGSData{T, I}
+  const data::LBFGSData{T, I, V}
   nprod::I
   ntprod::I
   nctprod::I
@@ -84,25 +98,26 @@ LBFGSOperator{T}(
   tprod!::Ft,
   ctprod!::Fct,
   inverse::Bool,
-  data::LBFGSData{T, I},
-) where {T, I <: Integer, F, Ft, Fct} = LBFGSOperator{T, I, F, Ft, Fct}(
-  nrow,
-  ncol,
-  symmetric,
-  hermitian,
-  prod!,
-  tprod!,
-  ctprod!,
-  inverse,
-  data,
-  0,
-  0,
-  0,
-)
+  data::LBFGSData{T, I, V},
+) where {T, I <: Integer, F, Ft, Fct, V <: AbstractVector{T}} =
+  LBFGSOperator{T, I, F, Ft, Fct, V}(
+    nrow,
+    ncol,
+    symmetric,
+    hermitian,
+    prod!,
+    tprod!,
+    ctprod!,
+    inverse,
+    data,
+    0,
+    0,
+    0,
+  )
 
 has_args5(op::LBFGSOperator) = true
 isallocated5(op::LBFGSOperator) = true
-storage_type(op::LBFGSOperator{T}) where {T} = Vector{T}
+storage_type(op::LBFGSOperator{T, I, F, Ft, Fct, V}) where {T, I, F, Ft, Fct, V} = V
 
 """
     InverseLBFGSOperator(T, n, [mem=5; scaling=true])
@@ -110,10 +125,15 @@ storage_type(op::LBFGSOperator{T}) where {T} = Vector{T}
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
+function InverseLBFGSOperator(
+  ::Type{T},
+  ::Type{V},
+  n::I;
+  kwargs...,
+) where {T, V <: AbstractVector{T}, I <: Integer}
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
-  lbfgs_data = LBFGSData(T, n; inverse = true, kwargs...)
+  lbfgs_data = LBFGSData(T, V, n; inverse = true, kwargs...)
 
   function lbfgs_multiply(
     res::AbstractVector,
@@ -158,6 +178,8 @@ function InverseLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
   return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, true, lbfgs_data)
 end
 
+InverseLBFGSOperator(T::Type, n::Integer; kwargs...) =
+  InverseLBFGSOperator(T, Vector{T}, n; kwargs...)
 InverseLBFGSOperator(n::Integer; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
 
 """
@@ -166,10 +188,15 @@ InverseLBFGSOperator(n::Integer; kwargs...) = InverseLBFGSOperator(Float64, n; k
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
 is omitted, then `Float64` is used.
 """
-function LBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
+function LBFGSOperator(
+  ::Type{T},
+  ::Type{V},
+  n::I;
+  kwargs...,
+) where {T, V <: AbstractVector{T}, I <: Integer}
   kwargs = Dict(kwargs)
   delete!(kwargs, :inverse)
-  lbfgs_data = LBFGSData(T, n; inverse = false, kwargs...)
+  lbfgs_data = LBFGSData(T, V, n; inverse = false, kwargs...)
 
   function lbfgs_multiply(
     res::AbstractVector,
@@ -206,14 +233,16 @@ function LBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
   return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, false, lbfgs_data)
 end
 
+LBFGSOperator(T::Type, n::Integer; kwargs...) =
+  LBFGSOperator(T, Vector{T}, n; kwargs...)
 LBFGSOperator(n::I; kwargs...) where {I <: Integer} = LBFGSOperator(Float64, n; kwargs...)
 
 function push_common!(
-  op::LBFGSOperator{T, I, F1, F2, F3},
-  s::Vector{T},
-  y::Vector{T},
+  op::LBFGSOperator{T, I, F1, F2, F3, V},
+  s::AbstractVector{T},
+  y::AbstractVector{T},
   ys::T,
-) where {T, I, F1, F2, F3}
+) where {T, I, F1, F2, F3, V}
   # op.counters.updates += 1
   data = op.data
   insert = data.insert
@@ -268,10 +297,10 @@ The third and fourth calling sequences are used in inverse LBFGS updating in con
 where α is the most recent steplength and g the gradient used when solving `d=-Hg`.
 """
 function push!(
-  op::LBFGSOperator{T, I, F1, F2, F3},
-  s::Vector{T},
-  y::Vector{T},
-) where {T, I, F1, F2, F3}
+  op::LBFGSOperator{T, I, F1, F2, F3, V},
+  s::AbstractVector{T},
+  y::AbstractVector{T},
+) where {T, I, F1, F2, F3, V}
   if op.data.damped
     return push!(op, s, y, similar(s))
   end
@@ -288,11 +317,11 @@ function push!(
 end
 
 function push!(
-  op::LBFGSOperator{T, I, F1, F2, F3},
-  s::Vector{T},
-  y::Vector{T},
-  Bs::Vector{T},
-) where {T, I, F1, F2, F3}
+  op::LBFGSOperator{T, I, F1, F2, F3, V},
+  s::AbstractVector{T},
+  y::AbstractVector{T},
+  Bs::AbstractVector{T},
+) where {T, I, F1, F2, F3, V}
   if !op.data.damped
     error("This push! should be used for damped operators")
   elseif op.inverse
@@ -322,13 +351,13 @@ function push!(
 end
 
 function push!(
-  op::LBFGSOperator{T, I, F1, F2, F3},
-  s::Vector{T},
-  y::Vector{T},
+  op::LBFGSOperator{T, I, F1, F2, F3, V},
+  s::AbstractVector{T},
+  y::AbstractVector{T},
   α::T,
-  g::Vector{T},
-  Bs::Vector{T},
-) where {T, I, F1, F2, F3}
+  g::AbstractVector{T},
+  Bs::AbstractVector{T},
+) where {T, I, F1, F2, F3, V}
   if !op.data.damped
     error("This push! should be used for damped operators")
   elseif !op.inverse
@@ -358,12 +387,12 @@ function push!(
 end
 
 function push!(
-  op::LBFGSOperator{T, I, F1, F2, F3},
-  s::Vector{T},
-  y::Vector{T},
+  op::LBFGSOperator{T, I, F1, F2, F3, V},
+  s::AbstractVector{T},
+  y::AbstractVector{T},
   α::T,
-  g::Vector{T},
-) where {T, I, F1, F2, F3}
+  g::AbstractVector{T},
+) where {T, I, F1, F2, F3, V}
   push!(op, s, y, α, g, similar(g))
 end
 
