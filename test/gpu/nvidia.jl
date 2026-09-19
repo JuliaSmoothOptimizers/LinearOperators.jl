@@ -21,3 +21,6 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
 
   @testset "Nvidia S kwarg" test_S_kwarg(arrayType = CuArray)
 end
+
+CUDA.allowscalar(false)
+test_lbfgs_backend(arrayType = CuArray)
