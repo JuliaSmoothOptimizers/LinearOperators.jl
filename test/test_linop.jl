@@ -111,6 +111,31 @@ function test_linop()
       @test Matrix(Hermitian(op6)) == (A6 + adjoint(A6)) / 2
     end
 
+    @testset "In-place operator update" begin
+      A = rand(5, 5)
+      B = rand(5, 5)
+      x = rand(5)
+
+      opA = LinearOperator(A)
+      opB = LinearOperator(B)
+
+      copyto!(opA, opB)
+      @test opA * x ≈ B * x
+
+      C = rand(5, 5)
+      opC = LinearOperator(C)
+      copy!(opA, opC)
+      @test opA * x ≈ C * x
+
+      opA .= opB
+      @test opA * x ≈ B * x
+
+      @test_throws LinearOperatorException opA .+= opB
+
+      op_complex = LinearOperator(rand(ComplexF64, 5, 5))
+      @test_throws LinearOperatorException copyto!(opA, op_complex)
+    end
+
     @testset "Constructor with specified structure" begin
       v = simple_vector(Float64, nrow)
       A = simple_matrix(ComplexF64, nrow, nrow)
