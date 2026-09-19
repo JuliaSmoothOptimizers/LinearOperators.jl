@@ -4,11 +4,12 @@ export LBFGSOperator, InverseLBFGSOperator, diag, diag!
 
 `V<:AbstractVector{T}` parameterises the *n-sized* working buffers, so the
 same operator can live on the CPU (`V = Vector{T}`) or on the GPU
-(`V = CuVector{T}`, etc.). The small `mem`-sized bookkeeping arrays
+(`V = CuVector{T}`, etc.). `M<:AbstractMatrix{T}` stores the shifted-solve
+workspace on the same backend. The small `mem`-sized bookkeeping arrays
 (`ys`, `α`, `norm_b`) stay on the CPU on purpose — they are indexed by
 scalar `k` inside `lbfgs_multiply` and would force scalar-getindex on a
 GPU array."
-mutable struct LBFGSData{T, I <: Integer, V <: AbstractVector{T}}
+mutable struct LBFGSData{T, I <: Integer, V <: AbstractVector{T}, M <: AbstractMatrix{T}}
   const mem::I
   const scaling::Bool
   scaling_factor::T
@@ -25,9 +26,9 @@ mutable struct LBFGSData{T, I <: Integer, V <: AbstractVector{T}}
   const norm_b::Vector{T}
   insert::I
   const Ax::V
-  const shifted_p::Matrix{T} # Temporary matrix used in the computation solve_shifted_system!
+  const shifted_p::M # Temporary matrix used in the computation solve_shifted_system!
   const shifted_v::Vector{T}
-  const shifted_u::Vector{T}
+  const shifted_u::V
 end
 
 function LBFGSData(
@@ -43,7 +44,9 @@ function LBFGSData(
 ) where {T, I <: Integer, V <: AbstractVector{T}}
   maxmem = max(mem, 1)
   _zeros(::Type{V}, n) where {V} = fill!(V(undef, n), zero(eltype(V)))
-  LBFGSData{T, I, V}(
+  Ax = V(undef, n)
+  shifted_p = similar(Ax, n, 2 * maxmem)
+  LBFGSData{T, I, V, typeof(shifted_p)}(
     maxmem,
     scaling,
     convert(T, 1),
@@ -59,22 +62,28 @@ function LBFGSData(
     inverse ? V[] : [_zeros(V, n) for _ = 1:maxmem],
     inverse ? Vector{T}(undef, 0) : zeros(T, maxmem),
     1,
-    V(undef, n),
-    Array{T}(undef, (n, 2 * maxmem)),
+    Ax,
+    shifted_p,
     Vector{T}(undef, 2 * maxmem),
-    Vector{T}(undef, n),
+    V(undef, n),
   )
 end
 
 # Backwards-compatible: default to CPU `Vector{T}`.
-LBFGSData(T::Type, n::I; kwargs...) where {I <: Integer} =
-  LBFGSData(T, Vector{T}, n; kwargs...)
+LBFGSData(T::Type, n::I; kwargs...) where {I <: Integer} = LBFGSData(T, Vector{T}, n; kwargs...)
 
 LBFGSData(n::I; kwargs...) where {I <: Integer} = LBFGSData(Float64, n; kwargs...)
 
 "A type for limited-memory BFGS approximations."
-mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct, V <: AbstractVector{T}} <:
-               AbstractQuasiNewtonOperator{T}
+mutable struct LBFGSOperator{
+  T,
+  I <: Integer,
+  F,
+  Ft,
+  Fct,
+  V <: AbstractVector{T},
+  M <: AbstractMatrix{T},
+} <: AbstractQuasiNewtonOperator{T}
   const nrow::I
   const ncol::I
   const symmetric::Bool
@@ -83,7 +92,7 @@ mutable struct LBFGSOperator{T, I <: Integer, F, Ft, Fct, V <: AbstractVector{T}
   const tprod!::Ft    # apply the transpose operator to a vector
   const ctprod!::Fct   # apply the transpose conjugate operator to a vector
   const inverse::Bool
-  const data::LBFGSData{T, I, V}
+  const data::LBFGSData{T, I, V, M}
   nprod::I
   ntprod::I
   nctprod::I
@@ -98,9 +107,9 @@ LBFGSOperator{T}(
   tprod!::Ft,
   ctprod!::Fct,
   inverse::Bool,
-  data::LBFGSData{T, I, V},
-) where {T, I <: Integer, F, Ft, Fct, V <: AbstractVector{T}} =
-  LBFGSOperator{T, I, F, Ft, Fct, V}(
+  data::LBFGSData{T, I, V, M},
+) where {T, I <: Integer, F, Ft, Fct, V <: AbstractVector{T}, M <: AbstractMatrix{T}} =
+  LBFGSOperator{T, I, F, Ft, Fct, V, M}(
     nrow,
     ncol,
     symmetric,
@@ -120,10 +129,12 @@ isallocated5(op::LBFGSOperator) = true
 storage_type(op::LBFGSOperator{T, I, F, Ft, Fct, V}) where {T, I, F, Ft, Fct, V} = V
 
 """
+    InverseLBFGSOperator(T, V, n; mem=5, scaling=true)
     InverseLBFGSOperator(T, n, [mem=5; scaling=true])
     InverseLBFGSOperator(n, [mem=5; scaling=true])
 Construct a limited-memory BFGS approximation in inverse form. If the type `T`
-is omitted, then `Float64` is used.
+is omitted, then `Float64` is used. Pass `V <: AbstractVector{T}` to select
+the storage backend (default: `Vector{T}`).
 """
 function InverseLBFGSOperator(
   ::Type{T},
@@ -183,10 +194,12 @@ InverseLBFGSOperator(T::Type, n::Integer; kwargs...) =
 InverseLBFGSOperator(n::Integer; kwargs...) = InverseLBFGSOperator(Float64, n; kwargs...)
 
 """
+    LBFGSOperator(T, V, n; mem=5, scaling=true)
     LBFGSOperator(T, n; [mem=5, scaling=true])
     LBFGSOperator(n; [mem=5, scaling=true])
 Construct a limited-memory BFGS approximation in forward form. If the type `T`
-is omitted, then `Float64` is used.
+is omitted, then `Float64` is used. Pass `V <: AbstractVector{T}` to select
+the storage backend (default: `Vector{T}`).
 """
 function LBFGSOperator(
   ::Type{T},
@@ -233,8 +246,7 @@ function LBFGSOperator(
   return LBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, false, lbfgs_data)
 end
 
-LBFGSOperator(T::Type, n::Integer; kwargs...) =
-  LBFGSOperator(T, Vector{T}, n; kwargs...)
+LBFGSOperator(T::Type, n::Integer; kwargs...) = LBFGSOperator(T, Vector{T}, n; kwargs...)
 LBFGSOperator(n::I; kwargs...) where {I <: Integer} = LBFGSOperator(Float64, n; kwargs...)
 
 function push_common!(
@@ -402,7 +414,7 @@ end
 Extract the diagonal of a L-BFGS operator in forward mode.
 """
 function diag(op::LBFGSOperator{T}) where {T}
-  d = Vector{T}(undef, op.nrow)
+  d = storage_type(op)(undef, op.nrow)
   diag!(op, d)
 end
 

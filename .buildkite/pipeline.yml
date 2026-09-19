@@ -11,6 +11,7 @@ steps:
       Pkg.add("CUDA")
       Pkg.instantiate()
       include("test/gpu/test_S_kwarg.jl")
+      include("test/gpu/test_lbfgs.jl")
       include("test/gpu/nvidia.jl")'
     timeout_in_minutes: 30
 
@@ -27,5 +28,6 @@ steps:
       Pkg.add("AMDGPU")
       Pkg.instantiate()
       include("test/gpu/test_S_kwarg.jl")
+      include("test/gpu/test_lbfgs.jl")
       include("test/gpu/amdgpu.jl")'
     timeout_in_minutes: 30
