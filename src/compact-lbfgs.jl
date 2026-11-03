@@ -1,6 +1,6 @@
 export CompactLBFGSOperator
 
-mutable struct CompactLBFGSData{T,V<:AbstractVector{T},MT<:AbstractMatrix{T}}
+mutable struct CompactLBFGSData{T, V <: AbstractVector{T}, MT <: AbstractMatrix{T}}
   const scaling::Bool
   ξ::T
   Sk::MT # n x p
@@ -31,9 +31,9 @@ function CompactLBFGSData(
   σ₂::Float64 = 0.99,
   σ₃::Float64 = 10.0,
   max_skip = 2,
-) where {I<:Integer}
+) where {I <: Integer}
   mem = max(mem, 1)
-  return CompactLBFGSData{T,Vector{T},Matrix{T}}(
+  return CompactLBFGSData{T, Vector{T}, Matrix{T}}(
     scaling,
     one(T),
     zeros(T, n, mem),
@@ -215,13 +215,13 @@ function push!(op::CompactLBFGSOperator{T}, s::AbstractVector{T}, y::AbstractVec
 
   # Shift
   if k > mem
-    @inbounds for i = 1:(mem-1)
+    @inbounds for i = 1:(mem - 1)
       copyto!(view(Sk, :, i), view(Sk, :, i+1))
       copyto!(view(Yk, :, i), view(Yk, :, i+1))
-      Dkinvsq[i] = Dkinvsq[i+1]
+      Dkinvsq[i] = Dkinvsq[i + 1]
 
-      for j = 1:(i-1)
-        Lk[i, j] = Lk[i+1, j+1]
+      for j = 1:(i - 1)
+        Lk[i, j] = Lk[i + 1, j + 1]
       end
     end
     k = mem
@@ -230,7 +230,7 @@ function push!(op::CompactLBFGSOperator{T}, s::AbstractVector{T}, y::AbstractVec
   copyto!(view(Sk, :, k), s)
   copyto!(view(Yk, :, k), y)
 
-  @inbounds for j = 1:(k-1)
+  @inbounds for j = 1:(k - 1)
     Lk[k, j] = dot(s, view(Yk, :, j))
   end
   Dkinvsq[k] = 1 / sqrt(sy)
