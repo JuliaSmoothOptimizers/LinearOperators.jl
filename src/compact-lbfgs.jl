@@ -1,7 +1,6 @@
-export CompactBFGSModel
+export CompactLBFGSOperator
 
-mutable struct CompactBFGS{T,V<:AbstractVector{T},MT<:AbstractMatrix{T}} <:
-               AbstractMatrix{T}
+mutable struct CompactLBFGSData{T,V<:AbstractVector{T},MT<:AbstractMatrix{T}}
   const scaling::Bool
   ξ::T
   Sk::MT # n x p
@@ -19,7 +18,7 @@ mutable struct CompactBFGS{T,V<:AbstractVector{T},MT<:AbstractMatrix{T}} <:
   _max_skip::Int
 end
 
-function CompactBFGS(
+function CompactLBFGSData(
   T::Type,
   n::I;
   mem::I = 6,
@@ -29,7 +28,7 @@ function CompactBFGS(
   σ₃::Float64 = 10.0,
   max_skip = 2,
 ) where {I<:Integer}
-  return CompactBFGS{T,Vector{T},Matrix{T}}(
+  return CompactLBFGSData{T,Vector{T},Matrix{T}}(
     scaling,
     one(T),
     zeros(T, n, mem),
@@ -48,97 +47,60 @@ function CompactBFGS(
   )
 end
 
-# There is no efficient way to compute the number of nonzeros of this approximation.
-# The meta of the compact BFGSModel will have 0 for the nnzh which is fine.
-SparseArrays.nnz(::CompactBFGS) = 0
-LinearAlgebra.Symmetric(op::CompactBFGS, ::Symbol) = op
-Base.size(op::CompactBFGS) = (size(op.Sk, 1), size(op.Sk, 1))
-
-# TODO: test this: compare with LinearOperators.jl
 function LinearAlgebra.mul!(
   x::AbstractVector,
-  op::CompactBFGS,
+  data::CompactLBFGSData,
   y::AbstractVector,
   α::Real,
   β::Real,
 )
-  x .*= β                                               # x = βx
-  x .+= (α*op.ξ) .* y                                   # x = βx + α * (ξI)y
+  x .*= β                                                   # x = βx
+  x .+= (α*data.ξ) .* y                                     # x = βx + α * (ξI)y
 
-  k = min(op._insert - 1, op._mem)
+  k = min(data._insert - 1, data._mem)
 
-  @views mul!(op._y[1:k], op.Uk[:, 1:k]', y)            # _y = Uₖᵀy
-  @views mul!(x, op.Uk[:, 1:k], op._y[1:k], -α, one(α)) #  x = βx + α * (ξI - UₖUₖᵀ)y
-  @views mul!(op._y[1:k], op.Vk[:, 1:k]', y)            # _y = Vₖᵀy
-  @views mul!(x, op.Vk[:, 1:k], op._y[1:k], α, one(α))  #  x = βx + α * (ξI - UₖUₖᵀ + VₖVₖᵀ)y
+  @views mul!(data._y[1:k], data.Uk[:, 1:k]', y)            # _y = Uₖᵀy
+  @views mul!(x, data.Uk[:, 1:k], data._y[1:k], -α, one(α)) #  x = βx + α * (ξI - UₖUₖᵀ)y
+  @views mul!(data._y[1:k], data.Vk[:, 1:k]', y)            # _y = Vₖᵀy
+  @views mul!(x, data.Vk[:, 1:k], data._y[1:k], α, one(α))  #  x = βx + α * (ξI - UₖUₖᵀ + VₖVₖᵀ)y
 end
 
-function NLPModels.reset!(op::CompactBFGS)
-  op.ξ = 1
-  op.Sk .= 0
-  op.Yk .= 0
-  op.Lk .= 0
-  op.Mk .= 0
-  op.Uk .= 0
-  op.Vk .= 0
-  op._Dkinvsq .= 0
-  op._DLk .= 0
-  op._y .= 0
+function reset!(data::CompactLBFGSData)
+  data.ξ = 1
+  data.Sk .= 0
+  data.Yk .= 0
+  data.Lk .= 0
+  data.Mk .= 0
+  data.Uk .= 0
+  data.Vk .= 0
+  data._Dkinvsq .= 0
+  data._DLk .= 0
+  data._y .= 0
 
-  op._insert = 1
-  op._nskip = 0
+  data._insert = 1
+  data._nskip = 0
 
 end
-"""
-    CompactBFGSModel(nlp; mem = 6, scaling = true, max_skip = 2)
-
-Wrap `nlp` so that its Hessian of the Lagrangian is replaced by a limited-memory BFGS
-approximation stored in compact form. The approximation is updated by the solver
-during the iterations. All other evaluations are forwarded to `nlp`.
-
-This is what `L2Penalty` uses with `qn_hessian_approximation = "bfgs"`.
-Construct it yourself only when using a preallocated [`L2PenaltySolver`](@ref),
-see [Preallocation](@ref).
-
-# Keyword arguments
-- `mem::Int = 6`: number of pairs ``(s, y)`` stored.
-- `scaling::Bool = true`: whether the initial approximation is ``B_0 = \\gamma I`` with ``\\gamma = y^T y / s^T y``.
-- `max_skip::Int = 2`: an update is skipped when `dot(s, y) ≤ eps(T)`; the approximation is reset once more than `max_skip` consecutive updates have been skipped.
-
-These correspond to the `qn_mem`, `qn_scaling` and `qn_max_skip` options, see [Options Reference](@ref).
-"""
-mutable struct CompactBFGSModel{
-  T,
-  S,
-  M<:AbstractNLPModel{T,S},
-  Meta<:AbstractNLPModelMeta{T,S},
-  Op<:CompactBFGS{T},
-} <: QuasiNewtonModel{T,S}
-  meta::Meta
-  model::M
-  op::Op
-end
-
-function Base.push!(op::CompactBFGS{T,V,MT}, s::V, y::V) where {T,V,MT}
-  k, mem = op._insert, op._mem
+function Base.push!(data::CompactLBFGSData{T,V,MT}, s::V, y::V) where {T,V,MT}
+  k, mem = data._insert, data._mem
   Sk, Yk, Lk, Dkinvsq, _DLk, Mk, Uk, Vk =
-    op.Sk, op.Yk, op.Lk, op._Dkinvsq, op._DLk, op.Mk, op.Uk, op.Vk
-  ξ = op.ξ
+    data.Sk, data.Yk, data.Lk, data._Dkinvsq, data._DLk, data.Mk, data.Uk, data.Vk
+  ξ = data.ξ
 
   sy = dot(s, y)
 
   if sy <= eps(T)
-    op._nskip = op._nskip + 1
-    if op._nskip > op._max_skip
-      NLPModels.reset!(op)
+    data._nskip = data._nskip + 1
+    if data._nskip > data._max_skip
+      reset!(data)
     end
     return
   else
-    op._nskip = 0
+    data._nskip = 0
   end
 
-  if op.scaling
-    ξ = op.ξ = dot(y, y) / sy
+  if data.scaling
+    ξ = data.ξ = dot(y, y) / sy
   end
 
   # Shift
@@ -176,7 +138,7 @@ function Base.push!(op::CompactBFGS{T,V,MT}, s::V, y::V) where {T,V,MT}
     cholesky!(Symmetric(@view Mk[1:k, 1:k]))                 # Mₖ = Jₖᵀ Jₖ (factorization)
   catch e
     @warn "Cholesky factorization of Mₖ failed. Resetting the compact BFGS model."
-    NLPModels.reset!(op)
+    reset!(data)
     return
   end
 
@@ -188,60 +150,127 @@ function Base.push!(op::CompactBFGS{T,V,MT}, s::V, y::V) where {T,V,MT}
   axpy!(ξ, Sk, Uk)                                         # Uₖ = ξ Sₖ + Yₖ Dₖ⁻¹ Lₖᵀ
   @views rdiv!(Uk[:, 1:k], UpperTriangular(Mk[1:k, 1:k]))  # Uₖ = (ξ Sₖ + Yₖ Dₖ⁻¹ Lₖᵀ) Jₖ⁻¹
 
-  op._insert = min(k + 1, mem + 1)
+  data._insert = min(k + 1, mem + 1)
 end
 
-function CompactBFGSModel(nlp::AbstractNLPModel{T,S}; kwargs...) where {T,S}
-  op = CompactBFGS(T, nlp.meta.nvar; kwargs...)
-  return CompactBFGSModel(nlp.meta, nlp, op)
+"A type for limited-memory BFGS approximations in compact form."
+mutable struct CompactLBFGSOperator{T, I <: Integer, F, Ft, Fct, D <: CompactLBFGSData{T}} <:
+               AbstractQuasiNewtonOperator{T}
+  const nrow::I
+  const ncol::I
+  const symmetric::Bool
+  const hermitian::Bool
+  const prod!::F    # apply the operator to a vector
+  const tprod!::Ft    # apply the transpose operator to a vector
+  const ctprod!::Fct   # apply the transpose conjugate operator to a vector
+  const data::D
+  nprod::I
+  ntprod::I
+  nctprod::I
 end
 
-get_model(nlp::CompactBFGSModel) = nlp.model
-get_op(nlp::CompactBFGSModel) = nlp.op
-@default_counters CompactBFGSModel model
+CompactLBFGSOperator{T}(
+  nrow::I,
+  ncol::I,
+  symmetric::Bool,
+  hermitian::Bool,
+  prod!::F,
+  tprod!::Ft,
+  ctprod!::Fct,
+  data::D,
+) where {T, I <: Integer, F, Ft, Fct, D} = CompactLBFGSOperator{T, I, F, Ft, Fct, D}(
+  nrow,
+  ncol,
+  symmetric,
+  hermitian,
+  prod!,
+  tprod!,
+  ctprod!,
+  data,
+  0,
+  0,
+  0,
+)
+
+has_args5(op::CompactLBFGSOperator) = true
+isallocated5(op::CompactLBFGSOperator) = true
+storage_type(op::CompactLBFGSOperator) = typeof(op.data._y)
+
+"""
+    CompactLBFGSOperator(T, n; [mem = 6, scaling = true, max_skip = 2])
+    CompactLBFGSOperator(n; kwargs...)
+
+Construct a limited-memory BFGS approximation stored in compact form
+``B = ξI - UUᵀ + VVᵀ``. If the type `T` is omitted, then `Float64` is used.
+
+# Keyword arguments
+- `mem::Int = 6`: number of pairs ``(s, y)`` stored.
+- `scaling::Bool = true`: whether the initial approximation is ``B_0 = ξ I`` with ``ξ = y^T y / s^T y``.
+- `max_skip::Int = 2`: an update is skipped when `dot(s, y) ≤ eps(T)`; the approximation is reset once more than `max_skip` consecutive updates have been skipped.
+"""
+function CompactLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
+  data = CompactLBFGSData(T, n; kwargs...)
+  prod! = @closure (res, x, α, β) -> mul!(res, data, x, α, β)
+  return CompactLBFGSOperator{T}(n, n, true, true, prod!, prod!, prod!, data)
+end
+
+CompactLBFGSOperator(n::Integer; kwargs...) = CompactLBFGSOperator(Float64, n; kwargs...)
+
+function push!(op::CompactLBFGSOperator, s::AbstractVector, y::AbstractVector)
+  push!(op.data, s, y)
+  return op
+end
+
+function reset!(op::CompactLBFGSOperator)
+  reset!(op.data)
+  op.nprod = 0
+  op.ntprod = 0
+  op.nctprod = 0
+  return op
+end
 
 # Copying API
-function Base.copy(op::CompactBFGS{T,V,MT}) where {T,V,MT}
-  return CompactBFGS(
-    op.scaling,
-    op.ξ,
-    copy(op.Sk),
-    copy(op.Yk),
-    copy(op.Lk),
-    copy(op._Dkinvsq),
-    copy(op._DLk),
-    copy(op.Mk),
-    copy(op.Uk),
-    copy(op.Vk),
-    copy(op._y),
-    op._mem,
-    op._insert,
-    op._nskip,
-    op._max_skip,
+function Base.copy(data::CompactLBFGSData{T,V,MT}) where {T,V,MT}
+  return CompactLBFGSData(
+    data.scaling,
+    data.ξ,
+    copy(data.Sk),
+    copy(data.Yk),
+    copy(data.Lk),
+    copy(data._Dkinvsq),
+    copy(data._DLk),
+    copy(data.Mk),
+    copy(data.Uk),
+    copy(data.Vk),
+    copy(data._y),
+    data._mem,
+    data._insert,
+    data._nskip,
+    data._max_skip,
   )
 end
 
-function Base.similar(op::CompactBFGS{T,V,MT}) where {T,V,MT}
-  return CompactBFGS(
-    op.scaling,
-    op.ξ,
-    similar(op.Sk),
-    similar(op.Yk),
-    similar(op.Lk),
-    similar(op._Dkinvsq),
-    similar(op._DLk),
-    similar(op.Mk),
-    similar(op.Uk),
-    similar(op.Vk),
-    similar(op._y),
-    op._mem,
-    op._insert,
-    op._nskip,
-    op._max_skip,
+function Base.similar(data::CompactLBFGSData{T,V,MT}) where {T,V,MT}
+  return CompactLBFGSData(
+    data.scaling,
+    data.ξ,
+    similar(data.Sk),
+    similar(data.Yk),
+    similar(data.Lk),
+    similar(data._Dkinvsq),
+    similar(data._DLk),
+    similar(data.Mk),
+    similar(data.Uk),
+    similar(data.Vk),
+    similar(data._y),
+    data._mem,
+    data._insert,
+    data._nskip,
+    data._max_skip,
   )
 end
 
-function Base.copy!(dest::CompactBFGS{T,V,MT}, src::CompactBFGS{T,V,MT}) where {T,V,MT}
+function Base.copy!(dest::CompactLBFGSData{T,V,MT}, src::CompactLBFGSData{T,V,MT}) where {T,V,MT}
   @assert dest.scaling == src.scaling
   dest.ξ = src.ξ
   copyto!(dest.Sk, src.Sk)

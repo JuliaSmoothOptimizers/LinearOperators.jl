@@ -4,4 +4,5 @@ import Base.push!
 import LinearAlgebra.diag
 
 include("lbfgs.jl")
+include("compact-lbfgs.jl")
 include("lsr1.jl")
