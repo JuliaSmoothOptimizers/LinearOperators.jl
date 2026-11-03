@@ -1,5 +1,6 @@
 export CompactLBFGSOperator
 
+"A data type to hold information relative to compact LBFGS operators."
 mutable struct CompactLBFGSData{T, V <: AbstractVector{T}, MT <: AbstractMatrix{T}}
   const scaling::Bool
   ξ::T
@@ -25,12 +26,12 @@ end
 function CompactLBFGSData(
   T::Type,
   n::I;
-  mem::I = 6,
+  mem::I = 5,
   scaling::Bool = true,
   damped::Bool = false,
   σ₂::Float64 = 0.99,
   σ₃::Float64 = 10.0,
-  max_skip = 2,
+  max_skip::Integer = typemax(Int),
 ) where {I <: Integer}
   mem = max(mem, 1)
   return CompactLBFGSData{T, Vector{T}, Matrix{T}}(
@@ -55,6 +56,8 @@ function CompactLBFGSData(
     zeros(T, n),
   )
 end
+
+CompactLBFGSData(n::I; kwargs...) where {I <: Integer} = CompactLBFGSData(Float64, n; kwargs...)
 
 function reset!(data::CompactLBFGSData)
   data.ξ = 1
@@ -145,17 +148,22 @@ function CompactLBFGSOperator(data::CompactLBFGSData{T}) where {T}
 end
 
 """
-    CompactLBFGSOperator(T, n; [mem = 6, scaling = true, damped = false, max_skip = 2])
-    CompactLBFGSOperator(n; kwargs...)
+    CompactLBFGSOperator(T, n; [mem=5, scaling=true])
+    CompactLBFGSOperator(n; [mem=5, scaling=true])
+Construct a limited-memory BFGS approximation in compact form ``B = ξI - UUᵀ + VVᵀ``.
+If the type `T` is omitted, then `Float64` is used.
 
-Construct a limited-memory BFGS approximation stored in compact form
-``B = ξI - UUᵀ + VVᵀ``. If the type `T` is omitted, then `Float64` is used.
+Only the forward form is implemented: there is no inverse compact L-BFGS operator.
+Use [`InverseLBFGSOperator`](@ref) for the inverse form.
 
 # Keyword arguments
-- `mem::Int = 6`: number of pairs ``(s, y)`` stored.
+- `mem::Int = 5`: number of pairs ``(s, y)`` stored.
 - `scaling::Bool = true`: whether the initial approximation is ``B_0 = ξ I`` with ``ξ = y^T y / s^T y``.
-- `damped::Bool = false`: whether to apply Powell's damping to the pairs ``(s, y)``, with parameters `σ₂::Float64 = 0.99` and `σ₃::Float64 = 10.0`.
-- `max_skip::Int = 2`: an update is skipped when `dot(s, y) ≤ eps(T)`; the approximation is reset once more than `max_skip` consecutive updates have been skipped.
+- `damped::Bool = false`: whether to apply Powell's damping to the pairs ``(s, y)``.
+- `σ₂::Float64 = 0.99` and `σ₃::Float64 = 10.0`: damping parameters.
+- `max_skip::Int = typemax(Int)`: an update is skipped when `dot(s, y) ≤ eps(T)`;
+  the approximation is reset once more than `max_skip` consecutive updates have been skipped;
+  deactivated by default.
 """
 CompactLBFGSOperator(T::Type, n::Integer; kwargs...) =
   CompactLBFGSOperator(CompactLBFGSData(T, n; kwargs...))
