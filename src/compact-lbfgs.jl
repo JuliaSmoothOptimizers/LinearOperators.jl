@@ -16,6 +16,10 @@ mutable struct CompactLBFGSData{T,V<:AbstractVector{T},MT<:AbstractMatrix{T}}
   _insert::Int
   _nskip::Int
   _max_skip::Int
+  const damped::Bool
+  σ₂::T
+  σ₃::T
+  _Bs::V # n
 end
 
 function CompactLBFGSData(
@@ -28,6 +32,7 @@ function CompactLBFGSData(
   σ₃::Float64 = 10.0,
   max_skip = 2,
 ) where {I<:Integer}
+  mem = max(mem, 1)
   return CompactLBFGSData{T,Vector{T},Matrix{T}}(
     scaling,
     one(T),
@@ -44,6 +49,10 @@ function CompactLBFGSData(
     1,
     0,
     max_skip,
+    damped,
+    convert(T, σ₂),
+    convert(T, σ₃),
+    zeros(T, n),
   )
 end
 
@@ -54,8 +63,11 @@ function LinearAlgebra.mul!(
   α::Real,
   β::Real,
 )
-  x .*= β                                                   # x = βx
-  x .+= (α*data.ξ) .* y                                     # x = βx + α * (ξI)y
+  if iszero(β)
+    x .= (α*data.ξ) .* y                                    # x = α * (ξI)y
+  else
+    x .= β .* x .+ (α*data.ξ) .* y                          # x = βx + α * (ξI)y
+  end
 
   k = min(data._insert - 1, data._mem)
 
@@ -81,7 +93,29 @@ function reset!(data::CompactLBFGSData)
   data._nskip = 0
 
 end
+# Powell's damping: return y, or θy + (1 - θ)Bs stored in data._Bs when sᵀy is
+# too small or too large compared with sᵀBs.
+function damp!(data::CompactLBFGSData{T,V,MT}, s::V, y::V) where {T,V,MT}
+  Bs = data._Bs
+  mul!(Bs, data, s, one(T), zero(T))
+  sBs = dot(s, Bs)
+  sy = dot(s, y)
+  if sy < (1 - data.σ₂) * sBs
+    θ = data.σ₂ * sBs / (sBs - sy)
+  elseif sy > (1 + data.σ₃) * sBs
+    θ = data.σ₃ * sBs / (sy - sBs)
+  else
+    return y
+  end
+  Bs .= θ .* y .+ (1 - θ) .* Bs
+  return Bs
+end
+
 function Base.push!(data::CompactLBFGSData{T,V,MT}, s::V, y::V) where {T,V,MT}
+  if data.damped
+    y = damp!(data, s, y)
+  end
+
   k, mem = data._insert, data._mem
   Sk, Yk, Lk, Dkinvsq, _DLk, Mk, Uk, Vk =
     data.Sk, data.Yk, data.Lk, data._Dkinvsq, data._DLk, data.Mk, data.Uk, data.Vk
@@ -197,7 +231,7 @@ isallocated5(op::CompactLBFGSOperator) = true
 storage_type(op::CompactLBFGSOperator) = typeof(op.data._y)
 
 """
-    CompactLBFGSOperator(T, n; [mem = 6, scaling = true, max_skip = 2])
+    CompactLBFGSOperator(T, n; [mem = 6, scaling = true, damped = false, max_skip = 2])
     CompactLBFGSOperator(n; kwargs...)
 
 Construct a limited-memory BFGS approximation stored in compact form
@@ -206,6 +240,7 @@ Construct a limited-memory BFGS approximation stored in compact form
 # Keyword arguments
 - `mem::Int = 6`: number of pairs ``(s, y)`` stored.
 - `scaling::Bool = true`: whether the initial approximation is ``B_0 = ξ I`` with ``ξ = y^T y / s^T y``.
+- `damped::Bool = false`: whether to apply Powell's damping to the pairs ``(s, y)``, with parameters `σ₂::Float64 = 0.99` and `σ₃::Float64 = 10.0`.
 - `max_skip::Int = 2`: an update is skipped when `dot(s, y) ≤ eps(T)`; the approximation is reset once more than `max_skip` consecutive updates have been skipped.
 """
 function CompactLBFGSOperator(T::Type, n::I; kwargs...) where {I <: Integer}
@@ -247,6 +282,10 @@ function Base.copy(data::CompactLBFGSData{T,V,MT}) where {T,V,MT}
     data._insert,
     data._nskip,
     data._max_skip,
+    data.damped,
+    data.σ₂,
+    data.σ₃,
+    copy(data._Bs),
   )
 end
 
@@ -267,11 +306,16 @@ function Base.similar(data::CompactLBFGSData{T,V,MT}) where {T,V,MT}
     data._insert,
     data._nskip,
     data._max_skip,
+    data.damped,
+    data.σ₂,
+    data.σ₃,
+    similar(data._Bs),
   )
 end
 
 function Base.copy!(dest::CompactLBFGSData{T,V,MT}, src::CompactLBFGSData{T,V,MT}) where {T,V,MT}
   @assert dest.scaling == src.scaling
+  @assert dest.damped == src.damped
   dest.ξ = src.ξ
   copyto!(dest.Sk, src.Sk)
   copyto!(dest.Yk, src.Yk)
@@ -286,4 +330,6 @@ function Base.copy!(dest::CompactLBFGSData{T,V,MT}, src::CompactLBFGSData{T,V,MT
   dest._insert = src._insert
   dest._nskip = src._nskip
   dest._max_skip = src._max_skip
+  dest.σ₂ = src.σ₂
+  dest.σ₃ = src.σ₃
 end
