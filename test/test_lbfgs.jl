@@ -342,6 +342,12 @@ function test_lbfgs()
 
   @testset ExtendedTestSet "Compact LBFGS specifics" begin
     n = 10
+
+    # Storage type
+    @test LinearOperators.storage_type(CompactLBFGSOperator(n)) == Vector{Float64}
+    C = CompactLBFGSOperator(Float32, n; S = Vector{Float32})
+    @test LinearOperators.storage_type(C) == Vector{Float32}
+    @test C.data.Sk isa Matrix{Float32}
     s = simple_vector(Float64, n)
 
     # The approximation is reset after more than max_skip consecutive skipped updates.
