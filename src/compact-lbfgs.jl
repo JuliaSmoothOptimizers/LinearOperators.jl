@@ -75,6 +75,12 @@ function reset!(data::CompactLBFGSData)
   data._nskip = 0
 end
 
+# Allow for GPU-compatible implementation:
+# GPU arrays can override these methods to avoid views throughout the implementation.
+_active(v::AbstractVector, k) = view(v, 1:k)
+_active(A::AbstractMatrix, k) = view(A, :, 1:k)
+_active(A::AbstractMatrix, k, l) = view(A, 1:k, 1:l)
+
 function compact_lbfgs_multiply!(
   x::AbstractVector,
   data::CompactLBFGSData,
@@ -89,11 +95,12 @@ function compact_lbfgs_multiply!(
   end
 
   k = min(data._insert - 1, data._mem)
+  Uk, Vk, _y = _active(data.Uk, k), _active(data.Vk, k), _active(data._y, k)
 
-  @views mul!(data._y[1:k], data.Uk[:, 1:k]', y)            # _y = Uₖᵀy
-  @views mul!(x, data.Uk[:, 1:k], data._y[1:k], -α, one(α)) #  x = βx + α * (ξI - UₖUₖᵀ)y
-  @views mul!(data._y[1:k], data.Vk[:, 1:k]', y)            # _y = Vₖᵀy
-  @views mul!(x, data.Vk[:, 1:k], data._y[1:k], α, one(α))  #  x = βx + α * (ξI - UₖUₖᵀ + VₖVₖᵀ)y
+  mul!(_y, Uk', y)                                          # _y = Uₖᵀy
+  mul!(x, Uk, _y, -α, one(α))                               #  x = βx + α * (ξI - UₖUₖᵀ)y
+  mul!(_y, Vk', y)                                          # _y = Vₖᵀy
+  mul!(x, Vk, _y, α, one(α))                                #  x = βx + α * (ξI - UₖUₖᵀ + VₖVₖᵀ)y
   return x
 end
 
@@ -252,8 +259,10 @@ function push!(op::CompactLBFGSOperator{T}, s::AbstractVector{T}, y::AbstractVec
   mul!(Mk, Sk', Sk, ξ, one(T))                             # Mₖ = ξ Sₖᵀ Sₖ + Lₖ Dₖ⁻¹ Lₖᵀ
 
   # Step 2: factorize Mₖ
+  M = _active(Mk, k, k)
+  view(M, diagind(M)) .+= iszero.(_active(Dkinvsq, k)) # Avoid singular M for padded matrices.
   try
-    cholesky!(Symmetric(@view Mk[1:k, 1:k]))                 # Mₖ = Jₖᵀ Jₖ (factorization)
+    cholesky!(Symmetric(M))                                  # Mₖ = Jₖᵀ Jₖ (factorization)
   catch e
     @warn "Cholesky factorization of Mₖ failed. Resetting the compact BFGS model."
     reset!(data)
@@ -266,7 +275,7 @@ function push!(op::CompactLBFGSOperator{T}, s::AbstractVector{T}, y::AbstractVec
   # Step 4: compute Uₖ
   mul!(Uk, Vk, _DLk)                                       # Uₖ = Yₖ Dₖ⁻¹ Lₖᵀ
   axpy!(ξ, Sk, Uk)                                         # Uₖ = ξ Sₖ + Yₖ Dₖ⁻¹ Lₖᵀ
-  @views rdiv!(Uk[:, 1:k], UpperTriangular(Mk[1:k, 1:k]))  # Uₖ = (ξ Sₖ + Yₖ Dₖ⁻¹ Lₖᵀ) Jₖ⁻¹
+  rdiv!(_active(Uk, k), UpperTriangular(M))                # Uₖ = (ξ Sₖ + Yₖ Dₖ⁻¹ Lₖᵀ) Jₖ⁻¹
 
   data._insert = min(k + 1, mem + 1)
   return op
