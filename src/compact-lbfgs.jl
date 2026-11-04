@@ -6,7 +6,7 @@ mutable struct CompactLBFGSData{T, V <: AbstractVector{T}, MT <: AbstractMatrix{
   ξ::T
   Sk::MT # n x p
   Yk::MT # n x p
-  Lk::MT # p x p
+  LkT::MT # p x p
   _Dkinvsq::V  # p
   _DLk::MT # p x p
   Mk::MT # p x p
@@ -65,7 +65,7 @@ function reset!(data::CompactLBFGSData)
   data.ξ = 1
   data.Sk .= 0
   data.Yk .= 0
-  data.Lk .= 0
+  data.LkT .= 0
   data.Mk .= 0
   data.Uk .= 0
   data.Vk .= 0
@@ -211,8 +211,8 @@ function push!(op::CompactLBFGSOperator{T}, s::AbstractVector{T}, y::AbstractVec
   end
 
   k, mem = data._insert, data._mem
-  Sk, Yk, Lk, Dkinvsq, _DLk, Mk, Uk, Vk =
-    data.Sk, data.Yk, data.Lk, data._Dkinvsq, data._DLk, data.Mk, data.Uk, data.Vk
+  Sk, Yk, LkT, Dkinvsq, _DLk, Mk, Uk, Vk =
+    data.Sk, data.Yk, data.LkT, data._Dkinvsq, data._DLk, data.Mk, data.Uk, data.Vk
   ξ = data.ξ
 
   sy = dot(s, y)
@@ -231,33 +231,32 @@ function push!(op::CompactLBFGSOperator{T}, s::AbstractVector{T}, y::AbstractVec
     ξ = data.ξ = dot(y, y) / sy
   end
 
-  # Shift
+  # Shift: drop the oldest pair.
+  # Contiguous blocks are copied.
   if k > mem
-    @inbounds for i = 1:(mem - 1)
-      copyto!(view(Sk, :, i), view(Sk, :, i+1))
-      copyto!(view(Yk, :, i), view(Yk, :, i+1))
-      Dkinvsq[i] = Dkinvsq[i + 1]
-
-      for j = 1:(i - 1)
-        Lk[i, j] = Lk[i + 1, j + 1]
-      end
+    for i = 1:(mem - 1)
+      copyto!(view(Sk, :, i), view(Sk, :, i + 1))
+      copyto!(view(Yk, :, i), view(Yk, :, i + 1))
+      copyto!(view(LkT, 1:(mem - 1), i), view(LkT, 2:mem, i + 1))
     end
+    copyto!(data._y, Dkinvsq)                                 # use _y is as buffer
+    copyto!(view(Dkinvsq, 1:(mem - 1)), view(data._y, 2:mem))
     k = mem
   end
 
   copyto!(view(Sk, :, k), s)
   copyto!(view(Yk, :, k), y)
 
-  @inbounds for j = 1:(k - 1)
-    Lk[k, j] = dot(s, view(Yk, :, j))
-  end
-  Dkinvsq[k] = 1 / sqrt(sy)
+  # New column of Lₖᵀ: yⱼᵀ sₖ for j < k.
+  mul!(view(LkT, :, k), Yk', s)                            # Yₖᵀ sₖ
+  fill!(view(LkT, k:mem, k), zero(T))                      # keep the strictly upper triangular part
+  fill!(view(Dkinvsq, k:k), 1 / sqrt(sy))
 
   # Compute compact representation Bₖ = σₖI - UₖUₖᵀ + VₖVₖᵀ.
   # Source: https://github.com/MadNLP/MadNLP.jl/blob/v0.9.1/src/quasi_newton.jl#L366
 
   # Step 1: compute Mₖ
-  mul!(_DLk, Diagonal(Dkinvsq), Lk')
+  mul!(_DLk, Diagonal(Dkinvsq), LkT)                       # Dₖ⁻¹ᐟ² Lₖᵀ
   mul!(Mk, _DLk', _DLk)                                    # Mₖ = Lₖ Dₖ⁻¹ Lₖᵀ
   mul!(Mk, Sk', Sk, ξ, one(T))                             # Mₖ = ξ Sₖᵀ Sₖ + Lₖ Dₖ⁻¹ Lₖᵀ
 
@@ -307,7 +306,7 @@ function Base.copy(op::CompactLBFGSOperator)
       data.ξ,
       copy(data.Sk),
       copy(data.Yk),
-      copy(data.Lk),
+      copy(data.LkT),
       copy(data._Dkinvsq),
       copy(data._DLk),
       copy(data.Mk),
@@ -334,7 +333,7 @@ function Base.similar(op::CompactLBFGSOperator)
       data.ξ,
       similar(data.Sk),
       similar(data.Yk),
-      similar(data.Lk),
+      similar(data.LkT),
       similar(data._Dkinvsq),
       similar(data._DLk),
       similar(data.Mk),
@@ -360,7 +359,7 @@ function Base.copy!(dest::CompactLBFGSOperator, src::CompactLBFGSOperator)
   d.ξ = s.ξ
   copyto!(d.Sk, s.Sk)
   copyto!(d.Yk, s.Yk)
-  copyto!(d.Lk, s.Lk)
+  copyto!(d.LkT, s.LkT)
   copyto!(d._Dkinvsq, s._Dkinvsq)
   copyto!(d._DLk, s._DLk)
   copyto!(d.Mk, s.Mk)
