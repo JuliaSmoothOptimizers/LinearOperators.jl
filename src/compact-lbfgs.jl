@@ -32,20 +32,22 @@ function CompactLBFGSData(
   σ₂::Float64 = 0.99,
   σ₃::Float64 = 10.0,
   max_skip::Integer = typemax(Int),
+  S::Type = Vector{T},
 ) where {I <: Integer}
   mem = max(mem, 1)
-  return CompactLBFGSData{T, Vector{T}, Matrix{T}}(
+  Sk = fill!(similar(S(undef, 0), T, n, mem), zero(T))
+  return CompactLBFGSData{T, S, typeof(Sk)}(
     scaling,
     one(T),
-    zeros(T, n, mem),
-    zeros(T, n, mem),
-    zeros(T, mem, mem),
-    zeros(T, mem),
-    zeros(T, mem, mem),
-    zeros(T, mem, mem),
-    zeros(T, n, mem),
-    zeros(T, n, mem),
-    zeros(T, mem),
+    Sk,
+    fill!(similar(S(undef, 0), T, n, mem), zero(T)),
+    fill!(similar(S(undef, 0), T, mem, mem), zero(T)),
+    fill!(S(undef, mem), zero(T)),
+    fill!(similar(S(undef, 0), T, mem, mem), zero(T)),
+    fill!(similar(S(undef, 0), T, mem, mem), zero(T)),
+    fill!(similar(S(undef, 0), T, n, mem), zero(T)),
+    fill!(similar(S(undef, 0), T, n, mem), zero(T)),
+    fill!(S(undef, mem), zero(T)),
     mem,
     1,
     0,
@@ -53,7 +55,7 @@ function CompactLBFGSData(
     damped,
     convert(T, σ₂),
     convert(T, σ₃),
-    zeros(T, n),
+    fill!(S(undef, n), zero(T)),
   )
 end
 
@@ -171,6 +173,7 @@ Use [`InverseLBFGSOperator`](@ref) for the inverse form.
 - `max_skip::Int = typemax(Int)`: an update is skipped when `dot(s, y) ≤ eps(T)`;
   the approximation is reset once more than `max_skip` consecutive updates have been skipped;
   deactivated by default.
+- `S::Type = Vector{T}`: storage type of the vectors; the matrices have the corresponding matrix type.
 """
 CompactLBFGSOperator(T::Type, n::Integer; kwargs...) =
   CompactLBFGSOperator(CompactLBFGSData(T, n; kwargs...))
