@@ -267,9 +267,9 @@ function push!(op::CompactLBFGSOperator{T}, s::AbstractVector{T}, y::AbstractVec
   # Step 2: factorize Mₖ
   M = _active(Mk, k, k)
   view(M, diagind(M)) .+= iszero.(_active(Dkinvsq, k)) # Avoid singular M for padded matrices.
-  
+
   F = cholesky!(Symmetric(M), check = false)               # Mₖ = Jₖᵀ Jₖ (factorization)
-  
+
   if !issuccess(F)
     @warn "Cholesky factorization of Mₖ failed. Resetting the compact BFGS model."
     reset!(data)
