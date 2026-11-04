@@ -20,4 +20,8 @@ using LinearOperators, CUDA, CUDA.CUSPARSE, CUDA.CUSOLVER
   @test LinearOperators.storage_type(Diagonal(v)) == typeof(v)
 
   @testset "Nvidia S kwarg" test_S_kwarg(arrayType = CuArray)
+
+  @testset "Nvidia CompactLBFGSOperator" for T in (Float32, Float64)
+    test_compact_lbfgs_gpu(arrayType = CuArray, T = T)
+  end
 end

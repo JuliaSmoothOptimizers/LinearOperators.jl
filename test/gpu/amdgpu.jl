@@ -17,4 +17,9 @@ using LinearOperators, AMDGPU
   @test LinearOperators.storage_type(Diagonal(v)) == typeof(v)
 
   @testset "AMDGPU S kwarg" test_S_kwarg(arrayType = ROCArray)
+
+  AMDGPU.allowscalar(false)
+  @testset "AMDGPU CompactLBFGSOperator" for T in (Float32, Float64)
+    test_compact_lbfgs_gpu(arrayType = ROCArray, T = T)
+  end
 end

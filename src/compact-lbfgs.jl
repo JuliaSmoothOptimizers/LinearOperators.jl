@@ -170,10 +170,14 @@ Use [`InverseLBFGSOperator`](@ref) for the inverse form.
 - `scaling::Bool = true`: whether the initial approximation is ``B_0 = ξ I`` with ``ξ = y^T y / s^T y``.
 - `damped::Bool = false`: whether to apply Powell's damping to the pairs ``(s, y)``.
 - `σ₂::Float64 = 0.99` and `σ₃::Float64 = 10.0`: damping parameters.
-- `max_skip::Int = typemax(Int)`: an update is skipped when `dot(s, y) ≤ eps(T)`;
+- `max_skip::Int = typemax(Int)`: an update is skipped when `dot(s, y) ≤ eps(T)` or is `NaN`;
   the approximation is reset once more than `max_skip` consecutive updates have been skipped;
   deactivated by default.
 - `S::Type = Vector{T}`: storage type of the vectors; the matrices have the corresponding matrix type.
+
+# GPU
+With a GPU vector type as `S`, e.g. `S = CuVector{Float32}`, the operator is stored and applied on
+the GPU, and `push!` takes GPU vectors.
 """
 CompactLBFGSOperator(T::Type, n::Integer; kwargs...) =
   CompactLBFGSOperator(CompactLBFGSData(T, n; kwargs...))
