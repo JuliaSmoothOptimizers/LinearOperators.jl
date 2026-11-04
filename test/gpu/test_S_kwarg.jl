@@ -31,6 +31,9 @@ function test_S_kwarg(; arrayType, notMetal = true)
     @test LinearOperators.storage_type(opOnes(Float32, 32, 32; S = vecT)) == vecT
     @test LinearOperators.storage_type(opZeros(Float32, 32, 32; S = vecT)) == vecT
 
+    # compact-lbfgs.jl
+    @test LinearOperators.storage_type(CompactLBFGSOperator(Float32, 32; S = vecT)) == vecT
+
     @test LinearOperators.storage_type(opDiagonal(vec)) == vecT
     @test LinearOperators.storage_type(opDiagonal(32, 32, vec)) == vecT
 
