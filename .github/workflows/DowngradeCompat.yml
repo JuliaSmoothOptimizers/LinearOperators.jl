@@ -1,0 +1,10 @@
+name: Downgrade Compat
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  downgrade-compat:
+    uses: JuliaSmoothOptimizers/.github/.github/workflows/downgrade-compat.yaml@main
