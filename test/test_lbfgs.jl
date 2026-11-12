@@ -202,17 +202,22 @@ function test_lbfgs()
     mul!(res, H, x)  # warmup
     nallocs = @allocated mul!(res, H, x)
     @test nallocs == 0
+    diag!(B, x)      # warmup
     nallocs = @allocated diag!(B, x)
     @test nallocs == 0
 
+    push!(B, x, y)  # warmup
     nallocs = @allocated push!(B, x, y)
     @test nallocs == 0
+    push!(H, x, y)  # warmup
     nallocs = @allocated push!(H, x, y)
     @test nallocs == 0
 
     tmp = zeros(n)
+    push!(BD, x, y, tmp)  # warmup
     nallocs = @allocated push!(BD, x, y, tmp)
     @test nallocs == 0
+    push!(HD, x, y, 1.0, x, tmp)  # warmup
     nallocs = @allocated push!(HD, x, y, 1.0, x, tmp)
     @test nallocs == 0
   end
