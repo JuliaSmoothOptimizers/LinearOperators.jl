@@ -21,5 +21,6 @@ include("test_shifted_operator.jl")
 include("gpu/test_S_kwarg.jl")
 include("gpu/jlarrays.jl")
 if Sys.isapple() && occursin("arm64", Sys.MACHINE)
+  using Pkg; Pkg.add("Metal")
   include("gpu/metal.jl")
 end
