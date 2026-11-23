@@ -18,3 +18,6 @@ using LinearOperators, AMDGPU
 
   @testset "AMDGPU S kwarg" test_S_kwarg(arrayType = ROCArray)
 end
+
+AMDGPU.allowscalar(false)
+test_lbfgs_backend(arrayType = ROCArray)

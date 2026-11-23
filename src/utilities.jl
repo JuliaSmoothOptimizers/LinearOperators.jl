@@ -206,10 +206,10 @@ Erway, J. B., Jain, V., & Marcia, R. F. Shifted L-BFGS Systems. Optimization Met
 """
 function solve_shifted_system!(
   x::AbstractVector{T},
-  B::LBFGSOperator{T, I, F1, F2, F3},
+  B::LBFGSOperator{T, I, F1, F2, F3, V},
   b::AbstractVector{T},
   σ::T,
-) where {T, I, F1, F2, F3}
+) where {T, I, F1, F2, F3, V}
   if σ < 0
     throw(ArgumentError("σ must be nonnegative"))
   end
@@ -221,27 +221,30 @@ function solve_shifted_system!(
   @. x = x_0 * b
 
   max_i = 2 * data.mem
-  sign_i = 1
+  # Add each positive rank-one term before its downdate. Subtracting
+  # a*a' first makes the initial system singular when σ == 0.
+  sign_i = -1
 
   for i = 1:max_i
     j = (i + 1) ÷ 2
-    k = mod(insert + j - 1, data.mem) + 1
+    k = mod(insert + j - 2, data.mem) + 1
     data.shifted_u .= ((sign_i == -1) ? data.b[k] : data.a[k])
 
-    @. data.shifted_p[:, i] = x_0 * data.shifted_u
+    p_i = view(data.shifted_p, :, i)
+    @. p_i = x_0 * data.shifted_u
 
-    sign_t = 1
+    sign_t = -1
     for t = 1:(i - 1)
-      c0 = dot(view(data.shifted_p, :, t), data.shifted_u)
+      p_t = view(data.shifted_p, :, t)
+      c0 = dot(p_t, data.shifted_u)
       c1 = sign_t .* data.shifted_v[t]
       c2 = c1 * c0
-      view(data.shifted_p, :, i) .+= c2 .* view(data.shifted_p, :, t)
+      p_i .+= c2 .* p_t
       sign_t = -sign_t
     end
 
-    data.shifted_v[i] = 1 / (1 - sign_i * dot(data.shifted_u, view(data.shifted_p, :, i)))
-    x .+=
-      sign_i * data.shifted_v[i] * (view(data.shifted_p, :, i)' * b) .* view(data.shifted_p, :, i)
+    data.shifted_v[i] = 1 / (1 - sign_i * dot(data.shifted_u, p_i))
+    x .+= sign_i * data.shifted_v[i] * dot(p_i, b) .* p_i
     sign_i = -sign_i
   end
   return x
@@ -280,9 +283,9 @@ ldiv!(x, B, b)
 
 function ldiv!(
   x::AbstractVector{T},
-  B::LBFGSOperator{T, I, F1, F2, F3},
+  B::LBFGSOperator{T, I, F1, F2, F3, V},
   b::AbstractVector{T},
-) where {T, I, F1, F2, F3}
+) where {T, I, F1, F2, F3, V}
   # Call solve_shifted_system! with σ = 0
   solve_shifted_system!(x, B, b, T(0.0))
   return x
