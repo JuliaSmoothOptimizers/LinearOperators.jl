@@ -1,0 +1,27 @@
+#documenter .docs-sidebar,
+html.theme--documenter-dark #documenter .docs-sidebar {
+  border-right: 4px solid #640000;
+  background-color: #8c1515;
+  color: #fff; 
+}
+
+.mi, .mo, .mn {
+  color: #317293;
+}
+
+a {
+  color: #3091d1;
+}
+
+a:visited {
+  color: #3091d1;
+}
+
+a:hover {
+  color: #ff5722;
+}
+
+nav.toc .logo {
+  max-width: 256px;
+  max-height: 256px;
+}
